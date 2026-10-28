@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <title>Neon Alley</title>
+    <meta name="description" content="A walkable cyberpunk alley at night: neon signs, snow, steam and wet reflections, rendered live in your browser." />
+    <meta name="theme-color" content="#0a0812" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230a0812'/%3E%3Cpath d='M18 46V18l28 28V18' fill='none' stroke='%23ff3fa4' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Noto+Sans+JP:wght@700;900&family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <div id="title" class="overlay">
+      <div class="panel">
+        <div class="kicker">ネオン路地 <span>·</span> DISTRICT 07 <span>·</span> 02:14 AM</div>
+        <h1 class="logo"><span class="a">NEON</span><span class="b">ALLEY</span></h1>
+        <p class="tag">A walkable alley in a city that never sleeps. Snow, steam, and a few thousand watts of neon.</p>
+        <div class="row">
+          <span class="label">Graphics</span>
+          <div class="pills" id="qpills"></div>
+        </div>
+        <div class="loader">
+          <div class="track"><i id="bar"></i></div>
+          <div id="status">Initializing…</div>
+        </div>
+        <button id="enter" disabled>LOADING…</button>
+        <div class="keys">
+          <span><b>WASD</b> / arrows move</span><span><b>Shift</b> run</span><span><b>Mouse</b> look</span>
+          <span><b>M</b> sound</span><span><b>F</b> fps</span><span><b>Esc</b> pause</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="pause" class="overlay hidden">
+      <div class="panel small">
+        <div class="kicker">PAUSED</div>
+        <p>Click to step back into the alley.</p>
+      </div>
+    </div>
+
+    <div id="hud" class="hidden">
+      <div id="fps" class="hidden">-- FPS</div>
+      <button id="sound">SOUND ON</button>
+      <div class="hint desktop">WASD move · Shift run · Esc pause</div>
+      <div class="hint mobile">Left thumb: walk · Right thumb: look</div>
+    </div>
+
+    <div id="joy"><div id="joy-knob"></div></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

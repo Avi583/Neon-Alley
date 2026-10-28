@@ -1,2 +1,100 @@
-# Neon-Alley
-Heavily Illuminated Neon Alley Demo
+# Neon Alley
+
+A walkable cyberpunk alley at night, rendered live in the browser with Three.js:
+neon signs that flicker and light the walls, wet asphalt with mirror puddles,
+falling snow, steam from street grates, icicles, and a hazy skyline beyond.
+
+No image or audio files are shipped. Every texture is generated on a canvas at
+load time, and all sound is synthesized with the Web Audio API.
+
+## Run locally
+
+```bash
+npm install
+npm run dev        # http://localhost:5173
+npm run build      # production build in dist/
+npm run preview    # serve the production build
+```
+
+Requires a browser with WebGL 2 (any current Chrome, Edge, Firefox or Safari).
+
+## Deploy to GitHub Pages
+
+1. Push this folder to a repository, on the `main` branch.
+2. In the repo, open **Settings → Pages** and set **Source** to **GitHub Actions**.
+3. Every push to `main` runs `.github/workflows/deploy.yml`, which builds the
+   site and publishes it at `https://<user>.github.io/<repo>/`.
+
+`vite.config.js` uses `base: './'`, so the build works under any repository name.
+
+## Controls
+
+| Input | Action |
+|---|---|
+| WASD / arrow keys | Walk |
+| Shift | Run |
+| Mouse | Look (click Enter to lock the pointer) |
+| M | Sound on/off |
+| F | FPS counter |
+| Esc | Pause |
+| Touch | Left thumb walks (virtual joystick), right thumb looks |
+
+## Graphics presets
+
+Chosen on the title screen and auto-detected on first visit (phones start on
+Low). The choice is stored in the URL as `?q=low|medium|high|ultra`.
+
+| Preset | Render scale | Reflections | Real lights | Snowflakes | AA |
+|---|---|---|---|---|---|
+| Low | 0.75× | 25% res | 6 | 1,500 | FXAA |
+| Medium | 1× (≤1.25 DPR) | 35% res | 10 | 3,000 | 2× MSAA |
+| High | 1× (≤2 DPR) | 50% res | 14 | 5,000 | 4× MSAA |
+| Ultra | 1× (≤3 DPR) | 75% res | 18 | 8,000 | 4× MSAA |
+
+## How it works
+
+| File | What it does |
+|---|---|
+| `src/main.js` | Boot, loading screen, render loop, title/pause states |
+| `src/textures.js` | Procedural PBR textures (concrete, brick, shutters, asphalt, window facades, metal) plus canvas art for shop interiors, vending machine and billboards |
+| `src/batch.js` | Merges thousands of props into one mesh per material; placement helpers |
+| `src/alley.js` | Buildings, shopfronts, fire escapes, AC units, pipes, cables, icicles, props, cross street, skyline |
+| `src/signs.js` | Neon sign drawing (tube glow, lightboxes, bordered panels), mounting, flicker, holographic billboard shader |
+| `src/ground.js` | Wet ground shader (puddle and slush masks) and the planar reflection, blurred by roughness |
+| `src/lights.js` | Light pool: ~50 light sources share N real point lights, re-assigned every frame by distance |
+| `src/atmosphere.js` | Sky dome, GPU snow, instanced steam plumes |
+| `src/post.js` | HDR pipeline: bloom → chromatic aberration and grade → ACES tone mapping → vignette and grain |
+| `src/player.js` | First-person movement, head bob, collision, touch joystick |
+| `src/audio.js` | Procedural city rumble, wind, neon hum, footsteps, distant sirens |
+| `src/materials.js` | Shared materials and HDR emissive colours |
+| `src/quality.js` | Graphics presets and auto-detection |
+
+### Rendering notes
+
+- **Reflections.** The scene is rendered a second time from a camera mirrored
+  under the ground plane. The ground shader samples that image through a mip
+  chain chosen by surface roughness. Puddles get a sharp mirror; damp asphalt
+  gets soft, smeared streaks of neon.
+- **Glow.** Signs and light strips use colours brighter than 1.0 in an HDR
+  buffer, and the bloom pass turns only those into glow.
+- **Lighting.** Each sign, doorway and lantern is a light source. The nearest
+  ones (weighted toward what's in front of you) get real point lights, and
+  their strength fades out before a light is handed to another source, so
+  there is no popping.
+
+## Customising
+
+- **Signs:** edit `SIGN_SPECS` in `src/signs.js`. Each entry has text, style
+  (`tube`, `box`, `border`, `circle`), colour, wall side, position, size,
+  flicker type (`steady`, `flicker`, `broken`, `pulse`) and light strength.
+- **Layout:** `buildAlley()` in `src/alley.js` is seeded, so the same seed always
+  produces the same alley. Change the seed in `main.js` (`makeKit(..., 20261028)`)
+  for a different arrangement.
+- **Mood:** fog colour and density, and exposure, are in `main.js`. Bloom is in
+  `src/post.js` and `src/quality.js`.
+
+### Debug URL parameters
+
+`?q=high&z=-30&yaw=0&pitch=0.1` sets the start position and view.
+`&exposure=1.2` overrides exposure. `&autostart` skips the title screen and
+freezes after a few frames, which is useful for screenshots.
