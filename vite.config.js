@@ -5,6 +5,9 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   base: './',
   build: {
+    // Output to docs/ so GitHub Pages can serve it straight from the main branch.
+    outDir: 'docs',
+    emptyOutDir: true,
     target: 'es2020',
     chunkSizeWarningLimit: 2000,
   },
