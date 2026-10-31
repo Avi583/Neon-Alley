@@ -646,9 +646,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "4f35f92e0bc845e6",
+      "hash": "793e5afe90228723",
       "material": "snow",
-      "vertices": 5880,
+      "vertices": 5784,
     },
     {
       "hash": "1077ed4a95b95df2",
@@ -661,24 +661,34 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "145a6dd96c711e83",
+      "hash": "016f77d1ba0be84f",
       "material": "metalDark",
-      "vertices": 24372,
+      "vertices": 38682,
     },
     {
-      "hash": "b84b280dc82c038e",
+      "hash": "8f930aaf2c996f44",
       "material": "metal",
-      "vertices": 6156,
+      "vertices": 14920,
     },
     {
-      "hash": "e305618f625d4230",
+      "hash": "b586d30663402437",
       "material": "metalLight",
-      "vertices": 1584,
+      "vertices": 3875,
     },
     {
       "hash": "c6ed0d32a3438926",
       "material": "acFront",
       "vertices": 260,
+    },
+    {
+      "hash": "252d7a11e77adad9",
+      "material": "copper",
+      "vertices": 5200,
+    },
+    {
+      "hash": "1647faa5e15614cf",
+      "material": "cable",
+      "vertices": 16204,
     },
     {
       "hash": "e14689dd946360e7",
@@ -711,9 +721,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 312,
     },
     {
-      "hash": "a0a74babd15c95d4",
+      "hash": "8f614195663b10ab",
       "material": "strip:#5dffb4:3.5",
-      "vertices": 216,
+      "vertices": 726,
     },
     {
       "hash": "7e74f62492b39c19",
@@ -766,11 +776,6 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 24,
     },
     {
-      "hash": "145e8b17da2f642b",
-      "material": "cable",
-      "vertices": 12224,
-    },
-    {
       "hash": "fc956cc33633957e",
       "material": "strip:#ffd08a:2.5",
       "vertices": 5481,
@@ -801,9 +806,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 4,
     },
     {
-      "hash": "085d2433ff8fbe22",
+      "hash": "42207ca24d9233e9",
       "material": "metalGreen",
-      "vertices": 48,
+      "vertices": 192,
     },
     {
       "hash": "da7cdd8593a079cc",
@@ -811,9 +816,19 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 652,
     },
     {
-      "hash": "b6bcdcc981ce2b48",
+      "hash": "d146e903b99ba2e8",
       "material": "trash",
-      "vertices": 1134,
+      "vertices": 5325,
+    },
+    {
+      "hash": "834bcf715bee40bd",
+      "material": "foam",
+      "vertices": 1011,
+    },
+    {
+      "hash": "28a8016e3af81d8a",
+      "material": "plasticRed",
+      "vertices": 104,
     },
     {
       "hash": "e0655d1370da6353",
@@ -826,14 +841,19 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 3312,
     },
     {
+      "hash": "305104df5feb63dc",
+      "material": "cardboard",
+      "vertices": 96,
+    },
+    {
+      "hash": "01b34465f4737f84",
+      "material": "trashBlue",
+      "vertices": 1065,
+    },
+    {
       "hash": "8c87747cc709a9b2",
       "material": "plasticYellow",
       "vertices": 304,
-    },
-    {
-      "hash": "e0019a46ddb1bfb5",
-      "material": "plasticRed",
-      "vertices": 24,
     },
     {
       "hash": "8927a3e9db82936f",
@@ -896,24 +916,14 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 4,
     },
     {
-      "hash": "d714b55b5a17b507",
+      "hash": "d709d15c271f3108",
       "material": "strip:#7fd8ff:3",
-      "vertices": 24,
+      "vertices": 2130,
     },
     {
-      "hash": "320d97e912c6acee",
-      "material": "foam",
-      "vertices": 288,
-    },
-    {
-      "hash": "84619e6badcb6453",
-      "material": "fishSilver",
-      "vertices": 1122,
-    },
-    {
-      "hash": "6cd10a9720031641",
-      "material": "fishRed",
-      "vertices": 996,
+      "hash": "a48fa34427c0a228",
+      "material": "strip:#ff6a5a:3.5",
+      "vertices": 1404,
     },
     {
       "hash": "25e4fcdb135f3d4e",
@@ -926,9 +936,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 4,
     },
     {
-      "hash": "8dd70ac43e796182",
-      "material": "rice",
-      "vertices": 484,
+      "hash": "f629c604a68bfc4d",
+      "material": "strip:#fff1d6:3.5",
+      "vertices": 1110,
     },
     {
       "hash": "8249df3258275300",

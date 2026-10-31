@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { WALL } from './config.js';
 import { buildShops } from './shops.js';
+import { mulberry32 } from './noise.js';
 
 export const ALLEY = {
   half: WALL,
@@ -36,6 +37,7 @@ function shopUnit(ctx, side, xi, zc, w, kind) {
     const c = pick(NEON);
     box(mats.metalDark, fx + out * 0.03, 1.1, zc, 0.06, 2.2, 1.05);
     box(mats.strip('#9fd8ff', 1.4), fx + out * 0.065, 1.7, zc, 0.01, 0.32, 0.45);
+    doorHandle(ctx, fx, out, zc);
     box(mats.strip(c, 3.5), fx + out * 0.08, 1.3, zc + 0.68, 0.035, 2.4, 0.035);
     box(mats.strip(c, 3.5), fx + out * 0.08, 1.3, zc - 0.68, 0.035, 2.4, 0.035);
     box(mats.strip(c, 3.5), fx + out * 0.08, 2.5, zc, 0.035, 0.035, 1.4);
@@ -70,16 +72,67 @@ function shopUnit(ctx, side, xi, zc, w, kind) {
   }
 }
 
+// A knob, lever or pull bar. No rng draws: the door's position picks the style
+// and which edge it sits on.
+function doorHandle(ctx, fx, out, zc) {
+  const { mats, box, cyl, sph } = ctx;
+  const n = Math.floor(Math.abs(zc) * 10);
+  const hand = n % 2 ? 1 : -1, style = n % 3;
+  const hz = zc + hand * 0.42, y = 1.02, at = (d) => fx + out * d;
+  if (style === 2) {
+    cyl(mats.metalLight, at(0.115), y + 0.08, hz, 0.012, 0.42, 0, 0, 0, true);
+    for (const dy of [-0.08, 0.24]) cyl(mats.metalLight, at(0.085), y + dy, hz, 0.008, 0.05, 0, 0, Math.PI / 2, true);
+    return;
+  }
+  box(mats.metal, at(0.065), y, hz, 0.01, 0.17, 0.055);
+  box(mats.cable, at(0.071), y - 0.055, hz, 0.003, 0.022, 0.01);
+  cyl(mats.metalLight, at(0.085), y + 0.02, hz, 0.011, 0.04, 0, 0, Math.PI / 2, true);
+  if (style === 0) sph(mats.metalLight, at(0.11), y + 0.02, hz, 0.028);
+  else box(mats.metalLight, at(0.105), y + 0.02, hz - hand * 0.045, 0.016, 0.018, 0.11);
+}
+
 function acUnit(ctx, side, faceX, y, z, ground = false) {
-  const { mats, box, cyl, plane, icicles, snow } = ctx;
+  const { mats, box, cyl, plane, icicles, snow, tube } = ctx;
   const out = -side;
   const fx = side * faceX;
   const d = 0.34;
+  const at = (k) => fx + out * k;
   box(mats.metalLight, fx + out * (d / 2 + 0.02), y, z, d, 0.62, 0.86);
   plane(mats.acFront, fx + out * (d + 0.025), y, z, 0.86, 0.62, out * Math.PI / 2);
   snow(fx + out * (d / 2 + 0.02), y + 0.31, z, d, 0.86);
   icicles(fx + out * (d + 0.02), y - 0.31, z - 0.4, fx + out * (d + 0.02), y - 0.31, z + 0.4, 0.6, ground ? 0.1 : 0.25);
-  if (!ground) {
+
+  // raised casing around the front
+  for (const dy of [-0.3, 0.3]) box(mats.metal, at(d + 0.03), y + dy, z, 0.02, 0.02, 0.86);
+  for (const dz of [-0.42, 0.42]) box(mats.metal, at(d + 0.03), y, z + dz, 0.02, 0.62, 0.02);
+
+  // fan guard over the fan painted on acFront: rim and hub
+  const fz = z + out * 0.12, fr = 0.26, rim = [];
+  for (let k = 0; k <= 16; k++) {
+    const a = k / 16 * Math.PI * 2;
+    rim.push(new THREE.Vector3(at(d + 0.04), y + Math.cos(a) * fr, fz + Math.sin(a) * fr));
+  }
+  tube(rim, 0.009, mats.metalDark, 16);
+  cyl(mats.metalDark, at(d + 0.04), y, fz, 0.035, 0.03, 0, 0, Math.PI / 2, true);
+
+  // Only seen up close at street level: guard spokes, and louvres over the painted vent.
+  if (ground) {
+    for (let k = 0; k < 4; k++) box(mats.metalDark, at(d + 0.04), y, fz, 0.007, fr * 2, 0.007, null, 0, k * Math.PI / 4);
+    const vz = z - out * 0.3225;
+    for (let k = -3; k <= 3; k++) box(mats.metalDark, at(d + 0.035), y + k * 0.055, vz, 0.012, 0.012, 0.11);
+  }
+
+  // coolant lines: out of the side of the casing and up the wall
+  const lz = z - out * 0.45;
+  for (const [ly, r, mat] of [[y + 0.1, 0.011, mats.copper], [y - 0.02, 0.018, mats.cable]]) {
+    cyl(mat, at(0.13), ly, lz, r, 0.18, 0, 0, Math.PI / 2, true);
+  }
+  cyl(mats.copper, at(0.045), y + 0.48, lz - 0.02, 0.011, 0.76, 0, 0, 0, true);
+  cyl(mats.cable, at(0.045), y + 0.42, lz + 0.02, 0.018, 0.88, 0, 0, 0, true);
+
+  if (ground) {
+    for (const dz of [-0.3, 0.3]) box(mats.metalDark, at(d / 2 + 0.02), 0.015, z + dz, d, 0.03, 0.07);
+  } else {
     box(mats.metalDark, fx + out * 0.2, y - 0.34, z - 0.3, 0.4, 0.04, 0.04);
     box(mats.metalDark, fx + out * 0.2, y - 0.34, z + 0.3, 0.4, 0.04, 0.04);
     cyl(mats.metalDark, fx + out * 0.05, y - 1.0, z + 0.36, 0.02, 1.4, 0, 0, 0, true);
@@ -213,6 +266,44 @@ function crate(ctx, mat, cx, cy, cz, sx, sy, sz, ry) {
   }
 }
 
+// A lumpy bag with a tied neck. The caller draws its size, so no rng draws here.
+function trashBag(ctx, mat, x, y, z, sx, sy, sz, k) {
+  const { sph, cyl } = ctx;
+  const a = k * 2.4 + x * 5;
+  sph(mat, x, y, z, sx, sy, sz, true);
+  sph(mat, x + Math.cos(a) * sx * 0.45, y - sy * 0.25, z + Math.sin(a) * sz * 0.45, sx * 0.62, sy * 0.68, sz * 0.62, true);
+  const top = y + sy * 0.92;
+  cyl(mat, x, top + 0.03, z, 0.028, 0.08, 0, 0, 0, true);
+  sph(mat, x, top + 0.05, z, 0.04, 0.018, 0.04, true);
+  for (const e of [-1, 1]) sph(mat, x + e * 0.03, top + 0.095, z - e * 0.012, 0.042, 0.016, 0.022, true);
+}
+
+// Loose rubbish on the ground, from its own rng so the kit's draws don't change.
+const litterRng = (z) => mulberry32(Math.round(Math.abs(z) * 100) + 7);
+function litter(ctx, side, zz) {
+  const { mats, box, cyl, sph } = ctx;
+  const r = litterRng(zz);
+  const px = () => side * (1.45 + r() * 0.7), pz = () => zz + (r() - 0.5) * 1.5;
+
+  // a flattened box
+  if (r() < 0.6) {
+    const x = px(), z = pz();
+    box(mats.cardboard, x, 0.008, z, 0.34 + r() * 0.16, 0.012, 0.42 + r() * 0.2, null, r() * 3);
+  }
+  // cans on their sides
+  const cans = 1 + Math.floor(r() * 3);
+  for (let k = 0; k < cans; k++) {
+    const x = px(), z = pz(), ry = r() * 3;
+    cyl(k % 2 ? mats.plasticRed : mats.metal, x, 0.033, z, 0.033, 0.12, 0, ry, Math.PI / 2, true);
+  }
+  // balled-up paper
+  const paper = 1 + Math.floor(r() * 3);
+  for (let k = 0; k < paper; k++) {
+    const x = px(), z = pz(), s = 0.03 + r() * 0.03;
+    sph(mats.foam, x, s * 0.7, z, s, s * 0.75, s * 1.1, true);
+  }
+}
+
 // ---------------------------------------------------------- overhead
 function buildOverhead(ctx) {
   const { mats, R, rng, pick, sph, catenary, tube } = ctx;
@@ -296,10 +387,22 @@ function buildStreetProps(ctx) {
   {
     const dz = -41, side = -1, d = 1.0;
     const cx = side * (WALL - d / 2 - 0.05);
-    box(mats.metalGreen, cx, 0.62, dz, d, 1.24, 1.9);
+    box(mats.metalGreen, cx, 0.69, dz, d, 1.1, 1.9);
     box(mats.metalGreen, cx + 0.05, 1.3, dz, d + 0.1, 0.06, 1.95, null, 0, 0, 0.08);
     snow(cx + 0.05, 1.33, dz, d, 1.9, 0.08);
     addCollider(cx - d / 2, cx + d / 2, dz - 1, dz + 1);
+    // ribs, top rim, lift bar, end sleeves and casters
+    const face = cx - side * d / 2;
+    for (let k = -2; k <= 2; k++) box(mats.metalGreen, face - side * 0.015, 0.69, dz + k * 0.42, 0.03, 1.08, 0.07);
+    box(mats.metalGreen, face - side * 0.025, 1.18, dz, 0.05, 0.08, 1.92);
+    cyl(mats.metal, face - side * 0.07, 0.95, dz, 0.018, 1.5, Math.PI / 2);
+    for (const e of [-1, 1]) {
+      box(mats.metalDark, cx, 0.8, dz + e * 0.965, 0.2, 0.14, 0.03);
+      for (const dx of [-0.34, 0.34]) {
+        box(mats.metalDark, cx + dx, 0.13, dz + e * 0.75, 0.1, 0.03, 0.1);
+        cyl(mats.cable, cx + dx, 0.065, dz + e * 0.75, 0.065, 0.05, Math.PI / 2);
+      }
+    }
   }
 
   // trash bags, crates and barrels along the walls
@@ -312,8 +415,11 @@ function buildStreetProps(ctx) {
     if (kind < 0.5) {
       const n = 2 + Math.floor(rng() * 3);
       for (let k = 0; k < n; k++) {
-        sph(mats.trash, side * R(1.95, 2.25), 0.22 + k * 0.04, zz + R(-0.5, 0.5), R(0.26, 0.36), R(0.22, 0.3), R(0.26, 0.34), true);
+        const bx = side * R(1.95, 2.25), by = 0.22 + k * 0.04, bz = zz + R(-0.5, 0.5);
+        const sx = R(0.26, 0.36), sy = R(0.22, 0.3), sz = R(0.26, 0.34);
+        trashBag(ctx, k % 3 === 2 ? mats.trashBlue : mats.trash, bx, by, bz, sx, sy, sz, k);
       }
+      litter(ctx, side, zz);
       addCollider(side * 1.75, side * 2.4, zz - 0.6, zz + 0.6);
     } else if (kind < 0.8) {
       const stack = 1 + Math.floor(rng() * 4);
@@ -325,6 +431,8 @@ function buildStreetProps(ctx) {
     } else {
       const cx = side * 2.0;
       cyl(mats.metalDark, cx, 0.45, zz, 0.28, 0.9);
+      for (const hy of [0.22, 0.45, 0.68]) cyl(mats.metal, cx, hy, zz, 0.288, 0.025);
+      cyl(mats.metal, cx, 0.895, zz, 0.295, 0.02);
       snow(cx, 0.9, zz, 0.4, 0.4, 0.05);
       addCollider(cx - 0.3, cx + 0.3, zz - 0.3, zz + 0.3);
     }

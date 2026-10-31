@@ -14,7 +14,7 @@ Live Site Here: https://avi583.github.io/Neon-Alley/
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm run build      # production build in dist/
+npm run build      # production build in docs/
 npm run preview    # serve the production build
 ```
 
@@ -60,6 +60,7 @@ Low). The choice is stored in the URL as `?q=low|medium|high|ultra`.
 | `src/math.js` | Small shared math helpers |
 | `src/batch.js` | Merges thousands of props into one mesh per material; placement helpers |
 | `src/alley.js` | Buildings, shopfronts, fire escapes, AC units, pipes, cables, icicles, props, cross street, skyline |
+| `src/shops.js` | Hand-placed fish market and onigiri shopfronts |
 | `src/signs.js` | Neon sign mounting, lights and flicker |
 | `src/sign-specs.js` | The list of signs and all the text they use |
 | `src/sign-canvas.js` | Sign drawing (tube glow, lightboxes, bordered panels) |

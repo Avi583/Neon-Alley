@@ -14,6 +14,14 @@ A. Ideas
 --------
 A1 [Sonnet | Risk 1/5] Audit code (first pass done, see sections B-F)
 A3 [Opus   | Risk 3/5] Add interaction with the vending machine (new input/prompt system touching player.js, ui.js and the HUD)
+A8 [Opus   | Risk 2/5] Testing audit: review what the tests cover and where the gaps are (see section G).
+A9 [Opus   | Risk 3/5] Sushi shop storefront (new shop in shops.js).
+A10 [Opus  | Risk 3/5] Ramen shop storefront (new shop in shops.js).
+A12 [Opus  | Risk 3/5] Disappearing boot marks (footprints that fade out over time).
+A16 [Sonnet | Risk 2/5] Make a build file.
+A17 [Sonnet | Risk 2/5] canvas-art.js drawFish/drawOnigiri: the shop back walls still paint realistic fish and rice balls behind the neon
+    from A11. Repaint them plainer or as neon if the neon should be the only food shown. Changes the texture snapshot (G9).
+A18 [Sonnet | Risk 1/5] AC units: add a drip stain on the wall below each unit. Needs a transparent decal material, as a solid strip reads as a pipe.
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------
@@ -44,7 +52,6 @@ C5 [Sonnet | Risk 3/5] batch.js: stop cloning geometry for every prop (compute i
 
 E. Cleanup
 ----------
-E8 [Sonnet | Risk 1/5] README.md: "Run locally" says the build goes to dist/, but it goes to docs/. The file table also lacks src/shops.js.
 E7 [Sonnet | Risk 3/5] Deploy with a GitHub Action rather than committing docs/. Each build changes the hashed filenames, which
    also forces a DIRECTORY.md update. Needs the repo's Pages source switched, so the live site can break if done wrong.
 
@@ -82,6 +89,13 @@ G12 [Sonnet | Risk 2/5] Add a GitHub Action that runs lint, tests and build on e
 
 H. Completed
 ------------
+A11 [Opus   | Risk 3/5] shops.js: 3D neon tube fish and onigiri replace the food on the counters and the hanging fish. No kit rng draws.
+A13 [Sonnet | Risk 2/5] alley.js acUnit: casing, fan guard rim and hub, coolant lines, and feet on ground units. Guard spokes and louvres are
+    on ground units only, to limit vertices. Scene vertices with A11, A14 and A15: 117,952 to 161,228, merged meshes 61 to 63.
+A14 [Sonnet | Risk 2/5] alley.js: lumpy bags with tied necks, some blue, plus loose cans, paper and flattened boxes from their own rng. The dumpster
+    gained ribs, a rim, a lift bar and casters, and barrels gained hoops. Bag sizes draw from the kit in the same order.
+A15 [Sonnet | Risk 2/5] alley.js doorHandle: knob, lever or pull bar on either edge, chosen from the door's position with no rng draws.
+E8 [Sonnet | Risk 1/5] README.md: build path corrected to docs/, and src/shops.js added to the file table.
 A2  [Opus   | Risk 3/5] Blocky fog was the steam, not banding. pbr-textures.js genCloud squared (1 - r) unclamped, so alpha rose again
     past the circle and each billboard's square corners showed. Now clamped, with a Playwright test on the alpha outside the circle.
 A4  [Sonnet | Risk 2/5] alley.js crate(): the plastic boxes are now slatted wooden crates with lid boards, corner posts and braces,

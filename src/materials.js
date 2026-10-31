@@ -33,6 +33,9 @@ export function createMaterials(tx) {
   m.snow = std({ color: 0xe6ecff, roughness: 0.62, metalness: 0 });
   m.ice = std({ color: 0xd2ecff, roughness: 0.05, metalness: 0.1, envMapIntensity: 2.5, emissive: 0x0a1420 });
   m.trash = std({ color: 0x0c0c10, roughness: 0.16, metalness: 0, envMapIntensity: 1.6 });
+  m.trashBlue = std({ color: 0x14263a, roughness: 0.2, metalness: 0, envMapIntensity: 1.6 });
+  m.cardboard = std({ color: 0x7a5c3c, roughness: 0.95 });
+  m.copper = std({ color: 0xb0683a, roughness: 0.45, metalness: 0.8 });
   m.cable = std({ color: 0x050507, roughness: 0.5 });
   m.grate = std({ map: tx.grate.map, normalMap: tx.grate.normalMap, roughnessMap: tx.grate.roughnessMap, roughness: 1, metalness: 0.8 });
   m.plasticRed = std({ color: 0xc81e32, roughness: 0.4 });
@@ -47,9 +50,6 @@ export function createMaterials(tx) {
   m.woodWorn = wood(0xc4c6c4, 0xc4c6c4);
   m.foam = std({ color: 0xf0f3f6, roughness: 0.8 });
   m.awningBlue = std({ color: 0x14508c, roughness: 0.7 });
-  m.fishSilver = std({ color: 0x6e7a88, roughness: 0.5, metalness: 0.2 });
-  m.fishRed = std({ color: 0xc04a3c, roughness: 0.5, metalness: 0.1 });
-  m.rice = std({ color: 0xfff8ea, roughness: 0.85, emissive: 0x221c12 });
   m.noren = std({ map: tx.noren, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.95 });
 
   const cache = new Map();
