@@ -2,6 +2,7 @@
 // reflection blurred by roughness so puddles mirror the neon sharply while
 // damp asphalt smears it into long glowing streaks.
 import * as THREE from 'three';
+import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
 
 export class PlanarReflection {
   constructor(scale) {
@@ -56,33 +57,85 @@ export class PlanarReflection {
   }
 }
 
+const NOISE = /* glsl */`
+float gh21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float gvn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(gh21(i), gh21(i + vec2(1.0, 0.0)), f.x), mix(gh21(i + vec2(0.0, 1.0)), gh21(i + vec2(1.0, 1.0)), f.x), f.y); }
+`;
+
 const FRAG_HEAD = /* glsl */`
 varying vec3 vWPos;
 varying vec4 vRefl;
 uniform sampler2D uReflMap;
+uniform sampler2D uMaskMap;
+uniform vec4 uMaskXform;
 uniform float uReflStrength;
 uniform float uLodMax;
 uniform float uTime;
 float gSnow;
 float gPuddle;
-float gh21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
-float gvn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
-  return mix(mix(gh21(i), gh21(i + vec2(1.0, 0.0)), f.x), mix(gh21(i + vec2(0.0, 1.0)), gh21(i + vec2(1.0, 1.0)), f.x), f.y); }
-float gfbm(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++){ s += a * gvn(p); p *= 2.03; a *= 0.5; } return s; }
+${NOISE}
 `;
 
 const FRAG_MASKS = /* glsl */`
 {
-  vec2 gp = vWPos.xz;
-  float edge = abs(gp.x);
-  float sn = gfbm(gp * vec2(1.3, 0.7));
-  gSnow = smoothstep(1.45, 2.0, edge + (sn - 0.5) * 1.0);
-  gSnow = max(gSnow, smoothstep(0.74, 0.8, gfbm(gp * 0.5 + 7.3)) * 0.7);
-  gSnow = max(gSnow, step(4.0, edge));
-  float pn = gfbm(gp * vec2(0.42, 0.24) + 3.1);
-  gPuddle = smoothstep(0.47, 0.53, pn) * (1.0 - smoothstep(0.2, 0.6, gSnow));
+  vec2 gm = texture2D(uMaskMap, vWPos.xz * uMaskXform.xy + uMaskXform.zw).rg;
+  gSnow = gm.r;
+  gPuddle = gm.g;
 }
 `;
+
+// Snow in red, puddles in green, in world space across the ground plane.
+const BAKE_FRAG = /* glsl */`
+varying vec2 vWorld;
+${NOISE}
+float gfbm(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++){ s += a * gvn(p); p *= 2.03; a *= 0.5; } return s; }
+void main() {
+  vec2 gp = vWorld;
+  float edge = abs(gp.x);
+  float sn = gfbm(gp * vec2(1.3, 0.7));
+  float snow = smoothstep(1.45, 2.0, edge + (sn - 0.5) * 1.0);
+  snow = max(snow, smoothstep(0.74, 0.8, gfbm(gp * 0.5 + 7.3)) * 0.7);
+  float pn = gfbm(gp * vec2(0.42, 0.24) + 3.1);
+  float puddle = smoothstep(0.47, 0.53, pn) * (1.0 - smoothstep(0.2, 0.6, snow));
+  gl_FragColor = vec4(snow, puddle, 0.0, 1.0);
+}
+`;
+
+// The masks never change, so they are drawn once into a texture 8 times as long as
+// it is wide, which matches the plane's proportions and the noise's finer x detail.
+function bakeMasks(renderer, Q, W, L, z1) {
+  const h = Math.min(Q.groundMask, renderer.capabilities.maxTextureSize), w = h / 8;
+  const rt = new THREE.WebGLRenderTarget(w, h, {
+    format: THREE.RGFormat,
+    depthBuffer: false,
+    generateMipmaps: true,
+    minFilter: THREE.LinearMipmapLinearFilter,
+    magFilter: THREE.LinearFilter,
+    anisotropy: renderer.capabilities.getMaxAnisotropy(),
+  });
+  const material = new THREE.ShaderMaterial({
+    uniforms: { uSize: { value: new THREE.Vector3(W, L, z1) } },
+    vertexShader: /* glsl */`
+      uniform vec3 uSize;
+      varying vec2 vWorld;
+      void main() {
+        vWorld = vec2((uv.x - 0.5) * uSize.x, uv.y * uSize.y + uSize.z);
+        gl_Position = vec4(position.xy, 0.0, 1.0);
+      }`,
+    fragmentShader: BAKE_FRAG,
+    depthTest: false,
+    depthWrite: false,
+  });
+  const quad = new FullScreenQuad(material);
+  const prev = renderer.getRenderTarget();
+  renderer.setRenderTarget(rt);
+  quad.render(renderer);
+  renderer.setRenderTarget(prev);
+  quad.dispose();
+  material.dispose();
+  return rt;
+}
 
 const FRAG_COLOR = /* glsl */`
 {
@@ -119,7 +172,7 @@ const FRAG_REFL = /* glsl */`
 
 const repeated = (t, x, y) => { const c = t.clone(); c.repeat.set(x, y); c.needsUpdate = true; return c; };
 
-export function createGround(tx, Q, refl) {
+export function createGround(tx, Q, refl, renderer) {
   const W = 7.2, z0 = 20, z1 = -93;
   const L = z0 - z1;
   const geo = new THREE.PlaneGeometry(W, L, 1, 1);
@@ -136,6 +189,8 @@ export function createGround(tx, Q, refl) {
   });
   const uniforms = {
     uReflMap: { value: refl.rt.texture },
+    uMaskMap: { value: bakeMasks(renderer, Q, W, L, z1).texture },
+    uMaskXform: { value: new THREE.Vector4(1 / W, 1 / L, 0.5, -z1 / L) },
     uReflMatrix: { value: refl.matrix },
     uReflStrength: { value: 1.0 },
     uLodMax: { value: Q.reflLod },

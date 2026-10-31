@@ -9,6 +9,7 @@ import { buildAlley, ALLEY } from './alley.js';
 import { buildSigns } from './signs.js';
 import { SIGN_SPECS, SIGN_TEXT } from './sign-specs.js';
 import { PlanarReflection, createGround } from './ground.js';
+import { Footprints } from './footprints.js';
 import { createSky, Snow, Steam } from './atmosphere.js';
 import { buildEnvironment } from './environment.js';
 import { LightPool } from './lights.js';
@@ -74,8 +75,10 @@ async function init() {
   batch.build(scene);
 
   const refl = new PlanarReflection(Q.reflScale);
-  const ground = createGround(tx, Q, refl);
+  const ground = createGround(tx, Q, refl, renderer);
   scene.add(ground.mesh, ground.street);
+  const footprints = new Footprints(tx.bootPrint, ground.uniforms, scene.fog);
+  scene.add(footprints.mesh);
 
   const sky = createSky(fogColor);
   scene.add(sky);
@@ -115,7 +118,11 @@ async function init() {
   const audio = new AmbientAudio();
   const start = { x: num('x', 0.35), z: num('z', 6), yaw: num('yaw', 0), pitch: num('pitch', 0.04) };
   const player = new Player(camera, renderer.domElement, {
-    bounds: ALLEY, colliders: alley.colliders, start, onStep: (v) => audio.step(v),
+    bounds: ALLEY, colliders: alley.colliders, start,
+    onStep: (v) => {
+      audio.step(v);
+      footprints.add(player.pos, player.yaw);
+    },
   });
 
   progress(0.9, 'Compiling shaders');
@@ -155,6 +162,7 @@ async function init() {
       player.yaw = start.yaw + Math.sin(t * 0.15) * 0.1;
       player.pitch = start.pitch + 0.04 + Math.sin(t * 0.11) * 0.03;
     }
+    footprints.update(t);
     player.update(dt);
     sky.position.copy(camera.position);
     signs.update(t);
@@ -163,7 +171,7 @@ async function init() {
     snow.update(t, camera, size.y);
     steam.update(t);
     ground.uniforms.uTime.value = t;
-    refl.update(renderer, scene, camera, [ground.mesh, ground.street]);
+    refl.update(renderer, scene, camera, [ground.mesh, ground.street, footprints.mesh]);
     post.render(t);
     bench?.end();
 

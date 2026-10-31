@@ -5,6 +5,46 @@ import { makeCanvas, canvasTexture, roundRect, FONT_JP, FONT_LAT, FONT_NEON } fr
 import { ART_TEXT } from './art-text.js';
 
 // --------------------------------------------------- outdoor AC unit front
+// Four streak patterns side by side in the alpha channel, heaviest at the top, for
+// the stains below the AC units. Dirt with a little rust, so it darkens the wall.
+export function genACDrip() {
+  const CELLS = 4, CW = 64, H = 256;
+  const c = makeCanvas(CW * CELLS, H), ctx = c.getContext('2d');
+  const rng = mulberry32(95);
+  for (let cell = 0; cell < CELLS; cell++) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(cell * CW, 0, CW, H); ctx.clip();
+    const n = 7 + Math.floor(rng() * 5);
+    for (let k = 0; k < n; k++) {
+      const x = (cell + 0.12 + rng() * 0.76) * CW, len = H * (0.3 + rng() * 0.7), w = 2 + rng() * 7;
+      const dirt = rng() < 0.5 ? '128, 74, 38' : '26, 24, 24', a = 0.35 + rng() * 0.45;
+      const g = ctx.createLinearGradient(0, 0, 0, len);
+      g.addColorStop(0, `rgba(${dirt}, ${a})`);
+      g.addColorStop(1, `rgba(${dirt}, 0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(x - w / 2, 0); ctx.lineTo(x + w / 2, 0);
+      ctx.lineTo(x + w * 0.1, len); ctx.lineTo(x - w * 0.1, len);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  return canvasTexture(c, { repeat: false });
+}
+
+// One boot sole in the alpha channel, toe at the top, with the tread cut out.
+export function genBootPrint(aniso) {
+  const W = 64, H = 160;
+  const c = makeCanvas(W, H), ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.ellipse(W * 0.54, H * 0.3, W * 0.38, H * 0.27, 0.06, 0, Math.PI * 2); ctx.fill();
+  ctx.fillRect(W * 0.26, H * 0.34, W * 0.5, H * 0.2);
+  roundRect(ctx, W * 0.2, H * 0.66, W * 0.56, H * 0.3, W * 0.2); ctx.fill();
+  ctx.globalCompositeOperation = 'destination-out';
+  for (let y = H * 0.07; y < H; y += H * 0.065) ctx.fillRect(0, y, W, H * 0.022);
+  return canvasTexture(c, { srgb: false, repeat: false, aniso });
+}
+
 export function genACFront(S) {
   const W = S, H = Math.round(S * 0.72);
   const c = makeCanvas(W, H), ctx = c.getContext('2d');

@@ -25,6 +25,8 @@
   "wood.roughnessMap": "256x256 a95f99ea811b1c62",
   "wood.normalMap": "256x256 e3c7d0dfaa8f81e7",
   "acFront": "256x184 d02c850f8e986aed",
+  "acDrip": "256x256 5d05cfe733f981f7",
+  "bootPrint": "64x160 910b2d35886893a6",
   "cloud": "128x128 214842bace919d87",
   "vendingHeader": "512x138 a49c8b7edff72c4e",
   "vendingPanel": "512x276 472a725a1649ed1c",

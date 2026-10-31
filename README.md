@@ -70,7 +70,8 @@ Low). The choice is stored in the URL as `?q=low|medium|high|ultra`.
 | `src/sign-specs.js` | The list of signs and all the text they use |
 | `src/sign-canvas.js` | Sign drawing (tube glow, lightboxes, bordered panels) |
 | `src/holo-shader.js` | Holographic billboard shader |
-| `src/ground.js` | Wet ground shader (puddle and slush masks) and the planar reflection, blurred by roughness |
+| `src/ground.js` | Wet ground shader (puddle and slush masks, baked once to a texture) and the planar reflection, blurred by roughness |
+| `src/footprints.js` | Boot marks left on each step, which fade out over time |
 | `src/lights.js` | Light pool: ~50 light sources share N real point lights, re-assigned every frame by distance |
 | `src/atmosphere.js` | Sky dome, GPU snow, instanced steam plumes |
 | `src/post.js` | HDR pipeline: bloom → chromatic aberration and grade → ACES tone mapping → vignette and grain |

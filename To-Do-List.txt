@@ -17,16 +17,13 @@ A3 [Opus   | Risk 3/5] Add interaction with the vending machine (new input/promp
 A8 [Opus   | Risk 2/5] Testing audit: review what the tests cover and where the gaps are (see section G).
 A9 [Opus   | Risk 3/5] Sushi shop storefront (new shop in shops.js).
 A10 [Opus  | Risk 3/5] Ramen shop storefront (new shop in shops.js).
-A12 [Opus  | Risk 3/5] Disappearing boot marks (footprints that fade out over time).
 A17 [Sonnet | Risk 2/5] canvas-art.js drawFish/drawOnigiri: the shop back walls still paint realistic fish and rice balls behind the neon
     from A11. Repaint them plainer or as neon if the neon should be the only food shown. Changes the texture snapshot (G9).
-A18 [Sonnet | Risk 1/5] AC units: add a drip stain on the wall below each unit. Needs a transparent decal material, as a solid strip reads as a pipe.
+A20 [Sonnet | Risk 2/5] More variety in the trash: crushed cans, broken bottles and similar. Use its own rng, as A14 did, so the layout doesn't move.
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------
-B1  [Opus   | Risk 3/5] ground.js: bake the snow/puddle masks into a texture. They never change, but every ground pixel
-    recomputes them each frame (3 gfbm x 5 octaves + 1 gvn = about 64 hash calls). Only the ripple needs uTime.
-B2  [Opus   | Risk 3/5] batch.js: split merged meshes into z-sections of the alley. Each material is now one mesh spanning
+B2  [Opus  | Risk 3/5] batch.js: split merged meshes into z-sections of the alley. Each material is now one mesh spanning
     the whole scene, so frustum culling almost never removes anything.
 B3  [Opus   | Risk 3/5] ground.js / atmosphere.js: use layers to leave snow, steam and the distant skyline out of the
     reflection pass, which redraws the full scene. Snow also uses the main-view uScale, so flakes are oversized in the
@@ -85,9 +82,18 @@ G11 [Opus   | Risk 4/5] Add screenshot comparison from fixed camera spots with t
     failures. Do this last, and run it only on one known machine rather than in CI.
 G12 [Sonnet | Risk 2/5] Add a GitHub Action that runs lint, tests and build on every push and PR. Keep this separate from the
     deploy change in E7. Add the G7 smoke test once it is stable.
+G15 [Sonnet | Risk 1/5] tests/perf-baseline.js: fail fast. Page errors are only checked after the 10 minute wait for __bench, so a broken
+    page or a stalled run looks like a long hang. One run timed out while another Playwright window was open; two later runs were fine.
 
 H. Completed
 ------------
+A12 [Opus   | Risk 3/5] footprints.js: pool of 72 instanced boot marks left on each step, fading out over 20 s in the shader. Dark imprints in
+    snow and pale slush on asphalt, which is too dark to darken further, with almost nothing in puddles. Left out of the reflection pass.
+A18 [Sonnet | Risk 1/5] alley.js acDrip: transparent rust and dirt streaks below wall-mounted AC units, stopping above the ledge. Four patterns in an
+    atlas (batch.js atlasPlane), chosen from the unit's position with no rng draws. Ground units have too little wall below them.
+B1  [Opus   | Risk 3/5] ground.js: snow and puddle masks baked once on the GPU to an RG8 texture (quality.js groundMask: 256 x 2048 on Low and Medium,
+    512 x 4096 on High and Ultra, about 5.6 MB with mipmaps). Ground looks the same in before and after screenshots on High. No clear frame time gain on an
+    RTX 5070 Ti at 1280 x 720: P50 2.1 ms before, 2.1 and 4.0 ms in two runs after, within the noise in G14. Worth re-measuring on a slower GPU.
 A16 [Sonnet | Risk 2/5] build.bat: double click to rebuild docs/ and refresh the docs/ section of DIRECTORY.md (scripts/update-directory.js).
     The only steps left to deploy are committing and pushing in GitHub Desktop.
 A19 [Opus   | Risk 3/5] alley.js vending machine: hollow cabinet with a glass front, 24 3D cans on shelves, price tags and buttons, a control panel

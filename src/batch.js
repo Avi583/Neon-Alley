@@ -91,6 +91,12 @@ export function makeKit(batch, mats, seed = 1) {
     for (let i = 0; i < uv.count; i++) uv.setX(i, (cell + uv.getX(i)) / cells);
     put(g, mat, x, y, z, r, h, r, 0, ry, 0);
   }
+  // A plane showing one cell of a horizontal texture atlas.
+  function atlasPlane(mat, x, y, z, w, h, cell, cells, ry = 0) {
+    const g = G.plane.clone(), uv = g.attributes.uv;
+    for (let i = 0; i < uv.count; i++) uv.setX(i, (cell + uv.getX(i)) / cells);
+    put(g, mat, x, y, z, w, h, 1, 0, ry, 0);
+  }
 
   // A row of icicles hanging from the line a -> b.
   function icicles(ax, ay, az, bx, by, bz, density = 0.6, maxLen = 0.45) {
@@ -126,5 +132,5 @@ export function makeKit(batch, mats, seed = 1) {
     batch.add(new THREE.TubeGeometry(curve, segs, radius, 5, false), mat);
     return curve;
   }
-  return { rng, R, pick, box, cyl, prism, sph, plane, atlasCyl, icicles, snow, catenary, tube };
+  return { rng, R, pick, box, cyl, prism, sph, plane, atlasCyl, atlasPlane, icicles, snow, catenary, tube };
 }

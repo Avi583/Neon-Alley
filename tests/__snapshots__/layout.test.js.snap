@@ -691,6 +691,11 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 16276,
     },
     {
+      "hash": "24581ae6a66d49d0",
+      "material": "acDrip",
+      "vertices": 200,
+    },
+    {
       "hash": "e14689dd946360e7",
       "material": "strip:#5dffb4:5",
       "vertices": 144,

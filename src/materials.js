@@ -29,6 +29,8 @@ export function createMaterials(tx) {
   m.metalGreen = std({ ...metalMaps, roughness: 1, metalness: 0.5, color: 0x2c4a3a });
   m.metalRed = std({ ...metalMaps, roughness: 1, metalness: 0.4, color: 0xb0222c });
   m.acFront = std({ map: tx.acFront, roughness: 0.55, metalness: 0.3 });
+  // A little self-glow too, or the rust is lost on the dark upper walls.
+  m.acDrip = std({ map: tx.acDrip, emissiveMap: tx.acDrip, emissive: 0xffffff, emissiveIntensity: 0.3, roughness: 0.9, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 
   m.snow = std({ color: 0xe6ecff, roughness: 0.62, metalness: 0 });
   m.ice = std({ color: 0xd2ecff, roughness: 0.05, metalness: 0.1, envMapIntensity: 2.5, emissive: 0x0a1420 });

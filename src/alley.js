@@ -137,7 +137,17 @@ function acUnit(ctx, side, faceX, y, z, ground = false) {
     box(mats.metalDark, fx + out * 0.2, y - 0.34, z - 0.3, 0.4, 0.04, 0.04);
     box(mats.metalDark, fx + out * 0.2, y - 0.34, z + 0.3, 0.4, 0.04, 0.04);
     cyl(mats.metalDark, fx + out * 0.05, y - 1.0, z + 0.36, 0.02, 1.4, 0, 0, 0, true);
+    acDrip(ctx, fx, out, y - 0.3, z);
   }
+}
+
+// A drip stain down the wall, stopping above the ledge. No rng draws: the unit's
+// position picks the streak pattern, width and length.
+function acDrip(ctx, fx, out, top, z) {
+  const { mats, atlasPlane } = ctx;
+  const n = Math.floor(Math.abs(z) * 10);
+  const w = 0.6 + (n % 3) * 0.1, h = Math.min(1.1 + (n % 5) * 0.3, top - 4.4);
+  atlasPlane(mats.acDrip, fx + out * 0.008, top - h / 2, z, w, h, n % 4, 4, out * Math.PI / 2);
 }
 
 function fireEscape(ctx, side, faceX, fz, H) {
