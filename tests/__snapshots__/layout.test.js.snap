@@ -693,12 +693,12 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "72866825bf5fa560",
+      "hash": "980049b2b6fe3340",
       "material": "metalDark",
-      "vertices": 41330,
+      "vertices": 41306,
     },
     {
-      "hash": "e9de21f825aa2201",
+      "hash": "c9c833975b13f244",
       "material": "graffiti",
       "vertices": 120,
     },
@@ -723,7 +723,7 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 5200,
     },
     {
-      "hash": "73a179ea207f838e",
+      "hash": "12b3f436885f119f",
       "material": "cable",
       "vertices": 16436,
     },
@@ -838,7 +838,7 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 120,
     },
     {
-      "hash": "494ff80f14b4081c",
+      "hash": "e8942d7e92596941",
       "material": "metalRed",
       "vertices": 772,
     },
@@ -858,12 +858,12 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 624,
     },
     {
-      "hash": "9d2c16dcc517f5cc",
-      "material": "strip:#ffffff:0.55",
-      "vertices": 576,
+      "hash": "d7d2e517ab28e5c5",
+      "material": "vendingPrice",
+      "vertices": 96,
     },
     {
-      "hash": "24a47645bac7a431",
+      "hash": "135a03af4a155ca5",
       "material": "strip:#ff3d5a:0.9",
       "vertices": 576,
     },

@@ -116,6 +116,21 @@ export class AmbientAudio {
     o.start(t); o.stop(t + 0.15);
   }
 
+  // A can dropping into the vending machine's bin: a low thud and a tinny ring.
+  clunk() {
+    const ctx = this.ctx;
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime + 0.3;
+    for (const [type, from, to, vol, dur] of [['sine', 150, 60, 0.5, 0.16], ['triangle', 1400, 900, 0.07, 0.22]]) {
+      const o = ctx.createOscillator(); o.type = type;
+      o.frequency.setValueAtTime(from, t); o.frequency.exponentialRampToValueAtTime(to, t + dur);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g).connect(this.master);
+      o.start(t); o.stop(t + dur + 0.02);
+    }
+  }
+
   toggleMute() {
     this.muted = !this.muted;
     if (this.master) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.9, this.ctx.currentTime, 0.05);

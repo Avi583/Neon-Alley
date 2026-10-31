@@ -188,18 +188,43 @@ const GRAFFITI = [
     }
     ctx.closePath(); ctx.fill(); ctx.stroke();
   },
-  // a crown over a crew number and an arrow
+  // a robot with an antenna and a glowing visor
   (ctx, W, H) => {
-    const cx = W / 2;
-    ctx.fillStyle = '#f9f871'; ctx.strokeStyle = '#0a0a12'; ctx.lineWidth = 6; ctx.lineJoin = 'round';
+    const cx = W / 2, INK = '#0a0a12', STEEL = '#33e1ff';
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    // arms and legs, inked then painted
+    const limbs = () => {
+      ctx.beginPath();
+      ctx.moveTo(cx - 52, H * 0.6); ctx.lineTo(cx - 92, H * 0.74); ctx.lineTo(cx - 84, H * 0.5);
+      ctx.moveTo(cx + 52, H * 0.6); ctx.lineTo(cx + 92, H * 0.74); ctx.lineTo(cx + 104, H * 0.52);
+      ctx.moveTo(cx - 24, H * 0.82); ctx.lineTo(cx - 24, H * 0.94);
+      ctx.moveTo(cx + 24, H * 0.82); ctx.lineTo(cx + 24, H * 0.94);
+      ctx.stroke();
+    };
+    ctx.strokeStyle = STEEL; ctx.lineWidth = 12; limbs();
+    // body and chest panel, with a neck up to the head
+    ctx.fillStyle = STEEL;
+    ctx.fillRect(cx - 18, H * 0.44, 36, H * 0.08);
+    roundRect(ctx, cx - 54, H * 0.5, 108, H * 0.34, 12); ctx.fill();
+    ctx.lineWidth = 4; ctx.strokeStyle = INK;
+    ctx.fillStyle = '#ff3fa4';
+    ctx.beginPath(); ctx.arc(cx, H * 0.66, 15, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    // antenna, then the head over it
+    ctx.strokeStyle = '#d8dce6'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(cx, H * 0.2); ctx.lineTo(cx, H * 0.07); ctx.stroke();
+    ctx.fillStyle = '#ff3fa4';
+    ctx.beginPath(); ctx.arc(cx, H * 0.06, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#d8dce6';
+    roundRect(ctx, cx - 64, H * 0.16, 128, H * 0.3, 16); ctx.fill();
+    // visor with two eyes, and a grille of a mouth
+    ctx.fillStyle = INK;
+    roundRect(ctx, cx - 50, H * 0.21, 100, 28, 12); ctx.fill();
+    ctx.fillStyle = '#f9f871';
+    for (const d of [-1, 1]) { ctx.beginPath(); ctx.arc(cx + d * 24, H * 0.21 + 14, 8, 0, Math.PI * 2); ctx.fill(); }
+    ctx.strokeStyle = INK; ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(cx - 70, H * 0.4); ctx.lineTo(cx - 84, H * 0.1); ctx.lineTo(cx - 36, H * 0.26); ctx.lineTo(cx, H * 0.05);
-    ctx.lineTo(cx + 36, H * 0.26); ctx.lineTo(cx + 84, H * 0.1); ctx.lineTo(cx + 70, H * 0.4);
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-    bubbleText(ctx, 'K-9', cx, H * 0.62, 66, '#ff6a2a', '#f9f871');
-    ctx.strokeStyle = '#33e1ff'; ctx.lineWidth = 9; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(cx - 110, H * 0.88); ctx.lineTo(cx + 110, H * 0.88);
-    ctx.moveTo(cx + 84, H * 0.8); ctx.lineTo(cx + 110, H * 0.88); ctx.lineTo(cx + 84, H * 0.96); ctx.stroke();
+    for (let k = -2; k <= 2; k++) { ctx.moveTo(cx + k * 12, H * 0.37); ctx.lineTo(cx + k * 12, H * 0.42); }
+    ctx.stroke();
   },
   // a torn paste-up poster of an eye
   (ctx, W, H, rng) => {
@@ -221,9 +246,9 @@ const GRAFFITI = [
     ctx.fillText('THEY WATCH', 0, 66);
     ctx.restore();
   },
-  // a dripping heart with a year
+  // a dripping heart
   (ctx, W, H, rng) => {
-    const cx = W * 0.34, cy = H * 0.3, s = 3.1;
+    const cx = W * 0.5, cy = H * 0.42, s = 3.1;
     ctx.fillStyle = '#ff2d55'; ctx.strokeStyle = '#f4f7ff'; ctx.lineWidth = 6; ctx.lineJoin = 'round';
     ctx.beginPath();
     ctx.moveTo(cx, cy + 46 * s / 2);
@@ -231,7 +256,6 @@ const GRAFFITI = [
     ctx.bezierCurveTo(cx + 40 * s / 2, cy - 30 * s / 2, cx + 52 * s / 2, cy + 8 * s / 2, cx, cy + 46 * s / 2);
     ctx.closePath(); ctx.fill(); ctx.stroke();
     paintDrips(ctx, rng, cx - 44, cx + 44, cy + 28, '#ff2d55', 7);
-    bubbleText(ctx, '2087', W * 0.66, H * 0.7, 62, '#33e1ff', '#0a0a12');
   },
   // a stencilled GitHub mark with a username
   (ctx, W, H, rng) => {
@@ -245,7 +269,7 @@ const GRAFFITI = [
     ctx.fillStyle = '#eceff5';
     ctx.font = `700 42px ${FONT_LAT}`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('Avi583', cx, H * 0.87);
+    ctx.fillText('avi583', cx, H * 0.87);
   },
 ];
 
@@ -277,6 +301,7 @@ function fadeGraffiti(ctx, W, H, rng) {
 
 // Pieces side by side in one transparent atlas. Placed by graffitiPiece in alley.js.
 export const GRAFFITI_CELLS = GRAFFITI.length;
+export const GRAFFITI_ROBOT = 5, GRAFFITI_GITHUB = 8;
 export function genGraffiti(aniso) {
   const CW = 384, H = 256;
   const c = makeCanvas(CW * GRAFFITI_CELLS, H), ctx = c.getContext('2d');
@@ -372,6 +397,16 @@ export function genVendingPanel() {
   ctx.fillStyle = '#c4c8d0'; ctx.font = `700 16px ${FONT_LAT}`;
   ctx.fillText('COINS', 410, 24);
   ctx.fillText('RETURN', 410, 206);
+  return canvasTexture(c, { repeat: false });
+}
+
+// The price tag on the rail under each can.
+export function genVendingPrice() {
+  const W = 160, H = 72;
+  const c = makeCanvas(W, H), ctx = c.getContext('2d');
+  ctx.fillStyle = '#f4f7ff'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#0a0a12'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `900 50px ${FONT_LAT}`; ctx.fillText('¥120', W / 2, H / 2 + 2, W - 12);
   return canvasTexture(c, { repeat: false });
 }
 

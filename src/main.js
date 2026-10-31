@@ -10,6 +10,7 @@ import { buildSigns } from './signs.js';
 import { SIGN_SPECS, SIGN_TEXT } from './sign-specs.js';
 import { PlanarReflection, createGround } from './ground.js';
 import { Footprints } from './footprints.js';
+import { Vending, inReach } from './vending.js';
 import { createSky, Snow, Steam } from './atmosphere.js';
 import { buildEnvironment } from './environment.js';
 import { LightPool } from './lights.js';
@@ -73,6 +74,7 @@ async function init() {
   await nextFrame();
   const signs = buildSigns(kit, mats, tx.holoText, Q.signPPM, scene);
   batch.build(scene);
+  const vending = new Vending(alley.vending, mats, scene);
 
   const refl = new PlanarReflection(Q.reflScale);
   const ground = createGround(tx, Q, refl, renderer);
@@ -130,7 +132,11 @@ async function init() {
   pool.update(camera);
   try { await renderer.compileAsync(scene, camera); } catch { renderer.compile(scene, camera); }
 
-  const states = createStates({ player, audio, canvas: renderer.domElement, auto: AUTO || BENCH });
+  const canVend = () => player.enabled && inReach(alley.vending, player.pos.x, player.pos.y, player.yaw);
+  const states = createStates({
+    player, audio, canvas: renderer.domElement, auto: AUTO || BENCH,
+    onUse: () => { if (canVend() && vending.buy()) audio.clunk(); },
+  });
   const bench = BENCH ? createBench(renderer, player, ALLEY, num('bench', 600)) : null;
 
   // -------------------------------------------------------------- loop
@@ -164,6 +170,8 @@ async function init() {
     }
     footprints.update(t);
     player.update(dt);
+    vending.update(dt);
+    states.showVendPrompt(canVend());
     sky.position.copy(camera.position);
     signs.update(t);
     mats.blink.color.copy(mats.blinkBase).multiplyScalar(Math.sin(t * 4) > 0 ? 1 : 0.05);

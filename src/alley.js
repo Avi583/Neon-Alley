@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { WALL } from './config.js';
 import { buildShops } from './shops.js';
 import { mulberry32 } from './noise.js';
-import { CAN_FLAVOURS, GRAFFITI_CELLS } from './canvas-art.js';
+import { CAN_FLAVOURS, GRAFFITI_CELLS, GRAFFITI_ROBOT, GRAFFITI_GITHUB } from './canvas-art.js';
 
 export const ALLEY = {
   half: WALL,
@@ -82,8 +82,13 @@ const ASPECT = 1.5; // of one atlas cell
 const graffitiRng = (side, zc) => mulberry32(Math.round(Math.abs(zc) * 100) * 2 + (side > 0 ? 1 : 0) + 31);
 function unitGraffiti(ctx, side, fx, out, zc, w, kind) {
   const r = graffitiRng(side, zc);
+  // The robot lands on three walls. The one on the right, near the vending machine, shows the GitHub mark instead.
+  const pickCell = () => {
+    const cell = Math.floor(r() * GRAFFITI_CELLS);
+    return cell === GRAFFITI_ROBOT && side > 0 ? GRAFFITI_GITHUB : cell;
+  };
   const piece = (depth, y, z, pw) => ctx.atlasPlane(ctx.mats.graffiti, fx + out * depth, y, z, pw, pw / ASPECT,
-    Math.floor(r() * GRAFFITI_CELLS), GRAFFITI_CELLS, out * Math.PI / 2);
+    pickCell(), GRAFFITI_CELLS, out * Math.PI / 2);
   if (kind === 'shutter') {
     if (r() < 0.55) {
       const pw = Math.min(1.3 + r() * 0.9, w - 0.8);
@@ -493,12 +498,11 @@ function buildStreetProps(ctx) {
     box(mats.metalRed, inset(0.605), 1.17, vz, 0.29, 0.9, 0.89);
     plane(mats.strip('#bcd8ff', 0.4), inset(0.455), 1.17, vz, 0.89, 0.9, ry);
     box(mats.strip('#eaf6ff', 2.2), inset(0.2), 1.6, vz, 0.04, 0.02, 0.76);
-    // Pickup bin: a real recess in the base, behind a tilted flap.
-    box(mats.metalRed, inset(0.415), 0.12, vz, 0.67, 0.24, 0.89);
-    box(mats.metalDark, inset(0.04), 0.05, vz, 0.08, 0.1, 0.89);
-    for (const e of [-1, 1]) box(mats.metalRed, inset(0.04), 0.17, vz + e * 0.345, 0.08, 0.14, 0.19);
-    box(mats.cable, inset(0.076), 0.17, vz, 0.008, 0.14, 0.5);
-    box(mats.metalDark, inset(0.035), 0.175, vz, 0.012, 0.125, 0.48, null, 0, 0, side * 0.22);
+    // Pickup bin: a real recess in the base. Its flap and cans move, so vending.js builds them.
+    box(mats.metalRed, inset(0.46), 0.12, vz, 0.58, 0.24, 0.89);
+    box(mats.metalDark, inset(0.085), 0.05, vz, 0.17, 0.1, 0.89);
+    for (const e of [-1, 1]) box(mats.metalRed, inset(0.085), 0.17, vz + e * 0.345, 0.17, 0.14, 0.19);
+    box(mats.cable, inset(0.166), 0.17, vz, 0.008, 0.14, 0.5);
     box(mats.metalLight, inset(0.008), 0.243, vz, 0.016, 0.012, 0.52);
     box(mats.metalLight, inset(0.008), 0.097, vz, 0.016, 0.012, 0.52);
     // Door frame around the glass, with a dark gasket inside it
@@ -516,8 +520,8 @@ function buildStreetProps(ctx) {
         const z = vz + (k - 2.5) * 0.125;
         atlasCyl(mats.vendingCans, inset(0.2), base + 0.075, z, 0.042, 0.15, (k * (row % 2 ? 5 : 1) + row * 2) % CAN_FLAVOURS, CAN_FLAVOURS, side * Math.PI / 2);
         cyl(mats.metalLight, inset(0.2), base + 0.152, z, 0.036, 0.004);
-        box(mats.strip('#ffffff', 0.55), inset(0.048), base - 0.012, z - 0.018, 0.002, 0.02, 0.05);
-        box(mats.strip('#ff3d5a', 0.9), inset(0.047), base - 0.012, z + 0.036, 0.006, 0.018, 0.018);
+        plane(mats.vendingPrice, inset(0.048), base - 0.02, z - 0.016, 0.08, 0.036, ry);
+        box(mats.strip('#ff3d5a', 0.9), inset(0.047), base - 0.02, z + 0.044, 0.006, 0.018, 0.018);
       }
     }
     plane(mats.vendingGlass, inset(0.03), 1.17, vz, 0.78, 0.9, ry);
@@ -533,6 +537,7 @@ function buildStreetProps(ctx) {
     icicles(cx - side * d / 2, 1.88, vz - 0.45, cx - side * d / 2, 1.88, vz + 0.45, 0.5, 0.25);
     addCollider(cx - d / 2, cx + d / 2, vz - 0.5, vz + 0.5);
     addLight(cx - side * 1.0, 1.2, vz, '#dff2ff', 2.5, 6);
+    ctx.vending = { face, z: vz, side };
   }
 
   // dumpster
@@ -662,5 +667,5 @@ export function buildAlley(kit, mats, signSpecs) {
   buildSkyline(ctx);
   buildShops(ctx);
 
-  return { colliders, vents, lights };
+  return { colliders, vents, lights, vending: ctx.vending };
 }

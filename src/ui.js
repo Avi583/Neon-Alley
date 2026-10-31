@@ -5,7 +5,7 @@ const $ = (id) => document.getElementById(id);
 const ui = {
   title: $('title'), bar: $('bar'), status: $('status'), enter: $('enter'),
   hud: $('hud'), pause: $('pause'), fps: $('fps'), sound: $('sound'), pills: $('qpills'),
-  resume: $('resume'), pauseSound: $('pause-sound'), pausePills: $('pause-qpills'),
+  resume: $('resume'), pauseSound: $('pause-sound'), pausePills: $('pause-qpills'), vend: $('vend'),
 };
 
 // Where the player is, for carrying across a quality reload. Empty until play starts.
@@ -47,7 +47,7 @@ export function setFps(text) {
   ui.fps.textContent = text;
 }
 
-export function createStates({ player, audio, canvas, auto }) {
+export function createStates({ player, audio, canvas, auto, onUse }) {
   let state = 'title';
   const hasLock = !player.touch && 'requestPointerLock' in canvas;
   currentView = () => (state === 'title' ? {} : { x: player.pos.x, z: player.pos.y, yaw: player.yaw, pitch: player.pitch });
@@ -101,12 +101,16 @@ export function createStates({ player, audio, canvas, auto }) {
     if (e.code === 'KeyM') toggleSound();
     if (e.code === 'KeyF') { showFps = !showFps; ui.fps.classList.toggle('hidden', !showFps); }
     if (e.code === 'Enter' && state === 'title' && !ui.enter.disabled) play();
+    if (e.code === 'KeyE' && !e.repeat && state === 'play') onUse();
   });
+  ui.vend.textContent = (player.touch ? 'TAP' : 'E') + ' · BUY A DRINK ¥120';
+  ui.vend.addEventListener('click', onUse);
   ui.sound.addEventListener('click', toggleSound);
   ui.pauseSound.addEventListener('click', toggleSound);
 
   return {
     get state() { return state; },
+    showVendPrompt(show) { ui.vend.classList.toggle('hidden', !show); },
     // Loading is finished: let the player in.
     ready() {
       ui.enter.disabled = false;

@@ -13,7 +13,6 @@ calls in alley.js, signs.js or batch.js changes the whole layout. Refactors ther
 A. Ideas
 --------
 A1 [Sonnet | Risk 1/5] Audit code (first pass done, see sections B-F)
-A3 [Opus   | Risk 3/5] Add interaction with the vending machine (new input/prompt system touching player.js, ui.js and the HUD)
 A8 [Opus   | Risk 2/5] Testing audit: review what the tests cover and where the gaps are (see section G).
 A17 [Sonnet | Risk 2/5] canvas-art.js drawFish/drawOnigiri: the shop back walls still paint realistic fish and rice balls behind the neon
     from A11. Repaint them plainer or as neon if the neon should be the only food shown. Changes the texture snapshot (G9).
@@ -23,6 +22,9 @@ A25 [Sonnet | Risk 1/5] alley.js doorFrame: door frames blend into the door unde
 A26 [Sonnet | Risk 1/5] Run build.bat before committing A20, A21 and A22, since docs/ has not been rebuilt and the live site won't show them until it is.
 A28 [Sonnet | Risk 1/5] Run build.bat before committing A9 and A10, since docs/ does not include the sushi and ramen shops yet.
 A29 [Sonnet | Risk 2/5] The ground vent at x = 0.9, z = -9.4 sometimes hides the left of the ramen shop behind steam. Moving the vent needs care, as vents feed the street prop placement in alley.js.
+A30 [Sonnet | Risk 1/5] Run build.bat before committing A3, A31 and A32, since docs/ does not include them yet.
+A33 [Sonnet | Risk 1/5] Try the vending prompt on a real touch device. So far only E on desktop has been run in a browser; the tap path is untested.
+A34 [Sonnet | Risk 2/5] Let the player take cans from the vending bin. They stay until the fourth purchase replaces the oldest, so the flap stays open after the first purchase.
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------
@@ -90,6 +92,11 @@ G15 [Sonnet | Risk 1/5] tests/perf-baseline.js: fail fast. Page errors are only 
 
 H. Completed
 ------------
+A3  [Opus   | Risk 3/5] vending.js: E (or tapping the prompt) within 1.6 m and facing the machine drops a random can into the pickup bin with a clunk. The flap swings in, the bin holds 3 cans
+    and the newest replaces the oldest. No money system. The bin recess is deeper, with the same footprint and collider. Random flavours use Math.random, so the layout is unchanged.
+A31 [Sonnet | Risk 1/5] canvas-art.js genVendingPrice: readable ¥120 tag on the rail under each can, replacing the blank white tags. Scene vertices drop by about 500.
+A32 [Opus   | Risk 1/5] canvas-art.js genGraffiti: K-9 crown replaced by a robot, 2087 removed from the heart, username now avi583. alley.js unitGraffiti shows the GitHub mark on the former K-9 wall
+    at z = -21.7 on the right, and robots at z = 18.7 and -35.4 on the left. Other walls keep their pieces.
 A9  [Opus   | Risk 3/5] shops.js: sushi shop on the left wall at z = -57.3, with a conveyor belt of neon nigiri and maki, an indigo awning and noren. No kit rng draws.
 A10 [Opus   | Risk 3/5] shops.js: ramen shop on the right wall at z = -8.3, with neon bowls, stools, a tiled eave, noren and lanterns. No kit rng draws. With A9: vertices 174,312 to 183,016,
     merged meshes 74 to 86. Three new textures: shopSushi, norenSushi and norenRamen.

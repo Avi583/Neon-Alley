@@ -48,6 +48,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/texture-core.js
 - src/textures.js
 - src/ui.js
+- src/vending.js
 
 ## scripts/
 - scripts/update-directory.js
@@ -66,12 +67,13 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - tests/textures.html
 - tests/textures.pw.js
 - tests/textures.pw.js-snapshots/textures-chromium-win32.json
+- tests/vending.test.js
 
 ## public/
 - public/.nojekyll
 
 ## docs/ (deployed build output)
 - docs/.nojekyll
-- docs/assets/index-DoLZZInM.js
-- docs/assets/index-vhr-f_eI.css
+- docs/assets/index-BXRTUsSW.js
+- docs/assets/index-DIPauJIT.css
 - docs/index.html
