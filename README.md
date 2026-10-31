@@ -20,6 +20,11 @@ npm run preview    # serve the production build
 
 Requires a browser with WebGL 2 (any current Chrome, Edge, Firefox or Safari).
 
+## Deploy
+
+On Windows, double-click `build.bat` to rebuild `docs/` and refresh `DIRECTORY.md`,
+then commit and push.
+
 ## Controls
 
 | Input | Action |

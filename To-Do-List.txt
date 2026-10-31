@@ -18,8 +18,6 @@ A8 [Opus   | Risk 2/5] Testing audit: review what the tests cover and where the 
 A9 [Opus   | Risk 3/5] Sushi shop storefront (new shop in shops.js).
 A10 [Opus  | Risk 3/5] Ramen shop storefront (new shop in shops.js).
 A12 [Opus  | Risk 3/5] Disappearing boot marks (footprints that fade out over time).
-A16 [Sonnet | Risk 2/5] Make a build file: a single script/file in the project that updates docs/ when double clicked. It runs the
-    production build, so the only steps left to deploy are committing and pushing in GitHub Desktop.
 A17 [Sonnet | Risk 2/5] canvas-art.js drawFish/drawOnigiri: the shop back walls still paint realistic fish and rice balls behind the neon
     from A11. Repaint them plainer or as neon if the neon should be the only food shown. Changes the texture snapshot (G9).
 A18 [Sonnet | Risk 1/5] AC units: add a drip stain on the wall below each unit. Needs a transparent decal material, as a solid strip reads as a pipe.
@@ -90,6 +88,8 @@ G12 [Sonnet | Risk 2/5] Add a GitHub Action that runs lint, tests and build on e
 
 H. Completed
 ------------
+A16 [Sonnet | Risk 2/5] build.bat: double click to rebuild docs/ and refresh the docs/ section of DIRECTORY.md (scripts/update-directory.js).
+    The only steps left to deploy are committing and pushing in GitHub Desktop.
 A19 [Opus   | Risk 3/5] alley.js vending machine: hollow cabinet with a glass front, 24 3D cans on shelves, price tags and buttons, a control panel
     and a recessed pickup bin. No kit rng draws, and the same footprint and collider. Adds 4,408 vertices and 7 merged meshes.
 A11 [Opus   | Risk 3/5] shops.js: 3D neon tube fish and onigiri replace the food on the counters and the hanging fish. No kit rng draws.

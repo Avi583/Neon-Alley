@@ -9,6 +9,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - README.md
 - TESTING.md
 - To-Do-List.txt
+- build.bat
 - eslint.config.js
 - index.html
 - package-lock.json
@@ -47,6 +48,9 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/textures.js
 - src/ui.js
 
+## scripts/
+- scripts/update-directory.js
+
 ## tests/
 - tests/__snapshots__/layout.test.js.snap
 - tests/adaptive-scale.test.js
@@ -66,6 +70,6 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 
 ## docs/ (deployed build output)
 - docs/.nojekyll
-- docs/index.html
-- docs/assets/index-Be1d4JGC.js
+- docs/assets/index-Dz8mGz_g.js
 - docs/assets/index-vhr-f_eI.css
+- docs/index.html
