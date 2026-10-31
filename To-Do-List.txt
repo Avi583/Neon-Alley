@@ -6,7 +6,7 @@ Legend: ID [Model | Risk n/5]
   Model = which model should do the task (Sonnet = mechanical/contained, Opus = design judgement or cross-file reasoning).
   Risk  = chance a fix breaks something or causes errors (1 = trivial, 5 = very likely to need debugging).
 
-Nothing has been profiled yet, so measure before and after each performance item.
+Measure before and after each performance item with npm run perf (see G10 in section H).
 Watch out: the world comes from one seeded rng, so adding, removing or reordering rng()/R()/pick()
 calls in alley.js, signs.js or batch.js changes the whole layout. Refactors there must keep the draw order.
 
@@ -16,11 +16,8 @@ A1 [Sonnet | Risk 1/5] Audit code (first pass done, see sections B-F)
 A2 [Opus   | Risk 3/5] Make fog less blocky (cause not yet diagnosed; likely 8-bit banding in the fog/HDR path, so try dithering)
 A3 [Opus   | Risk 3/5] Add interaction with the vending machine (new input/prompt system touching player.js, ui.js and the HUD)
 A4 [Sonnet | Risk 2/5] Make boxes more detailed (use non-rng geometry, or the layout shifts, see warning above)
-A5 [Sonnet | Risk 2/5] Mute and change quality from the pause menu (index.html #pause, ui.js, style.css). Move or duplicate the sound
-   button and the quality pills (createQualityPills) into the pause panel. The pause overlay click calls play(), so stop
-   click propagation on the new controls (or only resume from a Resume button). A quality change still reloads the page
-   (?q=), which drops the player's position; B7 would avoid that. Pause only exists with pointer lock, so touch devices
-   never see it. Reuse toggleSound in ui.js for the mute control.
+A6[Opus   | Risk 3/5] Add a Fish Market shop (keep the rng draw order, or the layout shifts, see warning above)
+A7 [Opus   | Risk 3/5] Add an onigiri shop (keep the rng draw order, or the layout shifts, see warning above)
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------
@@ -35,8 +32,6 @@ B4  [Opus   | Risk 4/5] signs.js: put signs in a texture atlas and draw them as 
     There are 23 separate meshes, materials and canvas textures, all drawn again in the reflection pass.
 B6  [Sonnet | Risk 2/5] main.js: skip or throttle rendering while paused (not on the title screen, which animates the
     camera). The full scene and reflection keep rendering behind the overlay.
-B7  [Opus   | Risk 3/5] main.js: add adaptive render scale from frame time. Changing quality now means a full page reload
-    and texture rebuild.
 B9  [Sonnet | Risk 2/5] main.js / audio.js: throttle setHum and stop calling it while audio is suspended. It schedules an
     automation event every frame, and they pile up while the audio clock is stopped. The hum follows sign flicker (up to
     24 Hz), so too low a throttle rate loses the stutter.
@@ -72,10 +67,17 @@ F2 [Sonnet | Risk 2/5] ui.js play(): no handling for a failed requestPointerLock
 F3 [Sonnet | Risk 1/5] main.js FPS counter: uses dt clamped to 0.05, so it can never show below 20 FPS. Use unclamped time.
 F4 [Sonnet | Risk 2/5] style.css title screen: on short viewports the ENTER button is off screen and can't be reached, since the
    page has overflow: hidden. At 640 x 360 (a landscape phone) its top is at y = 416. Touch devices have no Enter key to fall back on.
+F5 [Sonnet | Risk 1/5] ui.js / audio.js: mute is lost when a quality change reloads the page, so sound comes back on. Carry it in the
+   URL like the player's position. The pause menu makes this easy to hit.
+F7 [Opus   | Risk 2/5] adaptive-scale.js: it can't tell a slow GPU from a capped display. A browser held to 30 FPS (battery saver) drops to
+   60% and stays there, even if the GPU has room to spare. Consider detecting a steady cap, or measuring GPU time (see G14).
+F6 [Opus   | Risk 2/5] Touch devices never see the pause menu (it only exists with pointer lock), so they can't change quality or mute
+   from it. Touch users have the HUD sound button but can only change quality on the title screen.
 
 G. Testing recommendations
 --------------------------
-Vitest is set up (npm test) and Playwright for browser tests (npm run test:textures). G1-G3, G5, G6, G9, G13 are done (see H).
+Vitest is set up (npm test) and Playwright for browser tests (npm run test:textures). All test files live in tests/.
+G1-G3, G5, G6, G9, G10, G13 are done (see H).
 G4  [Sonnet | Risk 2/5] player.js: unit test movement with a stub camera and dom. Cover push-out from each side of a collider,
     walk bounds, equal diagonal and straight speed, the pitch clamp, no movement while disabled, keys cleared on blur,
     and onStep firing. Also test that running at the largest dt (0.05, per F3) can't carry the player through a collider.
@@ -85,10 +87,10 @@ G7  [Opus   | Risk 3/5] Add a Playwright smoke test (Playwright is now set up) a
 G8  [Opus   | Risk 3/5] Add browser regression tests for the input bugs: rejected pointer lock (F2), mouse look on a touchscreen
     laptop (F1), and the FPS counter on slow frames (F3). Write each one to fail before its fix. F3 needs the FPS
     calculation moved into a small testable function.
-G10 [Opus   | Risk 2/5] Add a repeatable performance baseline: fixed preset, fixed camera path and fixed viewport, recording
-    load time, frame time, draw calls and triangles (renderer.info). Run it before and after each B and C item, as the
-    note at the top requires. Use the same physical machine, since headless software rendering says little about real
-    GPU cost.
+G14 [Opus   | Risk 2/5] bench.js: make frame timing trustworthy. Two runs of the same build on High gave a P50 of 2.5 and 3.8 ms, and Low
+    (4.0 ms) read slower than High (3.0 ms), so small timing differences mean nothing yet. Draw calls, triangles and memory
+    counts were identical between runs and can be trusted. Try EXT_disjoint_timer_query_webgl2, a larger fixed viewport, and
+    keeping GPU clocks steady on a laptop (plugged in, longer warmup). Find out why Low reads slower than High.
 G11 [Opus   | Risk 4/5] Add screenshot comparison from fixed camera spots with time, flicker, snow and steam frozen. Useful for A2,
     B3 and post changes, but it needs a time-freeze hook and tolerances, and GPU differences make it prone to false
     failures. Do this last, and run it only on one known machine rather than in CI.
@@ -97,6 +99,12 @@ G12 [Sonnet | Risk 2/5] Add a GitHub Action that runs lint, tests and build on e
 
 H. Completed
 ------------
+A5  [Sonnet | Risk 2/5] Sound and quality controls in the pause menu, which now resumes only from its Resume button. A quality change
+    still reloads the page, because presets set texture sizes, MSAA and counts at startup, but it keeps the player's position.
+B7  [Opus   | Risk 3/5] adaptive-scale.js: render scale drops when frames are slow and recovers slowly. The FPS counter shows the scale when below 100%.
+G10 [Opus   | Risk 2/5] npm run perf (tests/perf-baseline.js, src/bench.js): fixed preset, camera path and viewport, recording load
+    time, frame time, draw calls and triangles. Results go in perf-results/ (not committed) and print against the last run.
+    Adaptive scale is off during the run. Use the same machine, as the default visible window uses the real GPU.
 B5  [Sonnet | Risk 1/5] signs.js drawSign: cap canvas size. There is no upper limit, so on Ultra the 7 x 3.2 m sign is
     2800 x 1280 (about 14 MB before mipmaps).
 B8  [Sonnet | Risk 1/5] main.js resize: debounce. Every resize event reallocates the HDR/MSAA, bloom and reflection targets.

@@ -38,7 +38,16 @@
     <div id="pause" class="overlay hidden">
       <div class="panel small">
         <div class="kicker">PAUSED</div>
-        <p>Click to step back into the alley.</p>
+        <div class="row">
+          <span class="label">Sound</span>
+          <button id="pause-sound" class="pill">SOUND ON</button>
+        </div>
+        <div class="row">
+          <span class="label">Graphics</span>
+          <div class="pills" id="pause-qpills"></div>
+        </div>
+        <p>Changing graphics reloads the alley, and you stay where you are.</p>
+        <button id="resume">RESUME</button>
       </div>
     </div>
 

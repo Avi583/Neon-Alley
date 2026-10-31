@@ -5,12 +5,12 @@
 import { createHash } from 'node:crypto';
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import * as THREE from 'three';
-import { Batch, makeKit } from './batch.js';
-import { createMaterials } from './materials.js';
-import { buildAlley } from './alley.js';
-import { buildSigns } from './signs.js';
-import { LightPool } from './lights.js';
-import { SIGN_SPECS } from './sign-specs.js';
+import { Batch, makeKit } from '../src/batch.js';
+import { createMaterials } from '../src/materials.js';
+import { buildAlley } from '../src/alley.js';
+import { buildSigns } from '../src/signs.js';
+import { LightPool } from '../src/lights.js';
+import { SIGN_SPECS } from '../src/sign-specs.js';
 
 const SEED = 20261028; // same seed as main.js
 const SIGN_PPM = 64;

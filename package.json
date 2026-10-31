@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:textures": "playwright test"
+    "test:textures": "playwright test",
+    "perf": "node tests/perf-baseline.js"
   },
   "dependencies": {
     "three": "^0.186.1"

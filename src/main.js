@@ -15,6 +15,8 @@ import { LightPool } from './lights.js';
 import { createPost } from './post.js';
 import { Player } from './player.js';
 import { AmbientAudio } from './audio.js';
+import { AdaptiveScale } from './adaptive-scale.js';
+import { createBench } from './bench.js';
 import { createQualityPills, createStates, progress, setFps, showError } from './ui.js';
 
 const params = new URLSearchParams(location.search);
@@ -22,6 +24,7 @@ const qKey = PRESETS[params.get('q')] ? params.get('q') : detectQuality();
 const Q = PRESETS[qKey];
 const AUTO = params.has('autostart'); // used for automated screenshots
 const FREEZE = AUTO || params.has('freeze');
+const BENCH = params.has('bench'); // used for the performance baseline
 const num = (k, d) => (params.has(k) ? parseFloat(params.get(k)) : d);
 
 createQualityPills(qKey);
@@ -118,17 +121,30 @@ async function init() {
   pool.update(camera);
   try { await renderer.compileAsync(scene, camera); } catch { renderer.compile(scene, camera); }
 
-  const states = createStates({ player, audio, canvas: renderer.domElement, auto: AUTO });
+  const states = createStates({ player, audio, canvas: renderer.domElement, auto: AUTO || BENCH });
+  const bench = BENCH ? createBench(renderer, player, ALLEY, num('bench', 600)) : null;
 
   // -------------------------------------------------------------- loop
+  const adaptive = new AdaptiveScale();
   let last = performance.now();
   let t = num('t', 0), frames = 0, fpsFrames = 0, fpsTime = 0;
   function frame() {
     if (FREEZE && frames >= 12) { window.__ready = true; return; } // freeze for screenshots
+    if (bench?.done) return;
     requestAnimationFrame(frame);
-    const dt = FREEZE ? 1 / 60 : Math.min((performance.now() - last) / 1000, 0.05);
-    last = performance.now();
+    const now = performance.now();
+    const elapsed = now - last;
+    const dt = FREEZE || BENCH ? 1 / 60 : Math.min(elapsed / 1000, 0.05);
+    last = now;
     t += dt;
+    bench?.begin();
+    if (!FREEZE && !BENCH && states.state === 'play') {
+      const scale = adaptive.sample(elapsed);
+      if (scale !== null) {
+        renderer.setPixelRatio(pixelRatio * scale);
+        resize();
+      }
+    } else adaptive.reset();
     if (states.state === 'title') {
       player.yaw = start.yaw + Math.sin(t * 0.15) * 0.1;
       player.pitch = start.pitch + 0.04 + Math.sin(t * 0.11) * 0.03;
@@ -144,6 +160,7 @@ async function init() {
     ground.uniforms.uTime.value = t;
     refl.update(renderer, scene, camera, [ground.mesh, ground.street]);
     post.render(t);
+    bench?.end();
 
     if (audio.ctx) {
       let hum = 0;
@@ -154,13 +171,17 @@ async function init() {
       audio.setHum(hum);
     }
     fpsFrames++; fpsTime += dt;
-    if (fpsTime > 0.5) { setFps(`${Math.round(fpsFrames / fpsTime)} FPS · ${Q.label}`); fpsFrames = 0; fpsTime = 0; }
+    if (fpsTime > 0.5) {
+      const res = adaptive.scale < 1 ? ` · ${Math.round(adaptive.scale * 100)}%` : '';
+      setFps(`${Math.round(fpsFrames / fpsTime)} FPS · ${Q.label}${res}`);
+      fpsFrames = 0; fpsTime = 0;
+    }
     frames++;
   }
-  frame();
-
   progress(1, 'Ready');
   states.ready();
+  bench?.loaded();
+  frame();
 }
 
 init().catch((err) => {

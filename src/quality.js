@@ -1,4 +1,4 @@
-// Graphics presets. Picked on the title screen; changing one reloads the page
+// Graphics presets. Picked on the title screen or pause menu; changing one reloads the page
 // with ?q=<key> so everything is rebuilt at the new resolution.
 
 export const PRESETS = {

@@ -45,8 +45,8 @@ html, body {
   width: min(560px, 100%);
   text-align: center;
 }
-.panel.small { cursor: pointer; }
-.panel.small p { color: var(--dim); letter-spacing: 0.08em; }
+.panel.small .row { margin-top: 18px; }
+.panel.small p { margin: 18px 0 22px; color: var(--dim); font-size: 13px; letter-spacing: 0.08em; }
 
 .kicker {
   font-size: 13px;
@@ -125,7 +125,7 @@ html, body {
 }
 #status { margin-top: 8px; font-size: 12px; letter-spacing: 0.12em; color: var(--dim); min-height: 1.2em; }
 
-#enter {
+#enter, #resume {
   font-family: 'Orbitron', sans-serif;
   font-weight: 700;
   font-size: 15px;
@@ -140,7 +140,7 @@ html, body {
   text-shadow: 0 0 8px var(--pink);
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
-#enter:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 0 30px rgba(255, 63, 164, 0.85), inset 0 0 18px rgba(255, 63, 164, 0.5); }
+#enter:hover:not(:disabled), #resume:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(255, 63, 164, 0.85), inset 0 0 18px rgba(255, 63, 164, 0.5); }
 #enter:disabled { opacity: 0.45; cursor: progress; box-shadow: none; }
 
 .keys {

@@ -5,20 +5,27 @@ const $ = (id) => document.getElementById(id);
 const ui = {
   title: $('title'), bar: $('bar'), status: $('status'), enter: $('enter'),
   hud: $('hud'), pause: $('pause'), fps: $('fps'), sound: $('sound'), pills: $('qpills'),
+  resume: $('resume'), pauseSound: $('pause-sound'), pausePills: $('pause-qpills'),
 };
 
+// Where the player is, for carrying across a quality reload. Empty until play starts.
+let currentView = () => ({});
+
 export function createQualityPills(qKey) {
-  for (const [k, p] of Object.entries(PRESETS)) {
-    const b = document.createElement('button');
-    b.textContent = p.label;
-    b.className = 'pill' + (k === qKey ? ' on' : '');
-    b.addEventListener('click', () => {
-      if (k === qKey) return;
-      const u = new URL(location.href);
-      u.searchParams.set('q', k);
-      location.href = u.toString();
-    });
-    ui.pills.appendChild(b);
+  for (const box of [ui.pills, ui.pausePills]) {
+    for (const [k, p] of Object.entries(PRESETS)) {
+      const b = document.createElement('button');
+      b.textContent = p.label;
+      b.className = 'pill' + (k === qKey ? ' on' : '');
+      b.addEventListener('click', () => {
+        if (k === qKey) return;
+        const u = new URL(location.href);
+        u.searchParams.set('q', k);
+        for (const [key, v] of Object.entries(currentView())) u.searchParams.set(key, v.toFixed(3));
+        location.href = u.toString();
+      });
+      box.appendChild(b);
+    }
   }
 }
 
@@ -39,6 +46,7 @@ export function setFps(text) {
 export function createStates({ player, audio, canvas, auto }) {
   let state = 'title';
   const hasLock = !player.touch && 'requestPointerLock' in canvas;
+  currentView = () => (state === 'title' ? {} : { x: player.pos.x, z: player.pos.y, yaw: player.yaw, pitch: player.pitch });
 
   function play() {
     state = 'play';
@@ -54,7 +62,7 @@ export function createStates({ player, audio, canvas, auto }) {
     }
   }
   ui.enter.addEventListener('click', play);
-  ui.pause.addEventListener('click', play);
+  ui.resume.addEventListener('click', play);
   document.addEventListener('pointerlockchange', () => {
     if (!document.pointerLockElement && state === 'play' && hasLock) {
       state = 'paused';
@@ -68,7 +76,9 @@ export function createStates({ player, audio, canvas, auto }) {
     if (document.hidden) audio.suspend();
     else if (state === 'play') audio.resume();
   });
-  const toggleSound = () => { ui.sound.textContent = audio.toggleMute() ? 'SOUND OFF' : 'SOUND ON'; };
+  const toggleSound = () => {
+    ui.sound.textContent = ui.pauseSound.textContent = audio.toggleMute() ? 'SOUND OFF' : 'SOUND ON';
+  };
   let showFps = false;
   window.addEventListener('keydown', (e) => {
     if (e.code === 'KeyM') toggleSound();
@@ -76,6 +86,7 @@ export function createStates({ player, audio, canvas, auto }) {
     if (e.code === 'Enter' && state === 'title' && !ui.enter.disabled) play();
   });
   ui.sound.addEventListener('click', toggleSound);
+  ui.pauseSound.addEventListener('click', toggleSound);
 
   return {
     get state() { return state; },

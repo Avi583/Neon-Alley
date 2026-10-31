@@ -14,7 +14,7 @@ export default [
     languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.browser },
   },
   {
-    files: ['vite.config.js', 'eslint.config.js', 'playwright.config.js'],
+    files: ['vite.config.js', 'eslint.config.js', 'playwright.config.js', 'tests/perf-baseline.js'],
     languageOptions: { globals: globals.node },
   },
 ];

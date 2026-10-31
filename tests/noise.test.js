@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mulberry32, hash2, fbm, noise1 } from './noise.js';
+import { mulberry32, hash2, fbm, noise1 } from '../src/noise.js';
 
 // Pinned outputs: textures and the whole layout depend on these staying identical.
 describe('noise', () => {

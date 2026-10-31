@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { PRESETS, detectQuality } from './quality.js';
+import { PRESETS, detectQuality } from '../src/quality.js';
 
 function stub({ ua = '', touch = 0, cores = 8, mem = 8 }) {
   vi.stubGlobal('navigator', { userAgent: ua, maxTouchPoints: touch, hardwareConcurrency: cores, deviceMemory: mem });
