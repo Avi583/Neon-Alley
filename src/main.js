@@ -73,6 +73,9 @@ function buildEnvironment(renderer) {
   const pm = new THREE.PMREMGenerator(renderer);
   const tex = pm.fromScene(s, 0.03).texture;
   pm.dispose();
+  s.traverse((o) => {
+    if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); }
+  });
   return tex;
 }
 
@@ -141,7 +144,11 @@ async function init() {
     refl.setSize(size.x, size.y);
   }
   resize();
-  window.addEventListener('resize', resize);
+  let resizeTimer = 0;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resize, 150);
+  });
 
   const audio = new AmbientAudio();
   const start = { x: num('x', 0.35), z: num('z', 6), yaw: num('yaw', 0), pitch: num('pitch', 0.04) };

@@ -6,7 +6,9 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { hash2, noise1 } from './noise.js';
 import { makeCanvas, canvasTexture, FONT_JP, FONT_LAT, FONT_NEON } from './textures.js';
 
-export const WALL = 2.4; // nominal inner face of the alley walls (|x|)
+import { WALL } from './config.js';
+
+const MAX_SIGN_PX = 2048; // longest canvas side; the 7 m banner would otherwise hit 2800 px on Ultra
 
 // side: -1 = left wall, +1 = right wall (looking down the alley from the start).
 export const SIGN_SPECS = [
@@ -16,7 +18,7 @@ export const SIGN_SPECS = [
   { text: 'ラーメン', vertical: true, style: 'tube', color: '#ff3fb4', side: -1, z: -12.5, y: 9.0, w: 0.8, h: 3.0, light: 12 },
   { columns: ['TECH', 'SOLUTIONS'], font: 'lat', vertical: true, style: 'tube', color: '#38e8ff', side: -1, z: -16.5, y: 6.4, w: 0.8, h: 3.6, flicker: 'broken', light: 8 },
   { kind: 'holo', side: -1, z: -21, y: 9.6, w: 3.0, h: 3.8, color: '#5ef2ff', color2: '#ff4fd8', light: 14 },
-  { kind: 'circle', style: 'circle', color: '#39f0ff', side: 1, z: -15.5, y: 10.5, w: 1.1, h: 1.1, flicker: 'pulse', light: 0 },
+  { style: 'circle', color: '#39f0ff', side: 1, z: -15.5, y: 10.5, w: 1.1, h: 1.1, flicker: 'pulse', light: 0 },
   { text: 'CYBERNETICS', font: 'lat', vertical: true, style: 'tube', color: '#b66bff', side: 1, z: -23.5, y: 8.4, w: 0.62, h: 4.4, light: 9 },
   { text: 'OPEN', font: 'neon', style: 'tube', color: '#ff3355', side: 1, z: -12.2, y: 2.35, w: 0.9, h: 0.42, mount: 'flat', flicker: 'flicker', light: 0 },
   { text: 'ラーメン', sub: 'RAMEN', style: 'box', color: '#ff7a2f', side: -1, z: -28, y: 4.8, w: 1.6, h: 0.7, light: 7 },
@@ -95,6 +97,7 @@ function fitFont(ctx, text, fam, weight, maxW, maxH) {
 }
 
 function drawSign(spec, ppm) {
+  ppm = Math.min(ppm, MAX_SIGN_PX / Math.max(spec.w, spec.h));
   const W = Math.max(64, Math.round(spec.w * ppm)), H = Math.max(64, Math.round(spec.h * ppm));
   const c = makeCanvas(W, H), ctx = c.getContext('2d');
   const color = spec.color, color2 = spec.color2 || spec.color;
@@ -168,7 +171,7 @@ function drawSign(spec, ppm) {
     const innerW = W - pad * 2, innerH = H - pad * 2;
     const mainH = spec.sub ? innerH * 0.66 : innerH;
     const size = fitFont(ctx, spec.text, fam, 900, innerW, mainH * 0.95);
-    const yMain = pad + mainH / 2 + (spec.sub ? 0 : 0);
+    const yMain = pad + mainH / 2;
     drawGlyph(spec.text, W / 2, yMain, size);
     if (spec.sub) {
       const subSize = fitFont(ctx, spec.sub, FONT_LAT, 700, innerW * 0.9, (innerH - mainH) * 0.8);
@@ -317,7 +320,6 @@ export function buildSigns(kit, mats, holoText, ppm, scene) {
 
   return {
     lights,
-    specs: SIGN_SPECS,
     update(t) {
       for (const it of items) {
         it.spec.factor = flicker(it.spec.flicker, t, it.spec.seed);

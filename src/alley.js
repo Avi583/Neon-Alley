@@ -2,7 +2,7 @@
 // escapes, AC units, pipes, cables, icicles and street clutter, plus the
 // cross street at the far end and a skyline of towers behind it all.
 import * as THREE from 'three';
-import { WALL } from './signs.js';
+import { WALL } from './config.js';
 
 export const ALLEY = {
   half: WALL,

@@ -8,6 +8,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - DIRECTORY.md
 - README.md
 - To-Do-List.txt
+- eslint.config.js
 - index.html
 - package-lock.json
 - package.json
@@ -18,6 +19,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/atmosphere.js
 - src/audio.js
 - src/batch.js
+- src/config.js
 - src/ground.js
 - src/lights.js
 - src/main.js
@@ -36,5 +38,5 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 ## docs/ (deployed build output)
 - docs/.nojekyll
 - docs/index.html
-- docs/assets/index-BM6vwCiH.js
+- docs/assets/index-DwZ0Yh40.js
 - docs/assets/index-DzKkiY3j.css

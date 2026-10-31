@@ -21,7 +21,7 @@ export function hash2(x, y, s = 0) {
 const sm = (t) => t * t * (3 - 2 * t);
 
 // Tileable value noise: px/py are the integer lattice periods.
-export function vnoise(x, y, px, py, s) {
+function vnoise(x, y, px, py, s) {
   const xi = Math.floor(x), yi = Math.floor(y);
   const fx = x - xi, fy = y - yi;
   const x0 = ((xi % px) + px) % px, y0 = ((yi % py) + py) % py;

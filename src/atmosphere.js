@@ -24,7 +24,7 @@ export function createSky(fogColor) {
   });
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(400, 32, 16), mat);
   mesh.frustumCulled = false;
-  mesh.renderOrder = -10;
+  mesh.renderOrder = 1000; // last of the opaque draws, so depth testing skips covered pixels
   return mesh;
 }
 

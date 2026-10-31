@@ -35,7 +35,6 @@ export function createMaterials(tx) {
   m.trash = std({ color: 0x0c0c10, roughness: 0.16, metalness: 0, envMapIntensity: 1.6 });
   m.cable = std({ color: 0x050507, roughness: 0.5 });
   m.grate = std({ map: tx.grate.map, normalMap: tx.grate.normalMap, roughnessMap: tx.grate.roughnessMap, roughness: 1, metalness: 0.8 });
-  m.glass = std({ color: 0x06080d, roughness: 0.04, metalness: 0.3, envMapIntensity: 2 });
   m.plasticBlue = std({ color: 0x1c4fd0, roughness: 0.4 });
   m.plasticRed = std({ color: 0xc81e32, roughness: 0.4 });
   m.plasticYellow = std({ color: 0xe8b416, roughness: 0.4 });

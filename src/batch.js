@@ -61,7 +61,7 @@ export function makeKit(batch, mats, seed = 1) {
     box: new THREE.BoxGeometry(1, 1, 1),
     cyl: new THREE.CylinderGeometry(1, 1, 1, 12, 1),
     cylLo: new THREE.CylinderGeometry(1, 1, 1, 6, 1),
-    cone: new THREE.ConeGeometry(1, 1, 6, 1),
+    cone: new THREE.ConeGeometry(1, 1, 6, 1, true),
     sph: new THREE.SphereGeometry(1, 14, 10),
     sphLo: new THREE.SphereGeometry(1, 8, 6),
     plane: new THREE.PlaneGeometry(1, 1),
@@ -116,5 +116,5 @@ export function makeKit(batch, mats, seed = 1) {
     batch.add(new THREE.TubeGeometry(curve, segs, radius, 5, false), mat);
     return curve;
   }
-  return { rng, R, pick, G, put, box, cyl, sph, plane, icicles, snow, catenary, tube, batch };
+  return { rng, R, pick, box, cyl, sph, plane, icicles, snow, catenary, tube };
 }

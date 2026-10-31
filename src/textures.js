@@ -68,7 +68,7 @@ function normalFromHeight(hgt, w, h, strength) {
       const dx = (hgt[y * w + xr] - hgt[y * w + xl]) * strength;
       const dy = (hgt[yd * w + x] - hgt[yu * w + x]) * strength;
       const nx = -dx, ny = dy, nz = 1;
-      const l = Math.hypot(nx, ny, nz);
+      const l = Math.sqrt(nx * nx + ny * ny + nz * nz);
       const k = (y * w + x) * 4;
       out[k] = (nx / l * 0.5 + 0.5) * 255;
       out[k + 1] = (ny / l * 0.5 + 0.5) * 255;

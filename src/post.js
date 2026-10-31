@@ -71,7 +71,7 @@ export function createPost(renderer, scene, camera, Q) {
     if (fxaa) fxaa.material.uniforms.resolution.value.set(1 / (w * pr), 1 / (h * pr));
   }
   return {
-    composer, bloom, setSize,
+    setSize,
     render(t) { final.uniforms.uTime.value = t; composer.render(); },
   };
 }
