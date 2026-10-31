@@ -42,7 +42,7 @@ function tiledEave(ctx, at, side, zc, w) {
   for (let k = 0; k < n; k++) {
     cyl(mats.metalDark, at(0.775), 2.845, zc + (k - (n - 1) / 2) * 0.175, 0.04, 0.85, 0, 0, roll, true);
   }
-  box(mats.snow, at(0.66), 2.92, zc, 0.5, 0.025, w - 0.14, null, 0, 0, side * ROOF_TILT);
+  ctx.drift(at(0.66), 2.9075, zc, 0.5, 0.07, w - 0.14, side * ROOF_TILT);
 }
 
 // Noren on a rod in front of the counter. The rod spans the shop, the cloth is cw wide.
@@ -101,7 +101,7 @@ function fishMarket(ctx) {
     box(mat, at(0.775), 2.82, sz, 0.85, 0.025, sw, null, 0, 0, tilt);
     box(mat, at(1.15), 2.56, sz, 0.02, 0.14, sw);
   }
-  box(mats.snow, at(0.68), 2.885, zc, 0.5, 0.025, w - 0.14, null, 0, 0, tilt);
+  ctx.drift(at(0.68), 2.885, zc, 0.5, 0.07, w - 0.14, tilt);
   box(mats.strip('#dff6ff', 3), at(SHELL + 0.08), 2.7, zc, 0.04, 0.04, w - 0.5);
 
   addLight(at(1.6), 1.3, zc, '#bfe8ff', 3, 8);
@@ -162,7 +162,7 @@ function sushiShop(ctx) {
 
   // plain indigo awning, snowed over
   box(mats.awningBlue, at(0.775), 2.82, zc, 0.85, 0.03, w, null, 0, 0, side * ROOF_TILT);
-  box(mats.snow, at(0.68), 2.885, zc, 0.5, 0.025, w - 0.14, null, 0, 0, side * ROOF_TILT);
+  ctx.drift(at(0.68), 2.885, zc, 0.5, 0.07, w - 0.14, side * ROOF_TILT);
   box(mats.strip('#fff0d8', 1.6), at(SHELL + 0.08), 2.7, zc, 0.04, 0.04, w - 0.5);
 
   norenCurtain(ctx, at, side, zc, w, 1.66, mats.norenSushi);

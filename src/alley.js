@@ -49,7 +49,7 @@ function shopUnit(ctx, side, xi, zc, w, kind) {
     if (rng() < 0.65) {
       const aw = Math.min(w - 0.2, 2.6), tilt = side * 0.22;
       box(mats.metalDark, fx + out * 0.55, 2.95, zc, 1.1, 0.06, aw, null, 0, 0, tilt);
-      box(mats.snow, fx + out * 0.55, 3.0, zc, 1.08, 0.06, aw - 0.04, null, 0, 0, tilt);
+      ctx.drift(fx + out * 0.55, 2.97, zc, 1.08, 0.1, aw - 0.04, tilt);
       icicles(fx + out * 1.08, 2.82, zc - aw / 2, fx + out * 1.08, 2.82, zc + aw / 2, 0.75, 0.5);
       box(mats.strip('#dff6ff', 3), fx + out * 0.3, 2.86, zc, 0.05, 0.04, aw - 0.4);
       addLight(fx + out * 0.6, 2.4, zc, '#cfeaff', 4, 8);
@@ -294,7 +294,7 @@ function buildBuildings(ctx) {
         box(mats.strip(pick(NEON), 5), side * (up - 0.03), gf + (H - gf) / 2, z0 - 0.06, 0.04, H - gf, 0.04);
       }
       // roof
-      box(mats.snow, side * (up + depth / 2), H + 0.04, zc, depth, 0.08, len);
+      ctx.drift(side * (up + depth / 2), H, zc, depth, 0.14, len);
       box(mats.concrete, side * (up + 0.1), H + 0.45, zc, 0.2, 0.9, len, [2, 2]);
       snow(side * (up + 0.1), H + 0.9, zc, 0.22, len);
       icicles(side * (up - 0.01), H, z0, side * (up - 0.01), H, z1, 0.4, 0.5);
@@ -617,9 +617,9 @@ function buildCrossStreet(ctx) {
     plane(shop, sx, 1.6, -105.95, 4, 2.4, 0);
     box(mats.strip(NEON[(sx / 5 + 30) % NEON.length], 5), sx, 3.0, -105.9, 4.2, 0.05, 0.05);
   }
-  box(mats.snow, 0, 0.12, -105.3, 160, 0.24, 1.0);
-  box(mats.snow, -30, 0.1, -92.6, 54, 0.2, 0.8);
-  box(mats.snow, 30, 0.1, -92.6, 54, 0.2, 0.8);
+  ctx.drift(0, 0, -105.3, 160, 0.3, 1.0);
+  ctx.drift(-30, 0, -92.6, 54, 0.26, 0.8);
+  ctx.drift(30, 0, -92.6, 54, 0.26, 0.8);
 }
 
 // -------------------------------------------------------- skyline

@@ -26,9 +26,10 @@ A29 [Sonnet | Risk 2/5] The ground vent at x = 0.9, z = -9.4 sometimes hides the
 A33 [Sonnet | Risk 1/5] Try the vending prompt on a real touch device. So far only E on desktop has been run in a browser; the tap path is untested.
 A34 [Sonnet | Risk 2/5] Let the player take cans from the vending bin. They stay until the fourth purchase replaces the oldest, so the flap stays open after the first purchase.
 A45 [Sonnet | Risk 1/5] Listen to the splash and purchase sounds on speakers. The browser check confirms which sound is chosen at each step, but not how they sound.
-A36 [Opus   | Risk 3/5] Non rectangular Snow
+A48 [Sonnet | Risk 1/5] Rounded snow (A36) adds about 83,000 triangles (+33%) on High. Frame time held on an RTX 5070 Ti, but low-end phones are untested. If they struggle, coarsen the drifts in driftGeometry, starting with the rooftops, which can't be seen from the street.
+A49 [Sonnet | Risk 1/5] Look at the A36 snow on awnings from above. Player height can't see their top surfaces, so how they sit there was only worked out from the numbers.
 A40 [Sonnet | Risk 1/5] Try the knock prompt on a real touch device and listen to the knock on speakers. It has only been run with E in a headless browser, which confirms the sound plays but not how it sounds.
-A41 [Sonnet | Risk 1/5] Run build.bat before committing A37, A38 and A39, since docs/ does not include them yet.
+A41 [Sonnet | Risk 1/5] Run build.bat before committing A36, A37, A38 and A39, since docs/ does not include them yet.
 A42 Retool quality
 A46 [Sonnet | Risk 1/5] Sushi shop has no price board, so its ¥240 only shows in the prompt. Add one with genShopPrice if it should match ramen and onigiri. Changes the texture snapshot (G9).
 A47 [Sonnet | Risk 1/5] Puddles cover 24 of 37 steps on a walk down the middle from z = 6 to -39, so most of that stretch splashes. Raise the threshold in ground.js puddleLookup if the sound should be rarer.

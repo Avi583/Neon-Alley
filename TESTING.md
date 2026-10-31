@@ -29,6 +29,7 @@ Automated tests cover noise, quality presets, sign data and the generated layout
 - [ ] Wet-ground reflections show the signs and move correctly with the camera
 - [ ] Fog looks smooth, with no visible banding or blockiness (A2)
 - [ ] Snow and steam render, with flakes the right size
+- [ ] Snow piles (A36) look rounded on bollards, AC units and the cross-street banks, with no white sheet under awnings or signs
 - [ ] Boot marks (A12) appear when walking, pale on asphalt and dark in snow, and are gone after about 20 seconds
 - [ ] AC drip stains (A18) show below wall units, with no flicker on the wall from a distance
 - [ ] FPS counter reads sensibly when the frame rate is low (F3)

@@ -5,7 +5,7 @@
 import { createHash } from 'node:crypto';
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import * as THREE from 'three';
-import { Batch, makeKit } from '../src/batch.js';
+import { Batch, makeKit, driftGeometry } from '../src/batch.js';
 import { createMaterials } from '../src/materials.js';
 import { buildAlley } from '../src/alley.js';
 import { buildSigns } from '../src/signs.js';
@@ -83,6 +83,52 @@ function generate(extraDraws = 0) {
     signLights: signs.lights.map(light),
   };
 }
+
+describe('snow drifts', () => {
+  const FOOTPRINTS = [[0.1, 0.1], [0.16, 0.16], [0.5, 2.46], [2.46, 0.5], [1, 160], [14, 11]];
+
+  it.each(FOOTPRINTS)('stays inside a %f by %f footprint with valid normals', (sx, sz) => {
+    const g = driftGeometry(sx, 0.1, sz, 42);
+    const { position: p, normal: n } = g.attributes;
+    for (let i = 0; i < p.count; i++) {
+      expect(Math.abs(p.getX(i))).toBeLessThanOrEqual(sx / 2 + 1e-5);
+      expect(Math.abs(p.getZ(i))).toBeLessThanOrEqual(sz / 2 + 1e-5);
+      expect(Math.hypot(n.getX(i), n.getY(i), n.getZ(i))).toBeCloseTo(1);
+    }
+  });
+
+  it.each(FOOTPRINTS)('fills most of a %f by %f footprint', (sx, sz) => {
+    const g = driftGeometry(sx, 0.1, sz, 42);
+    g.computeBoundingBox();
+    const size = g.boundingBox.getSize(new THREE.Vector3());
+    expect(size.x).toBeGreaterThan(sx * 0.7);
+    expect(size.z).toBeGreaterThan(sz * 0.7);
+  });
+
+  it('leaves the corners of the footprint empty', () => {
+    const { position: p } = driftGeometry(0.5, 0.1, 2.46, 42).attributes;
+    for (let i = 0; i < p.count; i++) {
+      const cornerX = Math.abs(p.getX(i)) > 0.2, cornerZ = Math.abs(p.getZ(i)) > 1.2;
+      expect(cornerX && cornerZ).toBe(false);
+    }
+  });
+
+  it('faces its top surface upwards along either axis', () => {
+    for (const [sx, sz] of [[0.5, 2.46], [2.46, 0.5]]) {
+      const g = driftGeometry(sx, 0.1, sz, 42);
+      const { position: p, normal: n } = g.attributes;
+      for (let i = 0; i < p.count; i++) if (p.getY(i) > 0.05) expect(n.getY(i)).toBeGreaterThan(0);
+    }
+  });
+
+  it('makes exactly one rng draw per kit.snow call', () => {
+    const mats = { snow: new THREE.MeshBasicMaterial() };
+    const a = makeKit(new Batch(), mats, SEED), b = makeKit(new Batch(), mats, SEED);
+    a.snow(1, 2, 3, 0.5, 2);
+    b.rng();
+    expect(a.rng()).toBe(b.rng());
+  });
+});
 
 describe('generated layout', () => {
   beforeAll(() => {
