@@ -3,7 +3,7 @@
 import { nextFrame } from './texture-core.js';
 import { clearNoiseCache } from './noise.js';
 import { genConcrete, genBrick, genShutter, genAsphalt, genMetal, genFacade, genGrate, genWood, genCloud } from './pbr-textures.js';
-import { genACFront, genACDrip, genGraffiti, genBootPrint, genVendingHeader, genVendingPanel, genVendingPrice, genShopPrice, genCanLabels, genShopInterior, genNoren, genAd, genHoloText } from './canvas-art.js';
+import { genACFront, genACDrip, genGraffiti, genBootPrint, genVendingHeader, genVendingPanel, genVendingPrice, genShopPrice, genBarMenu, genCanLabels, genShopInterior, genNoren, genAd, genHoloText } from './canvas-art.js';
 import { ART_TEXT } from './art-text.js';
 
 // Generate everything with progress callbacks, yielding to the browser
@@ -29,6 +29,7 @@ export async function generateTextures(Q, aniso, progress) {
     ['vendingPrice', () => genVendingPrice()],
     ['priceRamen', () => genShopPrice(ART_TEXT.ramen, '¥980')],
     ['priceOnigiri', () => genShopPrice(ART_TEXT.onigiri, '¥180')],
+    ['priceBar', () => genBarMenu([['BEER', '¥600'], ['SAKE', '¥800'], ['SOJU', '¥500']])],
     ['canLabels', () => genCanLabels()],
     ['shopRamen', () => genShopInterior('ramen')],
     ['shopBar', () => genShopInterior('bar')],
@@ -39,6 +40,7 @@ export async function generateTextures(Q, aniso, progress) {
     ['noren', () => genNoren(ART_TEXT.onigiri)],
     ['norenSushi', () => genNoren(ART_TEXT.sushi, '#16245c', '#f0ead8')],
     ['norenRamen', () => genNoren(ART_TEXT.ramen, '#8c1a1a', '#f6e6c8')],
+    ['norenBar', () => genNoren(ART_TEXT.bar, '#2e1048', '#ffd9f4')],
     ['holoText', () => genHoloText()],
     ['ads', () => [
       genAd('NEXA', ART_TEXT.ads[0], '#ff2d8a', '#3a0b5e', 1),

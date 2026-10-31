@@ -37,6 +37,9 @@ A48 [Sonnet | Risk 1/5] Run npm run perf on the real GPU to measure the bought f
 A49 [Sonnet | Risk 1/5] Run build.bat before committing A35, A43, A44 and A50, since docs/ does not include them yet.
 A52 [Sonnet | Risk 1/5] Watch the A51 corkscrew live at full speed and listen to the whirr on speakers. It was only checked in stepped screenshots on software rendering, and the sounds were never heard. Worth checking the can's tumble against the glass and the rail.
 A53 [Sonnet | Risk 1/5] Run build.bat before committing A51, since docs/ does not include it yet.
+A55 [Opus   | Risk 3/5] Add a money system: a wallet and a HUD balance, charged by the vending machine, food shops and bar. All prices are display only so far.
+A56 [Sonnet | Risk 1/5] Run npm run perf on the real GPU to measure the A54 bar. Only a short software-rendered run has been done, and it is now the stored last run, so its timings mean nothing.
+A57 [Sonnet | Risk 1/5] Run build.bat before committing A54, since docs/ does not include it yet.
 
 
 B. Runtime performance (highest impact first)
@@ -105,6 +108,8 @@ G15 [Sonnet | Risk 1/5] tests/perf-baseline.js: fail fast. Page errors are only 
 
 H. Completed
 ------------
+A54 [Opus   | Risk 3/5] shops.js: bar on the right wall at z = -45, selling three each of neon beer ¥600, sake ¥800 and soju ¥500. E (or tapping the prompt) replaces a neon drink with a solid one, through the food shop system (food-shop.js). No kit rng draws.
+    Two new textures: priceBar and norenBar. Checked in headless Chromium on Low by buying all nine drinks; the sound was not heard.
 A51 [Opus   | Risk 3/5] vending.js: buying turns a random slot's corkscrew, its front can tips off the shelf, falls behind the glass through a hatch and lands in the bin, with a motor whirr and a clunk on landing. Shelves moved back for the drop channel. Stock never runs out.
     Shelf cans moved from the batch to instanced meshes, with no rng change. npm run perf on High: draw calls 174 to 180, triangles 315,674 to 342,171. Frame time P50 2.7 to 4.0 ms on an RTX 5070 Ti, but P95 fell 9.4 to 4.4 ms, within the noise in G14.
 A35 [Sonnet | Risk 1/5] footprints.js: boot marks 50% bigger, 0.18 x 0.45 m. Foot spacing unchanged.

@@ -33,6 +33,7 @@ export const SIGN_SPECS = [
   { text: ART_TEXT.onigiri, sub: 'ONIGIRI', style: 'box', color: '#a82a18', textColor: '#ffe9c8', side: 1, z: -17.0, y: 3.62, w: 1.35, h: 0.72, light: 6, shopfront: true },
   { text: ART_TEXT.sushi, sub: 'SUSHI', style: 'box', color: '#16245c', textColor: '#f6f1e4', side: -1, z: -55.8, y: 3.62, w: 1.35, h: 0.72, light: 6, shopfront: true },
   { text: ART_TEXT.ramen, sub: 'RAMEN', style: 'box', color: '#a81c18', textColor: '#fff0d0', side: 1, z: -6.8, y: 3.62, w: 1.35, h: 0.72, light: 6, shopfront: true },
+  { text: ART_TEXT.bar, sub: 'BAR', style: 'box', color: '#4a1470', textColor: '#ffe6fa', side: 1, z: -46.5, y: 3.62, w: 1.35, h: 0.72, light: 6, shopfront: true },
 ];
 
 export const SIGN_TEXT = SIGN_SPECS.map((s) => (s.text || '') + (s.columns || []).join('') + (s.sub || '')).join('') +

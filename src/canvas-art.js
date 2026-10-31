@@ -409,6 +409,21 @@ export function genShopPrice(name, price) {
   return canvasTexture(c, { repeat: false });
 }
 
+// The bar's menu board: one row per drink, as [name, price].
+export function genBarMenu(rows) {
+  const W = 420, H = 180;
+  const c = makeCanvas(W, H), ctx = c.getContext('2d');
+  ctx.fillStyle = '#12081a'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#ff6ad5'; ctx.lineWidth = 5; ctx.strokeRect(8, 8, W - 16, H - 16);
+  ctx.textBaseline = 'middle'; ctx.font = `900 42px ${FONT_LAT}`;
+  rows.forEach(([name, price], k) => {
+    const y = 42 + k * 48;
+    ctx.fillStyle = '#ffe6fa'; ctx.textAlign = 'left'; ctx.fillText(name, 32, y);
+    ctx.fillStyle = '#ffd166'; ctx.textAlign = 'right'; ctx.fillText(price, W - 32, y);
+  });
+  return canvasTexture(c, { repeat: false });
+}
+
 // One label per cell. u = 0.5 of a cell faces the viewer, so the can's round
 // shading is painted in: the sides fall away to dark, with a highlight left of centre.
 export const CAN_FLAVOURS = 6;

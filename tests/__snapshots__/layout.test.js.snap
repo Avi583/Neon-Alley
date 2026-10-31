@@ -453,6 +453,26 @@ exports[`generated layout > matches the snapshot 1`] = `
       ],
       "range": 8,
     },
+    {
+      "color": "ff6ad5",
+      "intensity": 3,
+      "pos": [
+        0.9,
+        1.6,
+        -46.4,
+      ],
+      "range": 8,
+    },
+    {
+      "color": "ff6ad5",
+      "intensity": 3,
+      "pos": [
+        0.9,
+        1.6,
+        -43.6,
+      ],
+      "range": 8,
+    },
   ],
   "colliders": [
     [
@@ -665,12 +685,18 @@ exports[`generated layout > matches the snapshot 1`] = `
       -9.95,
       -6.65,
     ],
+    [
+      1.17,
+      2.75,
+      -47.7,
+      -42.3,
+    ],
   ],
   "geometry": [
     {
-      "hash": "59beaf65c49e3ee1",
+      "hash": "02f11c6360fc3626",
       "material": "concrete",
-      "vertices": 2040,
+      "vertices": 2064,
     },
     {
       "hash": "fc9f50e8669e7d34",
@@ -678,9 +704,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "d1b7fde7d24332ad",
+      "hash": "300074282d433549",
       "material": "snow",
-      "vertices": 32492,
+      "vertices": 32702,
     },
     {
       "hash": "1077ed4a95b95df2",
@@ -693,9 +719,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "9a58e1e4f586780b",
+      "hash": "a6945604bc02c48f",
       "material": "metalDark",
-      "vertices": 41138,
+      "vertices": 43570,
     },
     {
       "hash": "c9c833975b13f244",
@@ -723,9 +749,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 5200,
     },
     {
-      "hash": "bbc6ca733e467f8c",
+      "hash": "56e4c04c3f740c68",
       "material": "cable",
-      "vertices": 16596,
+      "vertices": 16756,
     },
     {
       "hash": "24581ae6a66d49d0",
@@ -828,9 +854,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 1827,
     },
     {
-      "hash": "0bb1ffca73f609c3",
+      "hash": "43fc67114224ec5c",
       "material": "lantern",
-      "vertices": 990,
+      "vertices": 1320,
     },
     {
       "hash": "c4bcf59d516d2912",
@@ -838,9 +864,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 120,
     },
     {
-      "hash": "e8942d7e92596941",
+      "hash": "879d3e714051f697",
       "material": "metalRed",
-      "vertices": 772,
+      "vertices": 1228,
     },
     {
       "hash": "64e5416d86dd85c1",
@@ -888,9 +914,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 192,
     },
     {
-      "hash": "1cbd4322b245748c",
+      "hash": "ec057864afb570d2",
       "material": "wood",
-      "vertices": 828,
+      "vertices": 904,
     },
     {
       "hash": "d146e903b99ba2e8",
@@ -908,9 +934,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 380,
     },
     {
-      "hash": "65b77b22335f4bde",
+      "hash": "3828c5e608cfb35a",
       "material": "woodDark",
-      "vertices": 3456,
+      "vertices": 3528,
     },
     {
       "hash": "fa205e02544857b1",
@@ -1075,6 +1101,31 @@ exports[`generated layout > matches the snapshot 1`] = `
     {
       "hash": "3597fc882fd0fea7",
       "material": "priceRamen",
+      "vertices": 4,
+    },
+    {
+      "hash": "fc6e65917946a80a",
+      "material": "shopBarFront",
+      "vertices": 4,
+    },
+    {
+      "hash": "c08fbd9aba4d2a82",
+      "material": "strip:#ff6ad5:3",
+      "vertices": 24,
+    },
+    {
+      "hash": "760d79db9a1ade0a",
+      "material": "strip:#ff9ae0:2.5",
+      "vertices": 24,
+    },
+    {
+      "hash": "f5cb7a60497939a5",
+      "material": "norenBar",
+      "vertices": 4,
+    },
+    {
+      "hash": "8d02812ce55b2baa",
+      "material": "priceBar",
       "vertices": 4,
     },
   ],
@@ -1330,6 +1381,16 @@ exports[`generated layout > matches the snapshot 1`] = `
       ],
       "range": 13,
     },
+    {
+      "color": "4a1470",
+      "intensity": 6,
+      "pos": [
+        1.595,
+        3.404,
+        -46.5,
+      ],
+      "range": 13,
+    },
   ],
   "signMeshes": [
     {
@@ -1554,6 +1615,14 @@ exports[`generated layout > matches the snapshot 1`] = `
         1.595,
         3.62,
         -6.8,
+      ],
+    },
+    {
+      "hash": "1d8b5d06c271dccc",
+      "pos": [
+        1.595,
+        3.62,
+        -46.5,
       ],
     },
   ],

@@ -21,6 +21,13 @@ const circle = (r) => Array.from({ length: 13 }, (_, k) => [r * Math.cos(k * Mat
 const BOWL_PROFILE = [[1, 0.2], [0.75, -0.45], [0.35, -0.7]]; // radius, up
 const CHOPSTICK = [[0.15, 0.25], [1.15, 1.05]];
 const WISP = [[0, 0.7], [-0.14, 0.95], [0.06, 1.2], [-0.08, 1.45]];
+// Drinks, as [radius, up] rings from the base.
+const MUG = [[0.55, -0.8], [0.6, 0], [0.6, 0.72]];
+const MUG_HANDLE = [[0.58, 0.4], [0.98, 0.32], [1.02, -0.2], [0.58, -0.35]];
+const TOKKURI = [[0.34, -1], [0.5, -0.5], [0.48, 0.1], [0.18, 0.55], [0.16, 0.8], [0.27, 1]];
+const SAKE_CUP = [[0.15, -1], [0.3, -0.68]];
+const SOJU_BOTTLE = [[0.3, -1], [0.3, 0.15], [0.12, 0.55], [0.12, 1]];
+const SHOT_GLASS = [[0.15, -1], [0.22, -0.55]];
 
 // Maps a form's (along, up, depth) to model space. turn hangs a fish nose down.
 const mapper = (s, turn = false) => (u, v, d = 0) => (turn
@@ -91,6 +98,47 @@ export function bowlParts(bowl, noodle, steam, s) {
   for (const d of [-0.05, 0.05]) noodles.push(wire(CHOPSTICK.map(([u, v]) => p(u, v, d)), 1));
   const wisps = [[-0.35, 0.18], [0.3, -0.18]].map(([u, d]) => wire(WISP.map(([a, v]) => p(a + u, v, d)), 14));
   return [[bowl, shell], [noodle, noodles], [steam, wisps]];
+}
+
+// A round vessel: a ring at each [radius, up] of the profile, joined by meridians,
+// centred along metres from the form's axis in the form's units.
+function vessel(p, profile, along = 0, meridians = 4) {
+  const around = (r, up, a) => p(along + r * Math.cos(a), up, r * Math.sin(a));
+  const out = profile.map(([r, up]) => wire(circle(1).map(([x, y]) => p(along + r * x, up, r * y)), 24));
+  for (let k = 0; k < meridians; k++) {
+    const a = (k + 0.5) * 2 * Math.PI / meridians;
+    out.push(wire(profile.map(([r, up]) => around(r, up, a)), 8 * profile.length));
+  }
+  return out;
+}
+
+export function beerParts(glass, foam, s) {
+  const p = mapper(s);
+  const handle = wire(MUG_HANDLE.map(([u, v]) => p(u, v)), 16);
+  const head = Array.from({ length: 25 }, (_, k) => {
+    const a = k * Math.PI / 12;
+    return p(0.6 * Math.cos(a), 0.72 + 0.08 * Math.sin(a * 5), 0.6 * Math.sin(a));
+  });
+  return [
+    [glass, [...vessel(p, MUG), handle]],
+    [foam, [wire(head, 50), ...vessel(p, [[0.6, 0.72], [0.38, 0.92]], 0, 6)]],
+  ];
+}
+
+export function sakeParts(flask, cup, s) {
+  const p = mapper(s);
+  return [
+    [flask, vessel(p, TOKKURI, -0.3, 6)],
+    [cup, vessel(p, SAKE_CUP, 0.62)],
+  ];
+}
+
+export function sojuParts(bottle, cup, s) {
+  const p = mapper(s);
+  return [
+    [bottle, vessel(p, SOJU_BOTTLE, -0.3)],
+    [cup, vessel(p, SHOT_GLASS, 0.5)],
+  ];
 }
 
 // A thin post from the plate up to a form held drop metres above it. It turns with

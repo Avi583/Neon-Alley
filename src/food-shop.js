@@ -9,6 +9,9 @@ export const FOOD = {
   nigiri: { name: 'SUSHI', price: 240 },
   maki: { name: 'SUSHI', price: 240 },
   ramen: { name: 'RAMEN', price: 980 },
+  beer: { name: 'BEER', price: 600 },
+  sake: { name: 'SAKE', price: 800 },
+  soju: { name: 'SOJU', price: 500 },
 };
 
 export const foodLabel = (spot) => `BUY ${FOOD[spot.kind].name} ¥${FOOD[spot.kind].price}`;
@@ -74,7 +77,46 @@ function ramenDish() {
   ];
 }
 
-const DISHES = { onigiri: onigiriDish, nigiri: nigiriDish, maki: makiDish, ramen: ramenDish };
+// A lathe from [radius, up] points, up the outside from the foot.
+function turned(profile, z = 0) {
+  return new THREE.LatheGeometry(profile.map(([r, y]) => new THREE.Vector2(r, y)), 20).translate(0, 0, z);
+}
+
+const double = (mat) => Object.assign(mat, { side: THREE.DoubleSide });
+
+function beerDish() {
+  return [
+    [new THREE.CylinderGeometry(0.052, 0.048, 0.14, 20).translate(0, 0.075, 0), food(0xd98a1c, 0.25)],
+    [new THREE.CylinderGeometry(0.052, 0.052, 0.01, 20).translate(0, 0.005, 0), food(0xc8d8d8, 0.15)],
+    [ball(0.054, 0.026, 0.054, 0.15), food(0xfff6e0, 0.9)],
+    [new THREE.TorusGeometry(0.032, 0.008, 8, 16, Math.PI).rotateZ(-Math.PI / 2).rotateY(-Math.PI / 2).translate(0, 0.08, 0.052), food(0xc8d8d8, 0.15)],
+  ];
+}
+
+function sakeDish() {
+  const flask = [[0, 0], [0.05, 0], [0.07, 0.06], [0.068, 0.12], [0.028, 0.175], [0.024, 0.21], [0.04, 0.235]];
+  const cup = [[0, 0], [0.018, 0], [0.04, 0.04], [0.036, 0.04], [0.014, 0.008]];
+  return [
+    [turned(flask, -0.05), double(food(0xe8ecf0, 0.35))],
+    [new THREE.CylinderGeometry(0.0705, 0.0705, 0.012, 20, 1, true).translate(0, 0.1, -0.05), double(food(0x204a8c, 0.35))],
+    [turned(cup, 0.08), double(food(0xe8ecf0, 0.35))],
+    [new THREE.CircleGeometry(0.03, 16).rotateX(-Math.PI / 2).translate(0, 0.03, 0.08), food(0xf0e8c8, 0.1)],
+  ];
+}
+
+function sojuDish() {
+  const bottle = [[0, 0], [0.034, 0], [0.036, 0.008], [0.036, 0.13], [0.014, 0.18], [0.014, 0.225]];
+  const glass = [[0, 0], [0.02, 0], [0.028, 0.05], [0.025, 0.05], [0.018, 0.006]];
+  return [
+    [turned(bottle, -0.04), double(food(0x1f9a5c, 0.12))],
+    [new THREE.CylinderGeometry(0.0375, 0.0375, 0.055, 20, 1, true).translate(0, 0.075, -0.04), double(food(0xe8f4ec, 0.6))],
+    [new THREE.CylinderGeometry(0.0155, 0.0155, 0.022, 12).translate(0, 0.232, -0.04), food(0x2e7d4f, 0.3)],
+    [turned(glass, 0.07), double(food(0xd4ecdf, 0.1))],
+    [new THREE.CircleGeometry(0.023, 16).rotateX(-Math.PI / 2).translate(0, 0.036, 0.07), food(0xf4faf6, 0.1)],
+  ];
+}
+
+const DISHES = { onigiri: onigiriDish, nigiri: nigiriDish, maki: makiDish, ramen: ramenDish, beer: beerDish, sake: sakeDish, soju: sojuDish };
 
 export class FoodShop {
   constructor(spots, parent) {

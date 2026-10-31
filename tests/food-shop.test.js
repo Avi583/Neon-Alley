@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { FOOD, FoodShop, foodLabel } from '../src/food-shop.js';
-import { NeonFood, neonForm, standPart, onigiriParts } from '../src/neon-food.js';
+import { NeonFood, neonForm, standPart, onigiriParts, beerParts, sakeParts, sojuParts } from '../src/neon-food.js';
 
 const LOOK_POS_X = -Math.PI / 2; // yaw looking down +x, towards the counter
 const spot = (kind, z, index = 0) => ({ face: 2, z, side: 1, kind, rest: 1, form: null, index });
@@ -49,6 +49,30 @@ describe('FoodShop', () => {
     expect(foodLabel(spot('onigiri', 0))).toBe('BUY ONIGIRI ¥180');
     expect(foodLabel(spot('maki', 0))).toBe('BUY SUSHI ¥240');
     expect(foodLabel(spot('ramen', 0))).toBe('BUY RAMEN ¥980');
+    expect(foodLabel(spot('beer', 0))).toBe('BUY BEER ¥600');
+    expect(foodLabel(spot('sake', 0))).toBe('BUY SAKE ¥800');
+    expect(foodLabel(spot('soju', 0))).toBe('BUY SOJU ¥500');
+  });
+});
+
+describe('neon drinks', () => {
+  const mat = new THREE.MeshBasicMaterial();
+
+  it.each([
+    ['beer', beerParts],
+    ['sake', sakeParts],
+    ['soju', sojuParts],
+  ])('builds %s as one instanced form that clears the back wall as it turns', (_, parts) => {
+    const forms = [];
+    neonForm(forms, parts(mat, mat, 0.16)).spots.push([0, 0, 0]);
+    const { meshes } = new NeonFood(forms, new THREE.Group()).forms[0];
+    expect(meshes).toHaveLength(2);
+    for (const mesh of meshes) {
+      mesh.geometry.computeBoundingBox();
+      const { min, max } = mesh.geometry.boundingBox;
+      const reach = Math.max(Math.hypot(min.x, min.z), Math.hypot(max.x, max.z));
+      expect(reach).toBeLessThan(0.25); // the form's centre stands 0.65 m out, the wall is 0.4 m out
+    }
   });
 });
 

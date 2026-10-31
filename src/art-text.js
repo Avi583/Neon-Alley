@@ -6,6 +6,7 @@ export const ART_TEXT = {
   fish: '魚市場',
   onigiri: 'おにぎり',
   sushi: '寿司',
+  bar: '酒場',
   holo: '夢を見る機械',
   ads: ['未来はここに', '眠らない街', '宇宙ラーメン'],
   graffiti: ['夜'],
