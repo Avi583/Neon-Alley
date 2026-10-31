@@ -65,6 +65,62 @@ function bubbleText(ctx, text, x, y, size, fill, line) {
   ctx.fillText(text, x, y);
 }
 
+// A standing cat facing dir, with its feet at (x, y).
+function catFighter(ctx, x, y, dir, fur, band) {
+  const INK = '#0a0a12';
+  ctx.save();
+  ctx.translate(x, y); ctx.scale(dir, 1);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  const limbs = () => {
+    ctx.beginPath();
+    ctx.moveTo(-26, -34); ctx.bezierCurveTo(-62, -40, -66, -80, -46, -96); // tail
+    ctx.moveTo(-12, -24); ctx.lineTo(-30, -6);
+    ctx.moveTo(12, -24); ctx.lineTo(28, -6);
+    ctx.moveTo(12, -72); ctx.lineTo(44, -78); // sword arm
+    ctx.stroke();
+  };
+  ctx.strokeStyle = INK; ctx.lineWidth = 20; limbs();
+  ctx.strokeStyle = fur; ctx.lineWidth = 12; limbs();
+  ctx.fillStyle = fur; ctx.strokeStyle = INK; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.ellipse(0, -52, 26, 38, 0.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  // ears, then the head over them
+  for (const ex of [-8, 30]) {
+    ctx.beginPath(); ctx.moveTo(ex - 14, -124); ctx.lineTo(ex, -152); ctx.lineTo(ex + 14, -124); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  ctx.beginPath(); ctx.arc(11, -108, 30, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  // headband, its tails flying out behind
+  ctx.strokeStyle = band; ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(-18, -116); ctx.lineTo(40, -120);
+  ctx.moveTo(-18, -116); ctx.quadraticCurveTo(-38, -130, -58, -118);
+  ctx.moveTo(-18, -116); ctx.quadraticCurveTo(-38, -112, -54, -98);
+  ctx.stroke();
+  // a narrowed eye and a snarl
+  ctx.fillStyle = INK;
+  ctx.beginPath(); ctx.moveTo(14, -108); ctx.lineTo(34, -112); ctx.lineTo(30, -100); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = INK; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(20, -90); ctx.lineTo(36, -92); ctx.stroke();
+  ctx.restore();
+}
+
+// A katana in the hand of a catFighter stood at the same (x, y), angled up to the middle of the piece.
+function katana(ctx, x, y, dir) {
+  ctx.save();
+  ctx.translate(x, y); ctx.scale(dir, 1);
+  ctx.lineCap = 'round';
+  const blade = () => { ctx.beginPath(); ctx.moveTo(46, -80); ctx.quadraticCurveTo(100, -106, 146, -158); ctx.stroke(); };
+  ctx.strokeStyle = '#0a0a12'; ctx.lineWidth = 9; blade();
+  ctx.strokeStyle = '#f4f7ff'; ctx.lineWidth = 4; blade();
+  ctx.strokeStyle = '#0a0a12'; ctx.lineWidth = 7;
+  ctx.beginPath(); ctx.moveTo(32, -72); ctx.lineTo(50, -82); ctx.stroke(); // grip
+  ctx.strokeStyle = '#f9f871'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(46, -90); ctx.lineTo(54, -74); ctx.stroke(); // guard
+  ctx.restore();
+}
+
+// The GitHub mark, in a 16 x 16 box.
+const GITHUB_MARK = 'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z';
+
 // One piece each, drawn in a W x H cell.
 const GRAFFITI = [
   // a bubble-letter throw-up
@@ -78,12 +134,13 @@ const GRAFFITI = [
   (ctx, W, H) => {
     ctx.save();
     ctx.translate(W / 2, H * 0.5); ctx.transform(1, -0.12, -0.35, 1, 0, 0);
-    ctx.font = `italic 700 88px ${FONT_LAT}`;
+    ctx.font = `italic 700 72px ${FONT_LAT}`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineWidth = 5; ctx.lineJoin = 'round'; ctx.strokeStyle = '#33e1ff';
-    ctx.strokeText('KAZE', 0, 0);
+    ctx.strokeText('NIGHT', 0, -44);
+    ctx.strokeText('CITY', 0, 24);
     ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(-150, 52); ctx.bezierCurveTo(-40, 86, 70, 30, 160, 60); ctx.lineTo(120, 74); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-150, 74); ctx.bezierCurveTo(-40, 104, 70, 56, 160, 82); ctx.lineTo(120, 96); ctx.stroke();
     ctx.restore();
   },
   // a stencilled cat with a slogan
@@ -115,28 +172,21 @@ const GRAFFITI = [
     ctx.fillStyle = '#0a0a12';
     ctx.fillText(ART_TEXT.graffiti[0], W / 2, H / 2 + 6);
   },
-  // a ghost with its name beside it
-  (ctx, W, H, rng) => {
-    const cx = W * 0.32, top = H * 0.14, bot = H * 0.8, r = 62;
-    ctx.fillStyle = '#a45cff';
-    ctx.strokeStyle = '#0a0a12'; ctx.lineWidth = 7; ctx.lineJoin = 'round';
+  // two headbanded cats crossing katanas
+  (ctx, W, H) => {
+    const feet = H * 0.94;
+    catFighter(ctx, W * 0.24, feet, 1, '#ff8a2a', '#ff2d55');
+    catFighter(ctx, W * 0.76, feet, -1, '#d8dce6', '#33e1ff');
+    katana(ctx, W * 0.24, feet, 1);
+    katana(ctx, W * 0.76, feet, -1);
+    const sx = W / 2, sy = feet - 121;
+    ctx.fillStyle = '#f9f871'; ctx.strokeStyle = '#0a0a12'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
     ctx.beginPath();
-    ctx.moveTo(cx - r, bot);
-    ctx.lineTo(cx - r, top + r); ctx.arc(cx, top + r, r, Math.PI, 0); ctx.lineTo(cx + r, bot);
-    for (let k = 1; k <= 4; k++) ctx.lineTo(cx + r - k * r / 2, bot + (k % 2 ? -18 : 0));
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-    for (const d of [-1, 1]) {
-      ctx.fillStyle = '#f4f7ff'; ctx.beginPath(); ctx.ellipse(cx + d * 24, top + r - 2, 15, 20, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#0a0a12'; ctx.beginPath(); ctx.arc(cx + d * 24 + 4, top + r + 3, 7, 0, Math.PI * 2); ctx.fill();
+    for (let k = 0; k < 16; k++) {
+      const a = k * Math.PI / 8, r = k % 2 ? 7 : 22;
+      ctx.lineTo(sx + Math.cos(a) * r, sy + Math.sin(a) * r);
     }
-    paintDrips(ctx, rng, cx - r, cx + r, bot, '#a45cff', 4);
-    ctx.font = `900 62px ${FONT_JP}`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#f9f871'; ctx.strokeStyle = '#0a0a12'; ctx.lineWidth = 8;
-    [...ART_TEXT.graffiti[1]].forEach((ch, k) => {
-      const y = H * 0.32 + k * 74;
-      ctx.strokeText(ch, W * 0.72, y); ctx.fillText(ch, W * 0.72, y);
-    });
+    ctx.closePath(); ctx.fill(); ctx.stroke();
   },
   // a crown over a crew number and an arrow
   (ctx, W, H) => {
@@ -183,7 +233,47 @@ const GRAFFITI = [
     paintDrips(ctx, rng, cx - 44, cx + 44, cy + 28, '#ff2d55', 7);
     bubbleText(ctx, '2087', W * 0.66, H * 0.7, 62, '#33e1ff', '#0a0a12');
   },
+  // a stencilled GitHub mark with a username
+  (ctx, W, H, rng) => {
+    const s = 10.5, cx = W / 2, cy = H * 0.38;
+    overspray(ctx, rng, cx, cy, 112, 106, 'rgba(235, 238, 245, 0.45)', 180);
+    ctx.save();
+    ctx.translate(cx - 8 * s, cy - 8 * s); ctx.scale(s, s);
+    ctx.fillStyle = '#eceff5';
+    ctx.fill(new Path2D(GITHUB_MARK), 'evenodd');
+    ctx.restore();
+    ctx.fillStyle = '#eceff5';
+    ctx.font = `700 42px ${FONT_LAT}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('Avi583', cx, H * 0.87);
+  },
 ];
+
+// Old paint: colours washed towards the wall, thinned, then rubbed away in patches and flecks.
+function fadeGraffiti(ctx, W, H, rng) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.fillStyle = 'rgba(92, 92, 100, 0.38)';
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+  ctx.fillRect(0, 0, W, H);
+  for (let k = 0, n = GRAFFITI_CELLS * 60; k < n; k++) {
+    const x = rng() * W, y = rng() * H, r = 20 + rng() * 50;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(0, 0, 0, ${0.2 + rng() * 0.35})`);
+    g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+  for (let k = 0, n = GRAFFITI_CELLS * 1200; k < n; k++) {
+    ctx.beginPath();
+    ctx.arc(rng() * W, rng() * H, 0.4 + rng() * 1.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
 
 // Pieces side by side in one transparent atlas. Placed by graffitiPiece in alley.js.
 export const GRAFFITI_CELLS = GRAFFITI.length;
@@ -198,6 +288,7 @@ export function genGraffiti(aniso) {
     draw(ctx, CW, H, rng);
     ctx.restore();
   });
+  fadeGraffiti(ctx, c.width, H, rng);
   return canvasTexture(c, { repeat: false, aniso });
 }
 

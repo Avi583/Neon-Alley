@@ -7,5 +7,5 @@ export const ART_TEXT = {
   onigiri: 'おにぎり',
   holo: '夢を見る機械',
   ads: ['未来はここに', '眠らない街', '宇宙ラーメン'],
-  graffiti: ['夜', '幽霊'],
+  graffiti: ['夜'],
 };

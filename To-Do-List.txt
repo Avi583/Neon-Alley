@@ -90,6 +90,8 @@ G15 [Sonnet | Risk 1/5] tests/perf-baseline.js: fail fast. Page errors are only 
 
 H. Completed
 ------------
+A27 [Opus   | Risk 1/5] canvas-art.js genGraffiti: 9 pieces, atlas 3456 x 256. KAZE tag now reads NIGHT CITY, the ghost is replaced by two cats with headbands
+    crossing katanas, and a stencilled GitHub mark with Avi583 is added. fadeGraffiti washes and wears the whole atlas. Same placements and vertices, but pieces land on different walls.
 A20 [Sonnet | Risk 2/5] alley.js litter: crushed cans, broken bottles with shards, bottle caps and noodle cups. New draws follow the old ones in the litter
     rng, so older litter stays put. With the door and graffiti work: vertices 165,836 to 174,312, merged meshes 71 to 74, graffiti atlas 3072 x 256.
 A21 [Opus   | Risk 2/5] alley.js: door frames (posts, head, threshold) and three hinges on the edge opposite the handle. No rng draws.
