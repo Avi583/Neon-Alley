@@ -164,11 +164,27 @@ export class AmbientAudio {
     }
   }
 
+  // A vending machine's corkscrew turning: a small geared motor that eases in and out.
+  whirr(dur) {
+    const ctx = this.ctx;
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 95;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.1, t + dur * 0.2);
+    g.gain.linearRampToValueAtTime(0.1, t + dur * 0.8);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    o.connect(lp).connect(g).connect(this.master);
+    o.start(t); o.stop(t + dur);
+  }
+
   // A can dropping into the vending machine's bin: a low thud and a tinny ring.
   clunk() {
     const ctx = this.ctx;
     if (!ctx || this.muted) return;
-    const t = ctx.currentTime + 0.3;
+    const t = ctx.currentTime;
     for (const [type, from, to, vol, dur] of [['sine', 150, 60, 0.5, 0.16], ['triangle', 1400, 900, 0.07, 0.22]]) {
       const o = ctx.createOscillator(); o.type = type;
       o.frequency.setValueAtTime(from, t); o.frequency.exponentialRampToValueAtTime(to, t + dur);

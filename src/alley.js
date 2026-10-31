@@ -454,7 +454,7 @@ function buildOverhead(ctx) {
 
 // ------------------------------------------------------- street props
 function buildStreetProps(ctx) {
-  const { mats, R, rng, pick, box, cyl, sph, plane, atlasCyl, icicles, snow, tube, vents, addLight, addCollider } = ctx;
+  const { mats, R, rng, pick, box, cyl, sph, plane, icicles, snow, tube, vents, addLight, addCollider } = ctx;
   // Paper lanterns at the izakaya
   for (const lz of [-5.6, -8.0]) {
     const lx = -WALL + 0.45;
@@ -512,19 +512,22 @@ function buildStreetProps(ctx) {
       box(mats.metalDark, inset(0.025), 1.17, vz + e * 0.385, 0.03, 0.9, 0.01);
     }
     for (const y of [0.725, 1.615]) box(mats.metalDark, inset(0.025), y, vz, 0.03, 0.01, 0.78);
-    // Shelves with price rails, then one can, price tag and button per slot.
+    // Shelves with price rails, set back to leave a drop channel behind the glass, then
+    // a price tag and button per slot. The coils and cans move, so vending.js builds them.
+    const slots = [];
     for (let row = 0; row < 4; row++) {
       const base = 0.745 + row * 0.22;
-      box(mats.metalLight, inset(0.25), base - 0.008, vz, 0.4, 0.016, 0.89);
-      box(mats.metalDark, inset(0.055), base - 0.02, vz, 0.012, 0.04, 0.76);
+      box(mats.metalLight, inset(0.32), base - 0.008, vz, 0.26, 0.016, 0.89);
+      box(mats.metalDark, inset(0.185), base - 0.02, vz, 0.012, 0.04, 0.76);
       for (let k = 0; k < 6; k++) {
         const z = vz + (k - 2.5) * 0.125;
-        atlasCyl(mats.vendingCans, inset(0.2), base + 0.075, z, 0.042, 0.15, (k * (row % 2 ? 5 : 1) + row * 2) % CAN_FLAVOURS, CAN_FLAVOURS, side * Math.PI / 2);
-        cyl(mats.metalLight, inset(0.2), base + 0.152, z, 0.036, 0.004);
-        plane(mats.vendingPrice, inset(0.048), base - 0.02, z - 0.016, 0.08, 0.036, ry);
-        box(mats.strip('#ff3d5a', 0.9), inset(0.047), base - 0.02, z + 0.044, 0.006, 0.018, 0.018);
+        slots.push({ z, base, flavour: (k * (row % 2 ? 5 : 1) + row * 2) % CAN_FLAVOURS });
+        plane(mats.vendingPrice, inset(0.178), base - 0.02, z - 0.016, 0.08, 0.036, ry);
+        box(mats.strip('#ff3d5a', 0.9), inset(0.177), base - 0.02, z + 0.044, 0.006, 0.018, 0.018);
       }
     }
+    // Hatch in the channel floor that falling cans pass through on the way to the bin
+    box(mats.metalDark, inset(0.11), 0.721, vz, 0.13, 0.002, 0.78);
     plane(mats.vendingGlass, inset(0.03), 1.17, vz, 0.78, 0.9, ry);
     // Header sign and control panel, with a coin plate and return button on it
     plane(mats.vendingHeader, face - side * 0.002, 1.76, vz, 0.89, 0.24, ry);
@@ -538,7 +541,7 @@ function buildStreetProps(ctx) {
     icicles(cx - side * d / 2, 1.88, vz - 0.45, cx - side * d / 2, 1.88, vz + 0.45, 0.5, 0.25);
     addCollider(cx - d / 2, cx + d / 2, vz - 0.5, vz + 0.5);
     addLight(cx - side * 1.0, 1.2, vz, '#dff2ff', 2.5, 6);
-    ctx.vending = { face, z: vz, side };
+    ctx.vending = { face, z: vz, side, slots };
   }
 
   // dumpster

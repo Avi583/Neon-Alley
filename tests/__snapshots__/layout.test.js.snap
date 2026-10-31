@@ -693,9 +693,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "6875a11646f7ea0a",
+      "hash": "9a58e1e4f586780b",
       "material": "metalDark",
-      "vertices": 41114,
+      "vertices": 41138,
     },
     {
       "hash": "c9c833975b13f244",
@@ -708,9 +708,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 16392,
     },
     {
-      "hash": "acba820880c5fb3f",
+      "hash": "4fb725fa26458b76",
       "material": "metalLight",
-      "vertices": 10539,
+      "vertices": 8715,
     },
     {
       "hash": "c6ed0d32a3438926",
@@ -853,17 +853,12 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 24,
     },
     {
-      "hash": "a67f01e48ee49881",
-      "material": "vendingCans",
-      "vertices": 624,
-    },
-    {
-      "hash": "d7d2e517ab28e5c5",
+      "hash": "9964f080e6b60f9e",
       "material": "vendingPrice",
       "vertices": 96,
     },
     {
-      "hash": "135a03af4a155ca5",
+      "hash": "35227eb4e0399940",
       "material": "strip:#ff3d5a:0.9",
       "vertices": 576,
     },

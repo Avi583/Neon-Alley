@@ -10,7 +10,7 @@ import { buildSigns } from './signs.js';
 import { SIGN_SPECS, SIGN_TEXT } from './sign-specs.js';
 import { PlanarReflection, createGround } from './ground.js';
 import { Footprints } from './footprints.js';
-import { Vending, inReach } from './vending.js';
+import { Vending, VEND_TURN, inReach } from './vending.js';
 import { NeonFood } from './neon-food.js';
 import { FoodShop, foodLabel } from './food-shop.js';
 import { createSky, Snow, Steam } from './atmosphere.js';
@@ -125,6 +125,7 @@ async function init() {
 
   const audio = new AmbientAudio();
   const start = { x: num('x', 0.35), z: num('z', 6), yaw: num('yaw', 0), pitch: num('pitch', 0.04) };
+  vending.onLand = () => audio.clunk();
   const player = new Player(camera, renderer.domElement, {
     bounds: ALLEY, colliders: alley.colliders, start,
     onStep: (v) => {
@@ -153,7 +154,7 @@ async function init() {
     player, audio, canvas: renderer.domElement, auto: AUTO || BENCH,
     onUse: () => {
       const action = useAction();
-      if (action === BUY && vending.buy()) audio.clunk();
+      if (action === BUY && vending.buy()) audio.whirr(VEND_TURN);
       if (action === KNOCK && performance.now() >= nextKnock) {
         nextKnock = performance.now() + KNOCK_COOLDOWN;
         audio.knock();

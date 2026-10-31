@@ -35,6 +35,8 @@ A46 [Sonnet | Risk 1/5] Sushi shop has no price board, so its ¥240 only shows i
 A47 [Sonnet | Risk 1/5] Puddles cover 24 of 37 steps on a walk down the middle from z = 6 to -39, so most of that stretch splashes. Raise the threshold in ground.js puddleLookup if the sound should be rarer.
 A48 [Sonnet | Risk 1/5] Run npm run perf on the real GPU to measure the bought food: up to 14 extra groups once everything is sold. Not measured yet.
 A49 [Sonnet | Risk 1/5] Run build.bat before committing A35, A43, A44 and A50, since docs/ does not include them yet.
+A52 [Sonnet | Risk 1/5] Watch the A51 corkscrew live at full speed and listen to the whirr on speakers. It was only checked in stepped screenshots on software rendering, and the sounds were never heard. Worth checking the can's tumble against the glass and the rail.
+A53 [Sonnet | Risk 1/5] Run build.bat before committing A51, since docs/ does not include it yet.
 
 
 B. Runtime performance (highest impact first)
@@ -103,6 +105,8 @@ G15 [Sonnet | Risk 1/5] tests/perf-baseline.js: fail fast. Page errors are only 
 
 H. Completed
 ------------
+A51 [Opus   | Risk 3/5] vending.js: buying turns a random slot's corkscrew, its front can tips off the shelf, falls behind the glass through a hatch and lands in the bin, with a motor whirr and a clunk on landing. Shelves moved back for the drop channel. Stock never runs out.
+    Shelf cans moved from the batch to instanced meshes, with no rng change. npm run perf on High: draw calls 174 to 180, triangles 315,674 to 342,171. Frame time P50 2.7 to 4.0 ms on an RTX 5070 Ti, but P95 fell 9.4 to 4.4 ms, within the noise in G14.
 A35 [Sonnet | Risk 1/5] footprints.js: boot marks 50% bigger, 0.18 x 0.45 m. Foot spacing unchanged.
 A43 [Sonnet | Risk 1/5] canvas-art.js genGraffiti: the stencilled cat and WAKE UP are replaced by a second GitHub mark with avi583. The katana cats stay. Same rng draws and placements.
 A44 [Opus   | Risk 2/5] ground.js / audio.js: a step in a puddle splashes instead of the snowy footstep. A 128 x 1024 RGBA copy of the mask is read back once at load, as the GLSL noise cannot be matched in JS.
