@@ -104,6 +104,17 @@ void main() {
 
 // The masks never change, so they are drawn once into a texture 8 times as long as
 // it is wide, which matches the plane's proportions and the noise's finer x detail.
+const WATER_W = 128, WATER_H = 1024; // the CPU's copy of the puddle mask, for footsteps
+
+// Is (x, z) in a puddle? pixels is an RGBA bake with puddles in green, row 0 at z1.
+export function puddleLookup(pixels, w, h, W, L, z1) {
+  return (x, z) => {
+    const u = x / W + 0.5, v = (z - z1) / L;
+    if (u < 0 || u >= 1 || v < 0 || v >= 1) return false;
+    return pixels[(Math.floor(v * h) * w + Math.floor(u * w)) * 4 + 1] > 127;
+  };
+}
+
 function bakeMasks(renderer, Q, W, L, z1) {
   const h = Math.min(Q.groundMask, renderer.capabilities.maxTextureSize), w = h / 8;
   const rt = new THREE.WebGLRenderTarget(w, h, {
@@ -131,10 +142,18 @@ function bakeMasks(renderer, Q, W, L, z1) {
   const prev = renderer.getRenderTarget();
   renderer.setRenderTarget(rt);
   quad.render(renderer);
+  // RGBA, as RG isn't a format every browser can read back. The noise can't be run in
+  // JS instead, since GLSL's 32-bit floats give different results.
+  const readable = new THREE.WebGLRenderTarget(WATER_W, WATER_H, { depthBuffer: false });
+  const pixels = new Uint8Array(WATER_W * WATER_H * 4);
+  renderer.setRenderTarget(readable);
+  quad.render(renderer);
+  renderer.readRenderTargetPixels(readable, 0, 0, WATER_W, WATER_H, pixels);
   renderer.setRenderTarget(prev);
+  readable.dispose();
   quad.dispose();
   material.dispose();
-  return rt;
+  return { rt, inWater: puddleLookup(pixels, WATER_W, WATER_H, W, L, z1) };
 }
 
 const FRAG_COLOR = /* glsl */`
@@ -187,9 +206,10 @@ export function createGround(tx, Q, refl, renderer) {
     roughness: 1, metalness: 0, envMapIntensity: 0.2,
     normalScale: new THREE.Vector2(0.9, 0.9),
   });
+  const masks = bakeMasks(renderer, Q, W, L, z1);
   const uniforms = {
     uReflMap: { value: refl.rt.texture },
-    uMaskMap: { value: bakeMasks(renderer, Q, W, L, z1).texture },
+    uMaskMap: { value: masks.rt.texture },
     uMaskXform: { value: new THREE.Vector4(1 / W, 1 / L, 0.5, -z1 / L) },
     uReflMatrix: { value: refl.matrix },
     uReflStrength: { value: 1.0 },
@@ -221,5 +241,5 @@ export function createGround(tx, Q, refl, renderer) {
     map: repeated(tx.asphalt.map, sW / 3, sL / 3), normalMap: repeated(tx.asphalt.normalMap, sW / 3, sL / 3),
     roughness: 0.35, metalness: 0, color: 0x9a9aa8, envMapIntensity: 0.8,
   }));
-  return { mesh, street, uniforms };
+  return { mesh, street, uniforms, inWater: masks.inWater };
 }

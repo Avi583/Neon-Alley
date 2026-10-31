@@ -12,6 +12,7 @@ import { PlanarReflection, createGround } from './ground.js';
 import { Footprints } from './footprints.js';
 import { Vending, inReach } from './vending.js';
 import { NeonFood } from './neon-food.js';
+import { FoodShop, foodLabel } from './food-shop.js';
 import { createSky, Snow, Steam } from './atmosphere.js';
 import { buildEnvironment } from './environment.js';
 import { LightPool } from './lights.js';
@@ -30,6 +31,7 @@ const FREEZE = AUTO || params.has('freeze');
 const BENCH = params.has('bench'); // used for the performance baseline
 const num = (k, d) => (params.has(k) ? parseFloat(params.get(k)) : d);
 const BUY = 'BUY A DRINK ¥120', KNOCK = 'KNOCK', KNOCK_COOLDOWN = 1000; // ms, the length of three raps
+const FOOD_COOLDOWN = 400; // ms, so a held key can't clear a counter
 
 createQualityPills(qKey);
 
@@ -78,6 +80,7 @@ async function init() {
   batch.build(scene);
   const vending = new Vending(alley.vending, mats, scene);
   const neonFood = new NeonFood(alley.neonForms, scene);
+  const foodShop = new FoodShop(alley.foodSpots, scene);
 
   const refl = new PlanarReflection(Q.reflScale);
   const ground = createGround(tx, Q, refl, renderer);
@@ -125,7 +128,8 @@ async function init() {
   const player = new Player(camera, renderer.domElement, {
     bounds: ALLEY, colliders: alley.colliders, start,
     onStep: (v) => {
-      audio.step(v);
+      if (ground.inWater(player.pos.x, player.pos.y)) audio.splash(v);
+      else audio.step(v);
       footprints.add(player.pos, player.yaw);
     },
   });
@@ -136,12 +140,15 @@ async function init() {
   try { await renderer.compileAsync(scene, camera); } catch { renderer.compile(scene, camera); }
 
   const reaches = (spot) => inReach(spot, player.pos.x, player.pos.y, player.yaw);
+  const foodInReach = () => foodShop.target(player.pos.x, player.pos.y, player.yaw);
   const useAction = () => {
     if (!player.enabled) return null;
     if (reaches(alley.vending)) return BUY;
+    const food = foodInReach();
+    if (food) return foodLabel(food);
     return alley.doors.some(reaches) ? KNOCK : null;
   };
-  let nextKnock = 0;
+  let nextKnock = 0, nextFood = 0;
   const states = createStates({
     player, audio, canvas: renderer.domElement, auto: AUTO || BENCH,
     onUse: () => {
@@ -150,6 +157,13 @@ async function init() {
       if (action === KNOCK && performance.now() >= nextKnock) {
         nextKnock = performance.now() + KNOCK_COOLDOWN;
         audio.knock();
+      }
+      const food = action && action !== BUY && action !== KNOCK ? foodInReach() : null;
+      if (food && performance.now() >= nextFood) {
+        nextFood = performance.now() + FOOD_COOLDOWN;
+        foodShop.buy(food);
+        neonFood.hide(food.form, food.index);
+        audio.purchase();
       }
     },
   });

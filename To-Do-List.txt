@@ -25,10 +25,16 @@ A29 [Sonnet | Risk 2/5] The ground vent at x = 0.9, z = -9.4 sometimes hides the
 
 A33 [Sonnet | Risk 1/5] Try the vending prompt on a real touch device. So far only E on desktop has been run in a browser; the tap path is untested.
 A34 [Sonnet | Risk 2/5] Let the player take cans from the vending bin. They stay until the fourth purchase replaces the oldest, so the flap stays open after the first purchase.
-A35 [Sonnet | Risk 1/5] Bigger Shoeprints
+A45 [Sonnet | Risk 1/5] Listen to the splash and purchase sounds on speakers. The browser check confirms which sound is chosen at each step, but not how they sound.
 A36 [Opus   | Risk 3/5] Non rectangular Snow
 A40 [Sonnet | Risk 1/5] Try the knock prompt on a real touch device and listen to the knock on speakers. It has only been run with E in a headless browser, which confirms the sound plays but not how it sounds.
 A41 [Sonnet | Risk 1/5] Run build.bat before committing A37, A38 and A39, since docs/ does not include them yet.
+A42 Retool quality
+A46 [Sonnet | Risk 1/5] Sushi shop has no price board, so its ¥240 only shows in the prompt. Add one with genShopPrice if it should match ramen and onigiri. Changes the texture snapshot (G9).
+A47 [Sonnet | Risk 1/5] Puddles cover 24 of 37 steps on a walk down the middle from z = 6 to -39, so most of that stretch splashes. Raise the threshold in ground.js puddleLookup if the sound should be rarer.
+A48 [Sonnet | Risk 1/5] Run npm run perf on the real GPU to measure the bought food: up to 14 extra groups once everything is sold. Not measured yet.
+A49 [Sonnet | Risk 1/5] Run build.bat before committing A35, A43, A44 and A50, since docs/ does not include them yet.
+
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------
@@ -96,6 +102,11 @@ G15 [Sonnet | Risk 1/5] tests/perf-baseline.js: fail fast. Page errors are only 
 
 H. Completed
 ------------
+A35 [Sonnet | Risk 1/5] footprints.js: boot marks 50% bigger, 0.18 x 0.45 m. Foot spacing unchanged.
+A43 [Sonnet | Risk 1/5] canvas-art.js genGraffiti: the stencilled cat and WAKE UP are replaced by a second GitHub mark with avi583. The katana cats stay. Same rng draws and placements.
+A44 [Opus   | Risk 2/5] ground.js / audio.js: a step in a puddle splashes instead of the snowy footstep. A 128 x 1024 RGBA copy of the mask is read back once at load, as the GLSL noise cannot be matched in JS.
+A50 [Opus   | Risk 3/5] food-shop.js: E (or tapping the prompt) buys the onigiri, sushi or ramen closest to the centre of the view, and a solid dish replaces its neon copy. Each spot sells once, with no money system. Sushi stands moved
+    from the batch to NeonFood so they hide with the neon: metalDark 41,354 to 41,114 vertices, no rng change. Food takes priority over knocking, as a door could otherwise block a sale.
 A37 [Sonnet | Risk 2/5] alley.js / audio.js / main.js: E (or tapping the prompt) within 1.6 m and facing a door plays three raps, with a 1 s cooldown. The vending machine takes priority where both are in reach.
 A38 [Sonnet | Risk 1/5] canvas-art.js genShopPrice / shops.js priceBoard: boards hung from the noren rod at eye level, ramen ¥980 and onigiri ¥180. Two new textures: priceRamen and priceOnigiri.
 A39 [Opus   | Risk 3/5] neon-food.js: the shops' neon fish, onigiri, sushi and bowls are now 3D wireframes turning at 0.35 rad/s, as instanced meshes outside the batch. No kit rng draws. Tube brightness lowered, since denser

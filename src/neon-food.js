@@ -93,6 +93,12 @@ export function bowlParts(bowl, noodle, steam, s) {
   return [[bowl, shell], [noodle, noodles], [steam, wisps]];
 }
 
+// A thin post from the plate up to a form held drop metres above it. It turns with
+// the form and goes when the form is hidden.
+export function standPart(mat, drop, height) {
+  return [mat, [new THREE.CylinderGeometry(0.005, 0.005, height, 6).translate(0, -drop, 0)]];
+}
+
 // Adds a form to the alley's list. Push [x, y, z] onto spots to place a copy.
 export function neonForm(forms, parts) {
   const form = { parts, spots: [] };
@@ -113,7 +119,7 @@ export class NeonFood {
         parent.add(mesh);
         return mesh;
       });
-      const form = { meshes, spots, phases: spots.map(() => (phase += PHASE_STEP)) };
+      const form = { meshes, spots, phases: spots.map(() => (phase += PHASE_STEP)), hidden: spots.map(() => false) };
       this.forms.push(form);
       this.pose(form, 0);
       for (const mesh of meshes) {
@@ -123,13 +129,20 @@ export class NeonFood {
     }
   }
 
-  pose({ meshes, spots, phases }, t) {
+  pose({ meshes, spots, phases, hidden }, t) {
     const m = new THREE.Matrix4();
     spots.forEach(([x, y, z], i) => {
-      m.makeRotationY(t * SPEED + phases[i]).setPosition(x, y, z);
+      if (hidden[i]) m.makeScale(0, 0, 0);
+      else m.makeRotationY(t * SPEED + phases[i]);
+      m.setPosition(x, y, z);
       for (const mesh of meshes) mesh.setMatrixAt(i, m);
     });
     for (const mesh of meshes) mesh.instanceMatrix.needsUpdate = true;
+  }
+
+  // Stops drawing one copy of a form passed to neonForm: instances can't be removed.
+  hide(source, i) {
+    this.forms.find((form) => form.spots === source.spots).hidden[i] = true;
   }
 
   update(t) {

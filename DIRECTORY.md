@@ -28,6 +28,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/canvas-art.js
 - src/config.js
 - src/environment.js
+- src/food-shop.js
 - src/footprints.js
 - src/ground.js
 - src/holo-shader.js
@@ -57,12 +58,14 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 ## tests/
 - tests/__snapshots__/layout.test.js.snap
 - tests/adaptive-scale.test.js
+- tests/food-shop.test.js
 - tests/footprints.test.js
 - tests/layout.test.js
 - tests/neon-food.test.js
 - tests/noise.test.js
 - tests/perf-baseline.js
 - tests/player.test.js
+- tests/puddles.test.js
 - tests/quality.test.js
 - tests/signs.test.js
 - tests/textures-page.js
@@ -76,6 +79,6 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 
 ## docs/ (deployed build output)
 - docs/.nojekyll
+- docs/assets/index-CclFAU3q.js
 - docs/assets/index-DIPauJIT.css
-- docs/assets/index-LdynAErL.js
 - docs/index.html

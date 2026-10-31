@@ -3,11 +3,18 @@
 // kit's rng (that includes kit.snow and kit.icicles) or the layout shifts, so
 // any variation comes from a separate seeded rng.
 import { WALL } from './config.js';
-import { neonForm, fishParts, onigiriParts, nigiriParts, makiParts, bowlParts } from './neon-food.js';
+import { neonForm, standPart, fishParts, onigiriParts, nigiriParts, makiParts, bowlParts } from './neon-food.js';
 
 const SHELL = 0.4; // far enough out to cover a shutter's housing and icicles
 const COUNTER = 0.46;
 const ROOF_TILT = 0.49;
+
+// Places a copy of a neon form and offers it for sale. rest is the height of the
+// surface below, where the real food goes once it's bought.
+function sell(ctx, form, [x, y, z], side, kind, rest) {
+  form.spots.push([x, y, z]);
+  ctx.foodSpots.push({ face: x, z, side, kind, rest, form, index: form.spots.length - 1 });
+}
 
 // The menu price, hung from the noren rod at eye level on two wires behind the cloth.
 function priceBoard(ctx, at, side, zc, mat) {
@@ -116,7 +123,7 @@ function onigiriShop(ctx) {
   const rice = mats.strip('#fff1d6', 1.5), nori = mats.strip('#5dffb4', 2);
   box(mats.woodDark, at(cd + 0.08), 0.92, zc, 0.12, 0.16, w - 0.3, wood);
   const onigiri = neonForm(ctx.neonForms, onigiriParts(rice, nori, 0.17));
-  for (let k = 0; k < 5; k++) onigiri.spots.push([at(cd + 0.08), 1.13, zc + (k - 2) * 0.46]);
+  for (let k = 0; k < 5; k++) sell(ctx, onigiri, [at(cd + 0.08), 1.13, zc + (k - 2) * 0.46], side, 'onigiri', 1);
 
   tiledEave(ctx, at, side, zc, w);
   box(mats.strip('#ffd9a0', 2.5), at(SHELL + 0.08), 2.7, zc, 0.04, 0.04, w - 0.5);
@@ -144,14 +151,13 @@ function sushiShop(ctx) {
   const salmon = mats.strip('#ff7a5a', 2.2), rice = mats.strip('#fff1d6', 1.5), nori = mats.strip('#5dffb4', 2);
   box(mats.metalDark, at(cd), 0.85, zc, 0.2, 0.02, w - 0.2);
   for (const d of [-1, 1]) box(mats.metalLight, at(cd + d * 0.11), 0.86, zc, 0.02, 0.04, w - 0.2);
-  const maki = neonForm(ctx.neonForms, makiParts(nori, rice, salmon, 0.12));
-  const nigiri = neonForm(ctx.neonForms, nigiriParts(rice, salmon, 0.15));
+  const maki = neonForm(ctx.neonForms, [...makiParts(nori, rice, salmon, 0.12), standPart(mats.metalDark, 0.16, 0.08)]);
+  const nigiri = neonForm(ctx.neonForms, [...nigiriParts(rice, salmon, 0.15), standPart(mats.metalDark, 0.12, 0.08)]);
   for (let k = 0; k < 6; k++) {
     const pz = zc + (k - 2.5) * 0.52;
     cyl(k % 2 ? mats.metalRed : mats.foam, at(cd), 0.87, pz, 0.085, 0.012);
-    cyl(mats.metalDark, at(cd), 0.91, pz, 0.005, 0.08, 0, 0, 0, true);
-    if (k % 3 === 2) maki.spots.push([at(cd), 1.07, pz]);
-    else nigiri.spots.push([at(cd), 1.03, pz]);
+    if (k % 3 === 2) sell(ctx, maki, [at(cd), 1.07, pz], side, 'maki', 0.876);
+    else sell(ctx, nigiri, [at(cd), 1.03, pz], side, 'nigiri', 0.876);
   }
 
   // plain indigo awning, snowed over
@@ -182,7 +188,7 @@ function ramenShop(ctx) {
   const bowl = mats.strip('#ff4a3a', 2.6), noodle = mats.strip('#ffd166', 2.2), pale = mats.strip('#f4f8ff', 1.6);
   box(mats.woodDark, at(cd + 0.06), 0.9, zc, 0.14, 0.12, w - 0.3, wood);
   const bowls = neonForm(ctx.neonForms, bowlParts(bowl, noodle, pale, 0.19));
-  for (let k = 0; k < 3; k++) bowls.spots.push([at(cd + 0.06), 1.14, zc + (k - 1) * 0.98]);
+  for (let k = 0; k < 3; k++) sell(ctx, bowls, [at(cd + 0.06), 1.14, zc + (k - 1) * 0.98], side, 'ramen', 0.96);
 
   // stools in front of the counter
   const sd = SHELL + COUNTER + 0.22;

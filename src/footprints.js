@@ -6,7 +6,7 @@ import * as THREE from 'three';
 
 export const MARK_LIFE = 20; // seconds
 export const MARK_COUNT = 72; // running leaves about 3.5 marks a second
-const MARK_W = 0.12, MARK_L = 0.3;
+const MARK_W = 0.18, MARK_L = 0.45;
 const STANCE = 0.09, TOE_OUT = 0.08;
 
 export class Footprints {

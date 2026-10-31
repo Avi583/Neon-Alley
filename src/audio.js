@@ -116,6 +116,54 @@ export class AmbientAudio {
     o.start(t); o.stop(t + 0.15);
   }
 
+  // A boot in a puddle: a falling burst of spray, a low plop and a few droplets after it.
+  splash(speed) {
+    const ctx = this.ctx;
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    const vol = 0.3 + Math.min(speed / 4, 1) * 0.2;
+    const src = ctx.createBufferSource(); src.buffer = this.white;
+    src.playbackRate.value = 0.8 + Math.random() * 0.4;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.7;
+    bp.frequency.setValueAtTime(3200 + Math.random() * 800, t);
+    bp.frequency.exponentialRampToValueAtTime(700, t + 0.28);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    src.connect(bp).connect(g).connect(this.master);
+    src.start(t, Math.random() * 2, 0.32);
+    const o = ctx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(320, t + 0.09);
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(vol * 0.7, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    o.connect(og).connect(this.master);
+    o.start(t); o.stop(t + 0.12);
+    for (let k = 0; k < 3; k++) {
+      const at = t + 0.07 + Math.random() * 0.16, from = 800 + Math.random() * 900;
+      const d = ctx.createOscillator(); d.type = 'sine';
+      d.frequency.setValueAtTime(from, at); d.frequency.exponentialRampToValueAtTime(from * 1.6, at + 0.03);
+      const dg = ctx.createGain();
+      dg.gain.setValueAtTime(vol * 0.18, at); dg.gain.exponentialRampToValueAtTime(0.001, at + 0.04);
+      d.connect(dg).connect(this.master);
+      d.start(at); d.stop(at + 0.05);
+    }
+  }
+
+  // Food handed over at a shop: two soft rising notes.
+  purchase() {
+    const ctx = this.ctx;
+    if (!ctx || this.muted) return;
+    for (const [at, f] of [[0, 880], [0.12, 1175]]) {
+      const t = ctx.currentTime + at;
+      const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = f;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.14, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      o.connect(g).connect(this.master);
+      o.start(t); o.stop(t + 0.32);
+    }
+  }
+
   // A can dropping into the vending machine's bin: a low thud and a tinny ring.
   clunk() {
     const ctx = this.ctx;

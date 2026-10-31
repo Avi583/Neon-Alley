@@ -658,7 +658,7 @@ export function buildAlley(kit, mats, signSpecs) {
   // Shopfront signs stay out: nearSign decides what gets built, which changes the rng draws.
   for (const s of signSpecs) if (s.side && !s.shopfront) signZ[s.side].push(s.z);
   const nearSign = (side, z, r) => signZ[side].some((sz) => Math.abs(sz - z) < r);
-  const ctx = { ...kit, mats, vents, addLight, addCollider, nearSign, doors: [], neonForms: [] };
+  const ctx = { ...kit, mats, vents, addLight, addCollider, nearSign, doors: [], neonForms: [], foodSpots: [] };
 
   // All of these draw from one rng, so this order fixes the layout.
   buildBuildings(ctx);
@@ -668,5 +668,5 @@ export function buildAlley(kit, mats, signSpecs) {
   buildSkyline(ctx);
   buildShops(ctx);
 
-  return { colliders, vents, lights, vending: ctx.vending, doors: ctx.doors, neonForms: ctx.neonForms };
+  return { colliders, vents, lights, vending: ctx.vending, doors: ctx.doors, neonForms: ctx.neonForms, foodSpots: ctx.foodSpots };
 }

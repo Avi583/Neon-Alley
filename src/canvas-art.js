@@ -121,6 +121,21 @@ function katana(ctx, x, y, dir) {
 // The GitHub mark, in a 16 x 16 box.
 const GITHUB_MARK = 'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z';
 
+// A stencilled GitHub mark with a username.
+function stencilledGithub(ctx, W, H, rng) {
+  const s = 10.5, cx = W / 2, cy = H * 0.38;
+  overspray(ctx, rng, cx, cy, 112, 106, 'rgba(235, 238, 245, 0.45)', 180);
+  ctx.save();
+  ctx.translate(cx - 8 * s, cy - 8 * s); ctx.scale(s, s);
+  ctx.fillStyle = '#eceff5';
+  ctx.fill(new Path2D(GITHUB_MARK), 'evenodd');
+  ctx.restore();
+  ctx.fillStyle = '#eceff5';
+  ctx.font = `700 42px ${FONT_LAT}`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('avi583', cx, H * 0.87);
+}
+
 // One piece each, drawn in a W x H cell.
 const GRAFFITI = [
   // a bubble-letter throw-up
@@ -143,22 +158,7 @@ const GRAFFITI = [
     ctx.beginPath(); ctx.moveTo(-150, 74); ctx.bezierCurveTo(-40, 104, 70, 56, 160, 82); ctx.lineTo(120, 96); ctx.stroke();
     ctx.restore();
   },
-  // a stencilled cat with a slogan
-  (ctx, W, H, rng) => {
-    overspray(ctx, rng, W / 2, H * 0.42, 110, 90, 'rgba(235, 238, 245, 0.45)', 180);
-    const cx = W / 2, cy = H * 0.42;
-    ctx.fillStyle = '#eceff5';
-    ctx.beginPath();
-    ctx.moveTo(cx - 70, cy - 74); ctx.lineTo(cx - 28, cy - 44); ctx.lineTo(cx + 28, cy - 44); ctx.lineTo(cx + 70, cy - 74);
-    ctx.lineTo(cx + 72, cy + 10); ctx.quadraticCurveTo(cx, cy + 86, cx - 72, cy + 10); ctx.closePath(); ctx.fill();
-    ctx.globalCompositeOperation = 'destination-out';
-    for (const d of [-1, 1]) { ctx.beginPath(); ctx.ellipse(cx + d * 30, cy - 4, 15, 19, 0, 0, Math.PI * 2); ctx.fill(); }
-    ctx.fillRect(cx - 5, cy + 22, 10, 7);
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.font = `700 30px ${FONT_LAT}`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('WAKE UP', cx, H * 0.89);
-  },
+  stencilledGithub,
   // a kanji over a spray-can halo
   (ctx, W, H, rng) => {
     const g = ctx.createRadialGradient(W / 2, H / 2, 16, W / 2, H / 2, H * 0.47);
@@ -257,20 +257,7 @@ const GRAFFITI = [
     ctx.closePath(); ctx.fill(); ctx.stroke();
     paintDrips(ctx, rng, cx - 44, cx + 44, cy + 28, '#ff2d55', 7);
   },
-  // a stencilled GitHub mark with a username
-  (ctx, W, H, rng) => {
-    const s = 10.5, cx = W / 2, cy = H * 0.38;
-    overspray(ctx, rng, cx, cy, 112, 106, 'rgba(235, 238, 245, 0.45)', 180);
-    ctx.save();
-    ctx.translate(cx - 8 * s, cy - 8 * s); ctx.scale(s, s);
-    ctx.fillStyle = '#eceff5';
-    ctx.fill(new Path2D(GITHUB_MARK), 'evenodd');
-    ctx.restore();
-    ctx.fillStyle = '#eceff5';
-    ctx.font = `700 42px ${FONT_LAT}`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('avi583', cx, H * 0.87);
-  },
+  stencilledGithub,
 ];
 
 // Old paint: colours washed towards the wall, thinned, then rubbed away in patches and flecks.
