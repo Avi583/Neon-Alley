@@ -25,7 +25,7 @@ A29 [Sonnet | Risk 2/5] The ground vent at x = 0.9, z = -9.4 sometimes hides the
 
 A33 [Sonnet | Risk 1/5] Try the vending prompt on a real touch device. So far only E on desktop has been run in a browser; the tap path is untested.
 A34 [Sonnet | Risk 2/5] Let the player take cans from the vending bin. They stay until the fourth purchase replaces the oldest, so the flap stays open after the first purchase.
-A45 [Sonnet | Risk 1/5] Listen to the splash and purchase sounds on speakers. The browser check confirms which sound is chosen at each step, but not how they sound.
+A45 [Sonnet | Risk 1/5] Listen to the splash and purchase sounds on speakers. The browser check confirms which sound is chosen at each step, but not how they sound. The splash was rewritten as one slosh per step, as the old one sounded like bubble wrap; tune it in audio.js splash() if needed.
 A48 [Sonnet | Risk 1/5] Rounded snow (A36) adds about 83,000 triangles (+33%) on High. Frame time held on an RTX 5070 Ti, but low-end phones are untested. If they struggle, coarsen the drifts in driftGeometry, starting with the rooftops, which can't be seen from the street.
 A49 [Sonnet | Risk 1/5] Look at the A36 snow on awnings from above. Player height can't see their top surfaces, so how they sit there was only worked out from the numbers.
 A40 [Sonnet | Risk 1/5] Try the knock prompt on a real touch device and listen to the knock on speakers. It has only been run with E in a headless browser, which confirms the sound plays but not how it sounds.
@@ -109,7 +109,7 @@ A51 [Opus   | Risk 3/5] vending.js: buying turns a random slot's corkscrew, its 
     Shelf cans moved from the batch to instanced meshes, with no rng change. npm run perf on High: draw calls 174 to 180, triangles 315,674 to 342,171. Frame time P50 2.7 to 4.0 ms on an RTX 5070 Ti, but P95 fell 9.4 to 4.4 ms, within the noise in G14.
 A35 [Sonnet | Risk 1/5] footprints.js: boot marks 50% bigger, 0.18 x 0.45 m. Foot spacing unchanged.
 A43 [Sonnet | Risk 1/5] canvas-art.js genGraffiti: the stencilled cat and WAKE UP are replaced by a second GitHub mark with avi583. The katana cats stay. Same rng draws and placements.
-A44 [Opus   | Risk 2/5] ground.js / audio.js: a step in a puddle splashes instead of the snowy footstep. A 128 x 1024 RGBA copy of the mask is read back once at load, as the GLSL noise cannot be matched in JS.
+A44 [Opus   | Risk 2/5] ground.js / audio.js: a step in a puddle splashes instead of the snowy footstep. A 128 x 1024 RGBA copy of the mask is read back once at load, as the GLSL noise cannot be matched in JS. The splash is one falling noise slosh over a low thump, with no rising tones or droplets.
 A50 [Opus   | Risk 3/5] food-shop.js: E (or tapping the prompt) buys the onigiri, sushi or ramen closest to the centre of the view, and a solid dish replaces its neon copy. Each spot sells once, with no money system. Sushi stands moved
     from the batch to NeonFood so they hide with the neon: metalDark 41,354 to 41,114 vertices, no rng change. Food takes priority over knocking, as a door could otherwise block a sale.
 A37 [Sonnet | Risk 2/5] alley.js / audio.js / main.js: E (or tapping the prompt) within 1.6 m and facing a door plays three raps, with a 1 s cooldown. The vending machine takes priority where both are in reach.
