@@ -19,6 +19,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 ## src/
 - src/__snapshots__/layout.test.js.snap
 - src/alley.js
+- src/art-text.js
 - src/atmosphere.js
 - src/audio.js
 - src/batch.js
@@ -31,6 +32,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/lights.js
 - src/main.js
 - src/materials.js
+- src/math.js
 - src/noise.js
 - src/noise.test.js
 - src/pbr-textures.js

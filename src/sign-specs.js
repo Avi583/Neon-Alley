@@ -1,4 +1,5 @@
 // Every sign in the alley: text, style, placement, flicker and light strength.
+import { ART_TEXT } from './art-text.js';
 
 // side: -1 = left wall, +1 = right wall (looking down the alley from the start).
 export const SIGN_SPECS = [
@@ -29,4 +30,4 @@ export const SIGN_SPECS = [
 ];
 
 export const SIGN_TEXT = SIGN_SPECS.map((s) => (s.text || '') + (s.columns || []).join('') + (s.sub || '')).join('') +
-  'らーめんつめた〜い夢を見る機械未来はここに眠らない街宇宙ラーメン';
+  Object.values(ART_TEXT).flat().join('');

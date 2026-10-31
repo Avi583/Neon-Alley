@@ -1,7 +1,8 @@
 // Procedural PBR textures, generated per texel from noise, so the site ships
 // with zero image downloads and has no licensing questions.
 import { fbm, hash2, mulberry32 } from './noise.js';
-import { clamp01, sstep, frac, Maps, finalize, arrToCanvas, canvasTexture } from './texture-core.js';
+import { clamp01, sstep, frac } from './math.js';
+import { Maps, finalize, arrToCanvas, canvasTexture } from './texture-core.js';
 
 // ---------------------------------------------------------------- concrete
 export function genConcrete(S, aniso, seed = 3) {

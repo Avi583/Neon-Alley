@@ -16,6 +16,11 @@ A1 [Sonnet | Risk 1/5] Audit code (first pass done, see sections B-F)
 A2 [Opus   | Risk 3/5] Make fog less blocky (cause not yet diagnosed; likely 8-bit banding in the fog/HDR path, so try dithering)
 A3 [Opus   | Risk 3/5] Add interaction with the vending machine (new input/prompt system touching player.js, ui.js and the HUD)
 A4 [Sonnet | Risk 2/5] Make boxes more detailed (use non-rng geometry, or the layout shifts, see warning above)
+A5 [Sonnet | Risk 2/5] Mute and change quality from the pause menu (index.html #pause, ui.js, style.css). Move or duplicate the sound
+   button and the quality pills (createQualityPills) into the pause panel. The pause overlay click calls play(), so stop
+   click propagation on the new controls (or only resume from a Resume button). A quality change still reloads the page
+   (?q=), which drops the player's position; B7 would avoid that. Pause only exists with pointer lock, so touch devices
+   never see it. Reuse toggleSound in ui.js for the mute control.
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------
@@ -54,12 +59,6 @@ C5 [Sonnet | Risk 3/5] batch.js: stop cloning geometry for every prop (compute i
 
 E. Cleanup
 ----------
-E1 [Sonnet | Risk 2/5] Duplicate code: roundRect (canvas-art.js) = roundRectPath (sign-canvas.js); the asphalt clone/sclone helpers in
-   ground.js; the mute toggle (twice in ui.js). Move clamp01/sstep/frac to a shared math helper.
-E4 [Sonnet | Risk 2/5] signs.js: stop writing seed/factor onto the SIGN_SPECS exported by sign-specs.js; keep runtime state in a separate
-   object. lights.js and main.js read spec.factor, so miss one and sign lights or the hum break.
-E5 [Sonnet | Risk 2/5] SIGN_TEXT (sign-specs.js): the hardcoded Japanese string duplicates text in canvas-art.js, so a new string can be missed
-   by font loading. Collect it from one shared source.
 E7 [Sonnet | Risk 3/5] Deploy with a GitHub Action rather than committing docs/. Each build changes the hashed filenames, which
    also forces a DIRECTORY.md update. Needs the repo's Pages source switched, so the live site can break if done wrong.
 
@@ -110,10 +109,15 @@ D1 [Sonnet | Risk 2/5] textures.js split into texture-core.js, pbr-textures.js a
 D2 [Opus   | Risk 3/5] alley.js: buildAlley split into buildings, overhead, street props, cross street and skyline.
 D3 [Sonnet | Risk 2/5] signs.js split into sign-specs.js, sign-canvas.js and holo-shader.js.
 D4 [Opus   | Risk 3/5] main.js split into environment.js and ui.js.
+E1 [Sonnet | Risk 2/5] Duplicate code removed: one roundRect (texture-core.js), one texture repeat helper in ground.js, one mute
+   toggle in ui.js. clamp01/sstep/frac moved to math.js.
 E2 [Sonnet | Risk 1/5] Dead code: m.glass (materials.js), specs in the buildSigns return, composer/bloom in the createPost
    return, G/put/batch in the makeKit return, the export on vnoise, the "+ (spec.sub ? 0 : 0)" at signs.js line 171, and
    the "kind: 'circle'" on that sign spec, which is never read.
 E3 [Sonnet | Risk 1/5] Move WALL into a shared config. alley.js imports it from signs.js only for that constant.
+E4 [Sonnet | Risk 2/5] signs.js: seed/factor no longer written onto SIGN_SPECS. Runtime state is a separate object, read through
+   light.state in lights.js and main.js.
+E5 [Sonnet | Risk 2/5] Japanese texture text moved to art-text.js, the one source for canvas-art.js, textures.js and SIGN_TEXT.
 E6 [Sonnet | Risk 1/5] Add ESLint (no-unused-vars would catch much of the dead code above).
 G1  [Sonnet | Risk 1/5] Add Vitest and an npm test script. It shares vite.config.js, and everything below can build on it.
 G2  [Sonnet | Risk 1/5] noise.js: pin exact outputs of mulberry32, hash2, fbm and noise1 for fixed inputs. Also check that
@@ -124,10 +128,8 @@ G3  [Opus   | Risk 2/5] layout.test.js: snapshot the generated layout (hash of m
     checking the result.
 G5  [Sonnet | Risk 1/5] quality.js: table-test detectQuality with stubbed user agents, core counts and memory, including an
     iPad reporting as Macintosh. Check that all PRESETS have the same keys and that values rise from low to ultra.
-G6  [Sonnet | Risk 1/5] signs.js: check every SIGN_SPECS entry for required fields and that all sign text is in SIGN_TEXT. Add
-    the textures.js strings once E5 gives them a shared source. Check the canvas size cap from B5 on the largest sign.
-    (Done except two parts: the textures.js strings wait on E5, and the canvas size cap needs a canvas, so it is on the
-    manual checklist in TESTING.md.)
+G6  [Sonnet | Risk 1/5] signs.js: check every SIGN_SPECS entry for required fields and that all sign and texture text is in
+    SIGN_TEXT. The canvas size cap from B5 needs a canvas, so it is on the manual checklist in TESTING.md.
 G9  [Opus   | Risk 3/5] tests/textures.pw.js: hash the raw pixels of every generated texture in pinned Chromium at a small size.
     Protects C1, C2 and C4. Canvas text and gradients can differ between machines, so the snapshot is per platform.
 G13 [Sonnet | Risk 1/5] Write a short manual checklist for what automation can't judge: a real phone (joystick and drag-look),

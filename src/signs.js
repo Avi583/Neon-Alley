@@ -34,8 +34,8 @@ export function buildSigns(kit, mats, holoText, ppm, scene) {
   let holo = null;
 
   SIGN_SPECS.forEach((spec, idx) => {
-    spec.seed = idx * 7 + 3;
-    spec.factor = 1;
+    const seed = idx * 7 + 3;
+    const state = { factor: 1 };
     const side = spec.side || 1;
     const { w, h, y, z } = spec;
 
@@ -61,8 +61,8 @@ export function buildSigns(kit, mats, holoText, ppm, scene) {
       box(mats.metalDark, cx + off.x, y - h / 2 - 0.05, z + off.z, w + 0.1, 0.08, 0.1, null, rotY);
       box(mats.metalDark, side * (WALL + 0.1), y, z - 0.4, 0.6, h * 0.9, 0.08);
       snow(cx + off.x, y + h / 2 + 0.09, z + off.z, 0.1, 0.1);
-      holo = { mesh, mat, spec };
-      lights.push({ pos: new THREE.Vector3(cx + side * -0.6, y - 0.5, z + 0.8), color: new THREE.Color('#9a7bff'), intensity: spec.light, range: 16, spec });
+      holo = { mesh, mat, state };
+      lights.push({ pos: new THREE.Vector3(cx + side * -0.6, y - 0.5, z + 0.8), color: new THREE.Color('#9a7bff'), intensity: spec.light, range: 16, state });
       return;
     }
 
@@ -101,20 +101,20 @@ export function buildSigns(kit, mats, holoText, ppm, scene) {
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.copy(pos);
     scene.add(mesh);
-    items.push({ spec, mat, base });
-    if (spec.light > 0) lights.push({ pos: lightPos, color: new THREE.Color(spec.color), intensity: spec.light, range: 13, spec });
+    items.push({ spec, seed, state, mat, base });
+    if (spec.light > 0) lights.push({ pos: lightPos, color: new THREE.Color(spec.color), intensity: spec.light, range: 13, state });
   });
 
   return {
     lights,
     update(t) {
       for (const it of items) {
-        it.spec.factor = flicker(it.spec.flicker, t, it.spec.seed);
-        it.mat.color.setScalar(it.base * it.spec.factor);
+        it.state.factor = flicker(it.spec.flicker, t, it.seed);
+        it.mat.color.setScalar(it.base * it.state.factor);
       }
       if (holo) {
         holo.mat.uniforms.uTime.value = t;
-        holo.spec.factor = 0.9 + 0.1 * Math.sin(t * 3);
+        holo.state.factor = 0.9 + 0.1 * Math.sin(t * 3);
       }
     },
   };

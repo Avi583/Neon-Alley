@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SIGN_SPECS, SIGN_TEXT } from './sign-specs.js';
+import { ART_TEXT } from './art-text.js';
 
 const STYLES = ['border', 'box', 'tube', 'circle'];
 const FLICKER = ['steady', 'flicker', 'broken', 'pulse'];
@@ -31,6 +32,12 @@ describe('SIGN_SPECS', () => {
       for (const ch of (s.text || '') + (s.columns || []).join('') + (s.sub || '')) {
         expect(SIGN_TEXT).toContain(ch);
       }
+    }
+  });
+
+  it('SIGN_TEXT covers all texture text', () => {
+    for (const ch of Object.values(ART_TEXT).flat().join('')) {
+      expect(SIGN_TEXT).toContain(ch);
     }
   });
 });

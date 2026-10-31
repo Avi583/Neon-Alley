@@ -2,10 +2,6 @@
 // the fonts used by anything drawn on a canvas.
 import * as THREE from 'three';
 
-export const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
-export const sstep = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
-export const frac = (x) => x - Math.floor(x);
-
 export const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
 
 export const FONT_JP = '"Noto Sans JP","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo","Noto Sans CJK JP",sans-serif';
@@ -16,6 +12,16 @@ export function makeCanvas(w, h) {
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
   return c;
+}
+
+export function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
 }
 
 export function arrToCanvas(data, w, h) {

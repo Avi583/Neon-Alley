@@ -38,7 +38,7 @@ export class LightPool {
       const src = c[this.order[i]];
       const s = scores[this.order[i]];
       const w = cutoff === Infinity ? 1 : THREE.MathUtils.clamp((cutoff - s) / (cutoff * 0.3), 0, 1);
-      const f = src.spec ? src.spec.factor : 1;
+      const f = src.state ? src.state.factor : 1;
       l.position.copy(src.pos);
       l.color.copy(src.color);
       l.distance = src.range || 12;

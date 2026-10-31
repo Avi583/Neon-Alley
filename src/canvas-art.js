@@ -1,7 +1,8 @@
 // Canvas-drawn art: AC units, the vending machine, shop interiors, billboards
 // and the holographic text.
 import { mulberry32 } from './noise.js';
-import { makeCanvas, canvasTexture, FONT_JP, FONT_LAT, FONT_NEON } from './texture-core.js';
+import { makeCanvas, canvasTexture, roundRect, FONT_JP, FONT_LAT, FONT_NEON } from './texture-core.js';
+import { ART_TEXT } from './art-text.js';
 
 // --------------------------------------------------- outdoor AC unit front
 export function genACFront(S) {
@@ -36,16 +37,6 @@ export function genACFront(S) {
 }
 
 // ----------------------------------------------------- emissive canvases
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
-
 export function genVending() {
   const W = 256, H = 512;
   const c = makeCanvas(W, H), ctx = c.getContext('2d');
@@ -54,7 +45,7 @@ export function genVending() {
   top.addColorStop(0, '#ff3d7f'); top.addColorStop(1, '#ff8a3d');
   ctx.fillStyle = top; ctx.fillRect(0, 0, W, 70);
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `900 30px ${FONT_JP}`; ctx.fillText('つめた〜い', W / 2, 26);
+  ctx.font = `900 30px ${FONT_JP}`; ctx.fillText(ART_TEXT.vending, W / 2, 26);
   ctx.font = `700 16px ${FONT_LAT}`; ctx.fillText('ICE COLD DRINKS', W / 2, 54);
   const cans = ['#ff3355', '#2d7dff', '#ffd23f', '#2bd47d', '#b25cff', '#ff8a2b', '#1ad4ff', '#ffffff'];
   const rng = mulberry32(5);
@@ -97,7 +88,7 @@ function drawRamen(ctx, W, H) {
   for (let k = 1; k < 4; k++) ctx.fillRect(k * W / 4 - 3, 20, 6, 84);
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `900 64px ${FONT_JP}`;
-  ['ら', 'ー', 'め', 'ん'].forEach((ch, k) => ctx.fillText(ch, W / 8 + k * W / 4, 58));
+  [...ART_TEXT.ramen].forEach((ch, k) => ctx.fillText(ch, W / 8 + k * W / 4, 58));
 }
 
 function drawBar(ctx, W, H, rng) {
@@ -178,7 +169,7 @@ export function genHoloText() {
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `900 120px ${FONT_LAT}`; ctx.fillText('NEXA', W / 2, H * 0.74);
-  ctx.font = `900 46px ${FONT_JP}`; ctx.fillText('夢を見る機械', W / 2, H * 0.86);
+  ctx.font = `900 46px ${FONT_JP}`; ctx.fillText(ART_TEXT.holo, W / 2, H * 0.86);
   ctx.font = `500 26px ${FONT_LAT}`; ctx.fillText('DREAM ENGINE  //  V.07', W / 2, H * 0.94);
   return canvasTexture(c, { repeat: false });
 }

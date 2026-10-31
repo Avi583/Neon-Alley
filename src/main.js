@@ -149,7 +149,7 @@ async function init() {
       let hum = 0;
       for (const s of signs.lights) {
         const d2 = s.pos.distanceToSquared(camera.position);
-        hum += s.spec.factor * 3 / (1 + d2);
+        hum += s.state.factor * 3 / (1 + d2);
       }
       audio.setHum(hum);
     }

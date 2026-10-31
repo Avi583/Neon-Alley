@@ -9,6 +9,7 @@ import { Batch, makeKit } from './batch.js';
 import { createMaterials } from './materials.js';
 import { buildAlley } from './alley.js';
 import { buildSigns } from './signs.js';
+import { LightPool } from './lights.js';
 import { SIGN_SPECS } from './sign-specs.js';
 
 const SEED = 20261028; // same seed as main.js
@@ -103,5 +104,27 @@ describe('generated layout', () => {
     const a = generate(), b = generate(1);
     expect(b.nextRng).not.toBe(a.nextRng);
     expect(b.geometry).not.toEqual(a.geometry);
+  });
+
+  it('keeps sign runtime state out of SIGN_SPECS', () => {
+    generate();
+    for (const spec of SIGN_SPECS) {
+      expect(spec).not.toHaveProperty('seed');
+      expect(spec).not.toHaveProperty('factor');
+    }
+  });
+
+  it('drives sign lights from their runtime state', () => {
+    const mats = fakeMaterials();
+    const scene = new THREE.Scene();
+    const signs = buildSigns(makeKit(new Batch(), mats, SEED), mats, null, SIGN_PPM, scene);
+    signs.update(1);
+    expect(signs.lights.some((l) => l.state.factor !== 1)).toBe(true);
+
+    const src = signs.lights[0];
+    src.state.factor = 0.5;
+    const pool = new LightPool(scene, 1, [src]);
+    pool.update(new THREE.PerspectiveCamera());
+    expect(pool.lights[0].intensity).toBeCloseTo(src.intensity * 0.5);
   });
 });

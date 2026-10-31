@@ -117,6 +117,8 @@ const FRAG_REFL = /* glsl */`
 }
 `;
 
+const repeated = (t, x, y) => { const c = t.clone(); c.repeat.set(x, y); c.needsUpdate = true; return c; };
+
 export function createGround(tx, Q, refl) {
   const W = 7.2, z0 = 20, z1 = -93;
   const L = z0 - z1;
@@ -125,11 +127,10 @@ export function createGround(tx, Q, refl) {
   geo.translate(0, 0, (z0 + z1) / 2);
 
   const tile = 2.2;
-  const clone = (t) => { const c = t.clone(); c.repeat.set(W / tile, L / tile); c.needsUpdate = true; return c; };
   const mat = new THREE.MeshStandardMaterial({
-    map: clone(tx.asphalt.map),
-    normalMap: clone(tx.asphalt.normalMap),
-    roughnessMap: clone(tx.asphalt.roughnessMap),
+    map: repeated(tx.asphalt.map, W / tile, L / tile),
+    normalMap: repeated(tx.asphalt.normalMap, W / tile, L / tile),
+    roughnessMap: repeated(tx.asphalt.roughnessMap, W / tile, L / tile),
     roughness: 1, metalness: 0, envMapIntensity: 0.2,
     normalScale: new THREE.Vector2(0.9, 0.9),
   });
@@ -161,9 +162,8 @@ export function createGround(tx, Q, refl) {
   const sgeo = new THREE.PlaneGeometry(sW, sL);
   sgeo.rotateX(-Math.PI / 2);
   sgeo.translate(0, -0.002, -98.5);
-  const sclone = (t) => { const c = t.clone(); c.repeat.set(sW / 3, sL / 3); c.needsUpdate = true; return c; };
   const street = new THREE.Mesh(sgeo, new THREE.MeshStandardMaterial({
-    map: sclone(tx.asphalt.map), normalMap: sclone(tx.asphalt.normalMap),
+    map: repeated(tx.asphalt.map, sW / 3, sL / 3), normalMap: repeated(tx.asphalt.normalMap, sW / 3, sL / 3),
     roughness: 0.35, metalness: 0, color: 0x9a9aa8, envMapIntensity: 0.8,
   }));
   return { mesh, street, uniforms };

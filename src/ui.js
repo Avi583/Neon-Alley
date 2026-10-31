@@ -68,13 +68,14 @@ export function createStates({ player, audio, canvas, auto }) {
     if (document.hidden) audio.suspend();
     else if (state === 'play') audio.resume();
   });
+  const toggleSound = () => { ui.sound.textContent = audio.toggleMute() ? 'SOUND OFF' : 'SOUND ON'; };
   let showFps = false;
   window.addEventListener('keydown', (e) => {
-    if (e.code === 'KeyM') ui.sound.textContent = audio.toggleMute() ? 'SOUND OFF' : 'SOUND ON';
+    if (e.code === 'KeyM') toggleSound();
     if (e.code === 'KeyF') { showFps = !showFps; ui.fps.classList.toggle('hidden', !showFps); }
     if (e.code === 'Enter' && state === 'title' && !ui.enter.disabled) play();
   });
-  ui.sound.addEventListener('click', () => { ui.sound.textContent = audio.toggleMute() ? 'SOUND OFF' : 'SOUND ON'; });
+  ui.sound.addEventListener('click', toggleSound);
 
   return {
     get state() { return state; },

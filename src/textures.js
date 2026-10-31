@@ -3,6 +3,7 @@
 import { nextFrame } from './texture-core.js';
 import { genConcrete, genBrick, genShutter, genAsphalt, genMetal, genFacade, genGrate, genCloud } from './pbr-textures.js';
 import { genACFront, genVending, genShopInterior, genAd, genHoloText } from './canvas-art.js';
+import { ART_TEXT } from './art-text.js';
 
 // Generate everything with progress callbacks, yielding to the browser
 // between textures so the loading bar can animate.
@@ -24,9 +25,9 @@ export async function generateTextures(Q, aniso, progress) {
     ['shopMart', () => genShopInterior('mart')],
     ['holoText', () => genHoloText()],
     ['ads', () => [
-      genAd('NEXA', '未来はここに', '#ff2d8a', '#3a0b5e', 1),
-      genAd('SOLACE', '眠らない街', '#14d8ff', '#14204f', 2),
-      genAd('ORBITAL', '宇宙ラーメン', '#ffb21f', '#7a0b3a', 3),
+      genAd('NEXA', ART_TEXT.ads[0], '#ff2d8a', '#3a0b5e', 1),
+      genAd('SOLACE', ART_TEXT.ads[1], '#14d8ff', '#14204f', 2),
+      genAd('ORBITAL', ART_TEXT.ads[2], '#ffb21f', '#7a0b3a', 3),
     ]],
   ];
   for (let i = 0; i < steps.length; i++) {

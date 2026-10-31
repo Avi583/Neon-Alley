@@ -1,21 +1,11 @@
 // Draws a sign onto a canvas: tube glow, lightboxes and bordered panels.
 import * as THREE from 'three';
-import { makeCanvas, FONT_JP, FONT_LAT, FONT_NEON } from './texture-core.js';
+import { makeCanvas, roundRect, FONT_JP, FONT_LAT, FONT_NEON } from './texture-core.js';
 
 const MAX_SIGN_PX = 2048; // longest canvas side; the 7 m banner would otherwise hit 2800 px on Ultra
 
 const lighten = (hex, t) => '#' + new THREE.Color(hex).lerp(new THREE.Color('#ffffff'), t).getHexString();
 const famOf = (spec) => (spec.font === 'lat' ? FONT_LAT : spec.font === 'neon' ? FONT_NEON : FONT_JP);
-
-function roundRectPath(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
 
 // Neon-tube text: wide glow, the coloured tube, then a white-hot core.
 function glowText(ctx, text, x, y, color, size, mode) {
@@ -44,7 +34,7 @@ function tubeRect(ctx, x, y, w, h, r, color, lw) {
   ctx.save();
   ctx.shadowColor = color;
   ctx.strokeStyle = color;
-  roundRectPath(ctx, x, y, w, h, r);
+  roundRect(ctx, x, y, w, h, r);
   ctx.globalAlpha = 0.6; ctx.lineWidth = lw * 1.8; ctx.shadowBlur = lw * 6; ctx.stroke();
   ctx.globalAlpha = 1; ctx.lineWidth = lw; ctx.shadowBlur = lw * 2; ctx.stroke();
   ctx.shadowBlur = 0; ctx.strokeStyle = lighten(color, 0.72); ctx.lineWidth = lw * 0.4; ctx.stroke();
@@ -72,12 +62,12 @@ export function drawSign(spec, ppm) {
   if (isBox) {
     ctx.fillStyle = '#05050a'; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = color;
-    roundRectPath(ctx, m * 0.03, m * 0.03, W - m * 0.06, H - m * 0.06, m * 0.06); ctx.fill();
+    roundRect(ctx, m * 0.03, m * 0.03, W - m * 0.06, H - m * 0.06, m * 0.06); ctx.fill();
     const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.6);
     g.addColorStop(0, 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = m * 0.02;
-    roundRectPath(ctx, m * 0.08, m * 0.08, W - m * 0.16, H - m * 0.16, m * 0.04); ctx.stroke();
+    roundRect(ctx, m * 0.08, m * 0.08, W - m * 0.16, H - m * 0.16, m * 0.04); ctx.stroke();
   } else {
     const g = ctx.createLinearGradient(0, 0, 0, H);
     g.addColorStop(0, '#0b0a12'); g.addColorStop(1, '#050409');
