@@ -7,6 +7,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - CLAUDE.md
 - DIRECTORY.md
 - README.md
+- TESTING.md
 - To-Do-List.txt
 - eslint.config.js
 - index.html
@@ -25,10 +26,13 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/main.js
 - src/materials.js
 - src/noise.js
+- src/noise.test.js
 - src/player.js
 - src/post.js
 - src/quality.js
+- src/quality.test.js
 - src/signs.js
+- src/signs.test.js
 - src/style.css
 - src/textures.js
 

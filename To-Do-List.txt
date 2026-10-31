@@ -84,7 +84,35 @@ F2 [Sonnet | Risk 2/5] main.js play(): no handling for a failed requestPointerLo
    which leaves state 'play' with no mouse look and no pause. Handle pointerlockerror and the rejected promise.
 F3 [Sonnet | Risk 1/5] main.js FPS counter: uses dt clamped to 0.05, so it can never show below 20 FPS. Use unclamped time.
 
-G. Completed
+G. Testing recommendations
+--------------------------
+Vitest is set up (npm test); G1, G2, G5, G6, G13 are done (see H). Do G3 next: they protect the refactors in B, C and D.
+G3  [Opus   | Risk 2/5] alley.js / batch.js: snapshot the generated layout (hash of merged geometry per material, plus colliders
+    and light positions) so an rng draw-order change fails a test instead of silently moving the world. Needed before
+    D2, A4 and B2. B2 and A4 may change the geometry on purpose, so update the snapshot only after checking the result.
+G4  [Sonnet | Risk 2/5] player.js: unit test movement with a stub camera and dom. Cover push-out from each side of a collider,
+    walk bounds, equal diagonal and straight speed, the pitch clamp, no movement while disabled, keys cleared on blur,
+    and onStep firing. Also test that running at the largest dt (0.05, per F3) can't carry the player through a collider.
+G7  [Opus   | Risk 3/5] Add a Playwright smoke test against vite preview: load each ?q= preset, fail on any console error or
+    shader compile error, start the game, hold W and confirm the player moved, then pause and resume. Run the built
+    output too, so a wrong asset base path is caught before it reaches Pages.
+G8  [Opus   | Risk 3/5] Add browser regression tests for the input bugs: rejected pointer lock (F2), mouse look on a touchscreen
+    laptop (F1), and the FPS counter on slow frames (F3). Write each one to fail before its fix. F3 needs the FPS
+    calculation moved into a small testable function.
+G9  [Opus   | Risk 3/5] Hash the generated textures in the browser at a small size (they need canvas), comparing the raw pixel data
+    of each gen* function. This protects C1, C2, C4 and D1. Pin one browser version, since canvas-drawn text and
+    gradients can differ between browsers and machines.
+G10 [Opus   | Risk 2/5] Add a repeatable performance baseline: fixed preset, fixed camera path and fixed viewport, recording
+    load time, frame time, draw calls and triangles (renderer.info). Run it before and after each B and C item, as the
+    note at the top requires. Use the same physical machine, since headless software rendering says little about real
+    GPU cost.
+G11 [Opus   | Risk 4/5] Add screenshot comparison from fixed camera spots with time, flicker, snow and steam frozen. Useful for A2,
+    B3 and post changes, but it needs a time-freeze hook and tolerances, and GPU differences make it prone to false
+    failures. Do this last, and run it only on one known machine rather than in CI.
+G12 [Sonnet | Risk 2/5] Add a GitHub Action that runs lint, tests and build on every push and PR. Keep this separate from the
+    deploy change in E7. Add the G7 smoke test once it is stable.
+
+H. Completed
 ------------
 B5  [Sonnet | Risk 1/5] signs.js drawSign: cap canvas size. There is no upper limit, so on Ultra the 7 x 3.2 m sign is
     2800 x 1280 (about 14 MB before mipmaps).
@@ -99,3 +127,16 @@ E2 [Sonnet | Risk 1/5] Dead code: m.glass (materials.js), specs in the buildSign
    the "kind: 'circle'" on that sign spec, which is never read.
 E3 [Sonnet | Risk 1/5] Move WALL into a shared config. alley.js imports it from signs.js only for that constant.
 E6 [Sonnet | Risk 1/5] Add ESLint (no-unused-vars would catch much of the dead code above).
+G1  [Sonnet | Risk 1/5] Add Vitest and an npm test script. It shares vite.config.js, and everything below can build on it.
+G2  [Sonnet | Risk 1/5] noise.js: pin exact outputs of mulberry32, hash2, fbm and noise1 for fixed inputs. Also check that
+    fbm tiles across u/v = 0 and 1 and that results stay in [0,1]. This is the safety net for C1 and C2, which must keep
+    output identical.
+G5  [Sonnet | Risk 1/5] quality.js: table-test detectQuality with stubbed user agents, core counts and memory, including an
+    iPad reporting as Macintosh. Check that all PRESETS have the same keys and that values rise from low to ultra.
+G6  [Sonnet | Risk 1/5] signs.js: check every SIGN_SPECS entry for required fields and that all sign text is in SIGN_TEXT. Add
+    the textures.js strings once E5 gives them a shared source. Check the canvas size cap from B5 on the largest sign.
+    (Done except two parts: the textures.js strings wait on E5, and the canvas size cap needs a canvas, so it is on the
+    manual checklist in TESTING.md.)
+G13 [Sonnet | Risk 1/5] Write a short manual checklist for what automation can't judge: a real phone (joystick and drag-look),
+    a touchscreen laptop, Chrome, Firefox and Safari, audio starting after the first click and muting, Esc and resume,
+    resizing, and how fog and reflections look.
