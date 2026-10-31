@@ -35,9 +35,22 @@ export function createMaterials(tx) {
   m.trash = std({ color: 0x0c0c10, roughness: 0.16, metalness: 0, envMapIntensity: 1.6 });
   m.cable = std({ color: 0x050507, roughness: 0.5 });
   m.grate = std({ map: tx.grate.map, normalMap: tx.grate.normalMap, roughnessMap: tx.grate.roughnessMap, roughness: 1, metalness: 0.8 });
-  m.plasticBlue = std({ color: 0x1c4fd0, roughness: 0.4 });
   m.plasticRed = std({ color: 0xc81e32, roughness: 0.4 });
   m.plasticYellow = std({ color: 0xe8b416, roughness: 0.4 });
+  // A little self-glow, or the grain is lost in the dark at street level.
+  const wood = (color, emissive) => std({
+    ...tx.wood, emissiveMap: tx.wood.map, emissive, emissiveIntensity: 0.32,
+    roughness: 1, normalScale: V2(1.2), color,
+  });
+  m.wood = wood(0xffffff, 0xffffff);
+  m.woodDark = wood(0xa88c76, 0xa88c76);
+  m.woodWorn = wood(0xc4c6c4, 0xc4c6c4);
+  m.foam = std({ color: 0xf0f3f6, roughness: 0.8 });
+  m.awningBlue = std({ color: 0x14508c, roughness: 0.7 });
+  m.fishSilver = std({ color: 0x6e7a88, roughness: 0.5, metalness: 0.2 });
+  m.fishRed = std({ color: 0xc04a3c, roughness: 0.5, metalness: 0.1 });
+  m.rice = std({ color: 0xfff8ea, roughness: 0.85, emissive: 0x221c12 });
+  m.noren = std({ map: tx.noren, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.95 });
 
   const cache = new Map();
   m.strip = (hex, k = 5) => {
@@ -54,6 +67,8 @@ export function createMaterials(tx) {
   m.shopRamen = basicMap(tx.shopRamen, 1.5);
   m.shopBar = basicMap(tx.shopBar, 1.6);
   m.shopMart = basicMap(tx.shopMart, 1.4);
+  m.shopFish = basicMap(tx.shopFish, 0.7);
+  m.shopOnigiri = basicMap(tx.shopOnigiri, 0.85);
   m.vending = basicMap(tx.vending, 1.7);
   m.ads = tx.ads.map((t) => basicMap(t, 2.6));
   return m;

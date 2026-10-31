@@ -2,8 +2,8 @@
 // and canvas-art.js; shared helpers are in texture-core.js.
 import { nextFrame } from './texture-core.js';
 import { clearNoiseCache } from './noise.js';
-import { genConcrete, genBrick, genShutter, genAsphalt, genMetal, genFacade, genGrate, genCloud } from './pbr-textures.js';
-import { genACFront, genVending, genShopInterior, genAd, genHoloText } from './canvas-art.js';
+import { genConcrete, genBrick, genShutter, genAsphalt, genMetal, genFacade, genGrate, genWood, genCloud } from './pbr-textures.js';
+import { genACFront, genVending, genShopInterior, genNoren, genAd, genHoloText } from './canvas-art.js';
 import { ART_TEXT } from './art-text.js';
 
 // Generate everything with progress callbacks, yielding to the browser
@@ -18,12 +18,16 @@ export async function generateTextures(Q, aniso, progress) {
     ['facade', () => genFacade(Q.facadeTex, aniso)],
     ['metal', () => genMetal(512, aniso)],
     ['grate', () => genGrate(256, aniso)],
+    ['wood', () => genWood(256, aniso)],
     ['acFront', () => genACFront(256)],
     ['cloud', () => genCloud(128)],
     ['vending', () => genVending()],
     ['shopRamen', () => genShopInterior('ramen')],
     ['shopBar', () => genShopInterior('bar')],
     ['shopMart', () => genShopInterior('mart')],
+    ['shopFish', () => genShopInterior('fish')],
+    ['shopOnigiri', () => genShopInterior('onigiri')],
+    ['noren', () => genNoren(ART_TEXT.onigiri)],
     ['holoText', () => genHoloText()],
     ['ads', () => [
       genAd('NEXA', ART_TEXT.ads[0], '#ff2d8a', '#3a0b5e', 1),

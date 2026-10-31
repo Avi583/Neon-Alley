@@ -61,6 +61,7 @@ export function makeKit(batch, mats, seed = 1) {
     box: new THREE.BoxGeometry(1, 1, 1),
     cyl: new THREE.CylinderGeometry(1, 1, 1, 12, 1),
     cylLo: new THREE.CylinderGeometry(1, 1, 1, 6, 1),
+    prism: new THREE.CylinderGeometry(1, 1, 1, 3, 1),
     cone: new THREE.ConeGeometry(1, 1, 6, 1, true),
     sph: new THREE.SphereGeometry(1, 14, 10),
     sphLo: new THREE.SphereGeometry(1, 8, 6),
@@ -78,6 +79,8 @@ export function makeKit(batch, mats, seed = 1) {
     put(G.box, mat, x, y, z, sx, sy, sz, rx, ry, rz, uv);
   const cyl = (mat, x, y, z, r, h, rx = 0, ry = 0, rz = 0, lo = false) =>
     put(lo ? G.cylLo : G.cyl, mat, x, y, z, r, h, r, rx, ry, rz);
+  const prism = (mat, x, y, z, r, h, rx = 0, ry = 0, rz = 0) =>
+    put(G.prism, mat, x, y, z, r, h, r, rx, ry, rz);
   const sph = (mat, x, y, z, sx, sy = sx, sz = sx, lo = false) =>
     put(lo ? G.sphLo : G.sph, mat, x, y, z, sx, sy, sz);
   const plane = (mat, x, y, z, w, h, ry = 0) => put(G.plane, mat, x, y, z, w, h, 1, 0, ry, 0);
@@ -116,5 +119,5 @@ export function makeKit(batch, mats, seed = 1) {
     batch.add(new THREE.TubeGeometry(curve, segs, radius, 5, false), mat);
     return curve;
   }
-  return { rng, R, pick, box, cyl, sph, plane, icicles, snow, catenary, tube };
+  return { rng, R, pick, box, cyl, prism, sph, plane, icicles, snow, catenary, tube };
 }

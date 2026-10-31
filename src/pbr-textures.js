@@ -230,6 +230,23 @@ export function genGrate(S, aniso) {
   return finalize(m, 6, aniso);
 }
 
+// ----------------------------------------------- crate wood, grain along u
+export function genWood(S, aniso, seed = 51) {
+  const m = new Maps(S, S);
+  for (let y = 0; y < S; y++) {
+    const v = y / S;
+    for (let x = 0; x < S; x++) {
+      const u = x / S, i = y * S + x;
+      const grain = fbm(u, v, 3, 40, seed, 4);
+      const fine = fbm(u, v, 8, 128, seed + 7, 2);
+      const blot = fbm(u, v, 3, 3, seed + 13, 3);
+      const c = (0.68 + 0.6 * (grain - 0.5) + 0.2 * (fine - 0.5)) * (1 - 0.3 * sstep(0.5, 0.75, blot));
+      m.put(i, c, c * 0.72, c * 0.46, clamp01(0.82 - 0.2 * grain), grain * 0.7 + fine * 0.3);
+    }
+  }
+  return finalize(m, 2, aniso);
+}
+
 // ------------------------------------------------------- soft steam puff
 export function genCloud(S = 128) {
   const data = new Uint8ClampedArray(S * S * 4);
@@ -239,7 +256,8 @@ export function genCloud(S = 128) {
       const dx = u - 0.5, dy = v - 0.5;
       const r = Math.sqrt(dx * dx + dy * dy) * 2;
       const n = fbm(u, v, 4, 4, 99, 5);
-      const a = clamp01((1 - r) * (1 - r) * (0.35 + 0.9 * n));
+      const fade = Math.max(0, 1 - r); // zero past the circle, or squaring brings the quad's corners back
+      const a = clamp01(fade * fade * (0.35 + 0.9 * n));
       const k = (y * S + x) * 4;
       const lum = 200 + 55 * n;
       data[k] = lum; data[k + 1] = lum; data[k + 2] = lum; data[k + 3] = a * 255;

@@ -94,8 +94,12 @@ export function buildSigns(kit, mats, holoText, ppm, scene) {
       pos.set(cx, y, z);
       box(mats.metalDark, cx, y, z, w + 0.07, h + 0.07, T);
       for (const dy of [h * 0.32, -h * 0.32]) box(mats.metalDark, side * (WALL + 0.1), y + dy, z, 0.6, 0.05, 0.05);
-      snow(cx, y + h / 2 + 0.035, z, w + 0.05, T + 0.04);
-      if (R(0, 1) < 0.6) icicles(cx - w / 2 + 0.05, y - h / 2 - 0.035, z, cx + w / 2 - 0.05, y - h / 2 - 0.035, z, 0.35, 0.22);
+      if (spec.shopfront) {
+        box(mats.snow, cx, y + h / 2 + 0.06, z, w + 0.05, 0.05, T + 0.04); // no rng draws, so the layout stays put
+      } else {
+        snow(cx, y + h / 2 + 0.035, z, w + 0.05, T + 0.04);
+        if (R(0, 1) < 0.6) icicles(cx - w / 2 + 0.05, y - h / 2 - 0.035, z, cx + w / 2 - 0.05, y - h / 2 - 0.035, z, 0.35, 0.22);
+      }
       lightPos = new THREE.Vector3(cx, y - h * 0.3, z);
     }
     const mesh = new THREE.Mesh(geo, mat);

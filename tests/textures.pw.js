@@ -16,3 +16,9 @@ test('generated textures are unchanged', async ({ page }) => {
   expect(Object.keys(hashes).length).toBeGreaterThan(0);
   expect(JSON.stringify(hashes, null, 2)).toMatchSnapshot('textures.json');
 });
+
+test('steam puffs fade out before the edge of their quad', async ({ page }) => {
+  await page.goto('/tests/textures.html');
+  await page.waitForFunction(() => window.cloudAlphaOutsideCircle);
+  expect(await page.evaluate(() => window.cloudAlphaOutsideCircle())).toBe(0);
+});

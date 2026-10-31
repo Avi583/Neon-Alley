@@ -3,6 +3,7 @@
 // cross street at the far end and a skyline of towers behind it all.
 import * as THREE from 'three';
 import { WALL } from './config.js';
+import { buildShops } from './shops.js';
 
 export const ALLEY = {
   half: WALL,
@@ -188,6 +189,30 @@ function buildBuildings(ctx) {
   box(mats.strip('#ff3fa4', 5), 0, 2.9, ALLEY.zStart - 0.06, 3.6, 0.04, 0.04);
 }
 
+// A slatted wooden crate over a dark core, turned ry around its centre. No rng
+// draws in here: the caller supplies ry, so the draw order stays the same.
+function crate(ctx, mat, cx, cy, cz, sx, sy, sz, ry) {
+  const { mats, box } = ctx;
+  const c = Math.cos(ry), s = Math.sin(ry), uv = [0.8, 0.8];
+  const part = (dx, dy, dz, w, h, d, rx = 0) =>
+    box(mat, cx + dx * c + dz * s, cy + dy, cz - dx * s + dz * c, w, h, d, uv, ry, rx);
+  box(mats.cable, cx, cy, cz, sx - 0.04, sy - 0.02, sz - 0.04, null, ry);
+  const t = 0.016, hx = sx / 2 - t / 2, hz = sz / 2 - t / 2;
+  for (let k = -1; k <= 1; k++) {
+    const dy = k * sy / 3, h = sy / 3 - 0.009;
+    for (const d of [-1, 1]) {
+      part(d * hx, dy, 0, t, h, sz - 0.01);
+      part(0, dy, d * hz, sx - 0.01, h, t);
+    }
+  }
+  // lid boards, corner posts and a diagonal brace on each long side
+  for (let k = -2; k <= 2; k++) part(0, sy / 2 - 0.008, k * sz / 5, sx, 0.016, sz / 5 - 0.016);
+  for (const dx of [-1, 1]) {
+    for (const dz of [-1, 1]) part(dx * (sx / 2 - 0.012), 0, dz * (sz / 2 - 0.012), 0.036, sy, 0.036);
+    part(dx * (hx + 0.012), 0, 0, 0.012, Math.hypot(sy, sz) - 0.05, 0.04, dx * Math.atan2(sz, sy));
+  }
+}
+
 // ---------------------------------------------------------- overhead
 function buildOverhead(ctx) {
   const { mats, R, rng, pick, sph, catenary, tube } = ctx;
@@ -292,10 +317,10 @@ function buildStreetProps(ctx) {
       addCollider(side * 1.75, side * 2.4, zz - 0.6, zz + 0.6);
     } else if (kind < 0.8) {
       const stack = 1 + Math.floor(rng() * 4);
-      const mat = pick([mats.plasticBlue, mats.plasticRed, mats.plasticYellow]);
+      const mat = pick([mats.wood, mats.woodDark, mats.woodWorn]);
       const cx = side * 2.05;
-      for (let k = 0; k < stack; k++) box(mat, cx, 0.16 + k * 0.32, zz, 0.42, 0.3, 0.56, null, R(-0.1, 0.1));
-      snow(cx, stack * 0.32, zz, 0.42, 0.56, 0.05);
+      for (let k = 0; k < stack; k++) crate(ctx, mat, cx, 0.16 + k * 0.32, zz, 0.42, 0.3, 0.56, R(-0.1, 0.1));
+      snow(cx, stack * 0.32 - 0.012, zz, 0.24, 0.3, 0.03);
       addCollider(cx - 0.25, cx + 0.25, zz - 0.32, zz + 0.32);
     } else {
       const cx = side * 2.0;
@@ -364,7 +389,8 @@ export function buildAlley(kit, mats, signSpecs) {
     colliders.push({ minX: Math.min(x0, x1), maxX: Math.max(x0, x1), minZ: Math.min(z0, z1), maxZ: Math.max(z0, z1) });
 
   const signZ = { '-1': [], '1': [] };
-  for (const s of signSpecs) if (s.side) signZ[s.side].push(s.z);
+  // Shopfront signs stay out: nearSign decides what gets built, which changes the rng draws.
+  for (const s of signSpecs) if (s.side && !s.shopfront) signZ[s.side].push(s.z);
   const nearSign = (side, z, r) => signZ[side].some((sz) => Math.abs(sz - z) < r);
   const ctx = { ...kit, mats, vents, addLight, addCollider, nearSign };
 
@@ -374,6 +400,7 @@ export function buildAlley(kit, mats, signSpecs) {
   buildStreetProps(ctx);
   buildCrossStreet(ctx);
   buildSkyline(ctx);
+  buildShops(ctx);
 
   return { colliders, vents, lights };
 }

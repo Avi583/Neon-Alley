@@ -38,6 +38,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/player.js
 - src/post.js
 - src/quality.js
+- src/shops.js
 - src/sign-canvas.js
 - src/sign-specs.js
 - src/signs.js

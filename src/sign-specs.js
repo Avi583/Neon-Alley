@@ -27,6 +27,10 @@ export const SIGN_SPECS = [
   { text: '24/7', font: 'lat', style: 'border', color: '#38e8ff', color2: '#ff3fa4', side: 1, z: -83, y: 5.0, w: 1.4, h: 0.7, light: 8 },
   { text: '夜市', sub: 'NIGHT MARKET', style: 'border', color: '#ff4fd8', color2: '#ffd166', mount: 'facing', x: 0, z: -105.7, y: 8.5, w: 7, h: 3.2, light: 0 },
   { text: '路地', sub: 'ALLEY 07', style: 'border', color: '#38e8ff', color2: '#ff3fa4', mount: 'facingBack', x: 0, z: 15.9, y: 6.2, w: 3.2, h: 1.6, light: 10 },
+  // Add new signs at the end: a sign's flicker seed comes from its index.
+  // shopfront signs make no rng draws, so they don't shift the layout.
+  { text: ART_TEXT.fish, sub: 'FISH MARKET', style: 'box', color: '#0c4a8c', side: -1, z: -43.2, y: 3.62, w: 1.35, h: 0.72, light: 6, shopfront: true },
+  { text: ART_TEXT.onigiri, sub: 'ONIGIRI', style: 'box', color: '#a82a18', textColor: '#ffe9c8', side: 1, z: -17.0, y: 3.62, w: 1.35, h: 0.72, light: 6, shopfront: true },
 ];
 
 export const SIGN_TEXT = SIGN_SPECS.map((s) => (s.text || '') + (s.columns || []).join('') + (s.sub || '')).join('') +

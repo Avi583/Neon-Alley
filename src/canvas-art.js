@@ -1,5 +1,5 @@
-// Canvas-drawn art: AC units, the vending machine, shop interiors, billboards
-// and the holographic text.
+// Canvas-drawn art: AC units, the vending machine, shop interiors, the noren
+// curtain, billboards and the holographic text.
 import { mulberry32 } from './noise.js';
 import { makeCanvas, canvasTexture, roundRect, FONT_JP, FONT_LAT, FONT_NEON } from './texture-core.js';
 import { ART_TEXT } from './art-text.js';
@@ -129,7 +129,70 @@ function drawMart(ctx, W, H, rng) {
   ctx.textBaseline = 'middle'; ctx.fillText('24 MART', W / 2, 14);
 }
 
-const SHOPS = { ramen: drawRamen, bar: drawBar, mart: drawMart };
+function drawFish(ctx, W, H, rng) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#d4f1f2'); g.addColorStop(1, '#6fb4c2');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(40,90,110,0.35)'; ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 32) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 32) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  // fish hanging from a rail, each with a price tag below
+  ctx.fillStyle = '#39424c'; ctx.fillRect(0, 98, W, 6);
+  for (let k = 0; k < 9; k++) {
+    const x = 32 + k * 56, len = 44 + rng() * 22;
+    ctx.fillStyle = '#39424c'; ctx.fillRect(x - 1, 104, 2, 12);
+    ctx.fillStyle = ['#8fa3b5', '#c7d3dd', '#d9654f', '#6b7f96'][Math.floor(rng() * 4)];
+    ctx.beginPath(); ctx.ellipse(x, 116 + len / 2, 13, len / 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x, 110 + len); ctx.lineTo(x - 14, 132 + len); ctx.lineTo(x + 14, 132 + len); ctx.fill();
+    ctx.fillStyle = '#12161c';
+    ctx.beginPath(); ctx.arc(x + 4, 126, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffe14d'; ctx.fillRect(x - 15, 204, 30, 18);
+    ctx.fillStyle = '#c21f2e'; ctx.font = `900 13px ${FONT_LAT}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`${(2 + Math.floor(rng() * 8)) * 100}`, x, 213);
+  }
+  // crushed ice along the bottom
+  ctx.fillStyle = '#7fa4b6'; ctx.fillRect(0, 240, W, 80);
+  for (let k = 0; k < 160; k++) {
+    ctx.fillStyle = rng() < 0.5 ? '#6d93a6' : '#9dbdcb';
+    ctx.beginPath(); ctx.arc(rng() * W, 240 + rng() * 80, 2 + rng() * 5, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.fillStyle = '#0f3a66'; ctx.fillRect(0, 0, W, 84);
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `900 50px ${FONT_JP}`; ctx.fillText(ART_TEXT.fish, W / 2, 34);
+  ctx.font = `700 18px ${FONT_LAT}`; ctx.fillText('FISH MARKET', W / 2, 69);
+}
+
+function drawOnigiri(ctx, W, H, rng) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#ffd698'); g.addColorStop(1, '#a8622a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // shelves of rice balls wrapped in nori
+  for (let s = 0; s < 3; s++) {
+    const y = 148 + s * 64;
+    ctx.fillStyle = '#5a3216'; ctx.fillRect(10, y, W * 0.72, 8);
+    for (let k = 0; k < 8; k++) {
+      const x = 40 + k * 44, r = 16 + rng() * 3;
+      ctx.fillStyle = '#fffaf0';
+      ctx.beginPath(); ctx.moveTo(x, y - r * 2.2); ctx.lineTo(x - r * 1.2, y); ctx.lineTo(x + r * 1.2, y); ctx.fill();
+      ctx.fillStyle = '#10140f'; ctx.fillRect(x - r * 0.55, y - r * 0.95, r * 1.1, r * 0.95);
+    }
+  }
+  // wooden menu tags
+  for (let k = 0; k < 4; k++) {
+    const x = W * 0.78 + k * 27;
+    ctx.fillStyle = '#f4e5c4'; ctx.fillRect(x, 100, 22, 150 + rng() * 40);
+    ctx.fillStyle = '#3a1a10'; ctx.font = `900 18px ${FONT_JP}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    [...ART_TEXT.onigiri].forEach((ch, j) => ctx.fillText(ch, x + 11, 118 + j * 26));
+  }
+  ctx.fillStyle = '#6e1620'; ctx.fillRect(0, 0, W, 84);
+  ctx.fillStyle = '#fff3d8'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `900 48px ${FONT_JP}`; ctx.fillText(ART_TEXT.onigiri, W / 2, 34);
+  ctx.font = `700 18px ${FONT_LAT}`; ctx.fillText('ONIGIRI', W / 2, 69);
+}
+
+const SHOPS = { ramen: drawRamen, bar: drawBar, mart: drawMart, fish: drawFish, onigiri: drawOnigiri };
 
 export function genShopInterior(kind) {
   const W = 512, H = 320;
@@ -141,6 +204,21 @@ export function genShopInterior(kind) {
   gl.addColorStop(0.3, 'rgba(255,255,255,0)'); gl.addColorStop(0.45, 'rgba(255,255,255,0.12)');
   gl.addColorStop(0.5, 'rgba(255,255,255,0)');
   ctx.fillStyle = gl; ctx.fillRect(0, 0, W, H);
+  return canvasTexture(c, { repeat: false });
+}
+
+// Split shop curtain: one cloth panel per character, with see-through gaps.
+export function genNoren(text) {
+  const W = 512, H = 192;
+  const c = makeCanvas(W, H), ctx = c.getContext('2d');
+  const chars = [...text], pw = W / chars.length;
+  ctx.fillStyle = '#1c2452'; ctx.fillRect(0, 0, W, 20);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `900 84px ${FONT_JP}`;
+  chars.forEach((ch, k) => {
+    ctx.fillStyle = '#1c2452'; ctx.fillRect(k * pw + 3, 0, pw - 6, H);
+    ctx.fillStyle = '#c9c2b2'; ctx.fillText(ch, (k + 0.5) * pw, H * 0.56);
+  });
   return canvasTexture(c, { repeat: false });
 }
 

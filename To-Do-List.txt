@@ -13,11 +13,7 @@ calls in alley.js, signs.js or batch.js changes the whole layout. Refactors ther
 A. Ideas
 --------
 A1 [Sonnet | Risk 1/5] Audit code (first pass done, see sections B-F)
-A2 [Opus   | Risk 3/5] Make fog less blocky (cause not yet diagnosed; likely 8-bit banding in the fog/HDR path, so try dithering)
 A3 [Opus   | Risk 3/5] Add interaction with the vending machine (new input/prompt system touching player.js, ui.js and the HUD)
-A4 [Sonnet | Risk 2/5] Make boxes more detailed (use non-rng geometry, or the layout shifts, see warning above)
-A6[Opus   | Risk 3/5] Add a Fish Market shop (keep the rng draw order, or the layout shifts, see warning above)
-A7 [Opus   | Risk 3/5] Add an onigiri shop (keep the rng draw order, or the layout shifts, see warning above)
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------
@@ -30,6 +26,9 @@ B3  [Opus   | Risk 3/5] ground.js / atmosphere.js: use layers to leave snow, ste
     smaller target.
 B4  [Opus   | Risk 4/5] signs.js: put signs in a texture atlas and draw them as one mesh with a per-sign flicker attribute.
     There are 23 separate meshes, materials and canvas textures, all drawn again in the reflection pass.
+B12 [Sonnet | Risk 2/5] main.js resize: stop adaptive scale from softening reflections. refl.setSize uses the scaled drawing
+    buffer, so on High a 60% step leaves the reflection at 30% of native width and height. Size it from the unscaled
+    pixelRatio, or give it a floor. This costs frame time, since the reflection pass redraws the full scene; check with npm run perf. Investigate if actually a bug.
 
 C. Load time and memory
 -----------------------
@@ -82,6 +81,13 @@ G12 [Sonnet | Risk 2/5] Add a GitHub Action that runs lint, tests and build on e
 
 H. Completed
 ------------
+A2  [Opus   | Risk 3/5] Blocky fog was the steam, not banding. pbr-textures.js genCloud squared (1 - r) unclamped, so alpha rose again
+    past the circle and each billboard's square corners showed. Now clamped, with a Playwright test on the alpha outside the circle.
+A4  [Sonnet | Risk 2/5] alley.js crate(): the plastic boxes are now slatted wooden crates with lid boards, corner posts and braces,
+    using a new wood texture. Same rng draws, so the layout doesn't move.
+A6  [Opus   | Risk 3/5] shops.js: fish market on the left wall at z = -44.7. No kit rng draws (its own seeded rng for variation).
+A7  [Opus   | Risk 3/5] shops.js: onigiri shop with a noren curtain on the right wall at z = -18.5. Signs for both shops use
+    shopfront: true, which keeps them out of nearSign and skips the rng snow and icicles.
 A5  [Sonnet | Risk 2/5] Sound and quality controls in the pause menu, which now resumes only from its Resume button. A quality change
     still reloads the page, because presets set texture sizes, MSAA and counts at startup, but it keeps the player's position.
 B7  [Opus   | Risk 3/5] adaptive-scale.js: render scale drops when frames are slow and recovers slowly. The FPS counter shows the scale when below 100%.
