@@ -32,6 +32,11 @@ export function createMaterials(tx) {
   // A little self-glow too, or the rust is lost on the dark upper walls.
   m.acDrip = std({ map: tx.acDrip, emissiveMap: tx.acDrip, emissive: 0xffffff, emissiveIntensity: 0.3, roughness: 0.9, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 
+  m.graffiti = std({ map: tx.graffiti, emissiveMap: tx.graffiti, emissive: 0xffffff, emissiveIntensity: 0.28, roughness: 0.75, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  // Opaque: the shards are too small for see-through glass to show.
+  m.glassGreen = std({ color: 0x1c5a34, roughness: 0.08, metalness: 0, envMapIntensity: 2.2 });
+  m.glassBrown = std({ color: 0x5a2f10, roughness: 0.08, metalness: 0, envMapIntensity: 2.2 });
+
   m.snow = std({ color: 0xe6ecff, roughness: 0.62, metalness: 0 });
   m.ice = std({ color: 0xd2ecff, roughness: 0.05, metalness: 0.1, envMapIntensity: 2.5, emissive: 0x0a1420 });
   m.trash = std({ color: 0x0c0c10, roughness: 0.16, metalness: 0, envMapIntensity: 1.6 });

@@ -80,6 +80,8 @@ export function makeKit(batch, mats, seed = 1) {
     put(G.box, mat, x, y, z, sx, sy, sz, rx, ry, rz, uv);
   const cyl = (mat, x, y, z, r, h, rx = 0, ry = 0, rz = 0, lo = false) =>
     put(lo ? G.cylLo : G.cyl, mat, x, y, z, r, h, r, rx, ry, rz);
+  const squashedCyl = (mat, x, y, z, rx, h, rz, ax = 0, ay = 0, az = 0) =>
+    put(G.cylLo, mat, x, y, z, rx, h, rz, ax, ay, az);
   const prism = (mat, x, y, z, r, h, rx = 0, ry = 0, rz = 0) =>
     put(G.prism, mat, x, y, z, r, h, r, rx, ry, rz);
   const sph = (mat, x, y, z, sx, sy = sx, sz = sx, lo = false) =>
@@ -132,5 +134,5 @@ export function makeKit(batch, mats, seed = 1) {
     batch.add(new THREE.TubeGeometry(curve, segs, radius, 5, false), mat);
     return curve;
   }
-  return { rng, R, pick, box, cyl, prism, sph, plane, atlasCyl, atlasPlane, icicles, snow, catenary, tube };
+  return { rng, R, pick, box, cyl, squashedCyl, prism, sph, plane, atlasCyl, atlasPlane, icicles, snow, catenary, tube };
 }

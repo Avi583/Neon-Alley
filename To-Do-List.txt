@@ -19,7 +19,10 @@ A9 [Opus   | Risk 3/5] Sushi shop storefront (new shop in shops.js).
 A10 [Opus  | Risk 3/5] Ramen shop storefront (new shop in shops.js).
 A17 [Sonnet | Risk 2/5] canvas-art.js drawFish/drawOnigiri: the shop back walls still paint realistic fish and rice balls behind the neon
     from A11. Repaint them plainer or as neon if the neon should be the only food shown. Changes the texture snapshot (G9).
-A20 [Sonnet | Risk 2/5] More variety in the trash: crushed cans, broken bottles and similar. Use its own rng, as A14 did, so the layout doesn't move.
+A23 [Sonnet | Risk 1/5] Run npm run perf on the real GPU to measure the frame time of A20, A21 and A22. Only software rendering has been used so far, which gives meaningless timings.
+A24 [Sonnet | Risk 1/5] Check the new litter from A20 up close in the browser, especially crushed cans and the teeth on broken bottles. So far only seen from about 2 m.
+A25 [Sonnet | Risk 1/5] alley.js doorFrame: door frames blend into the door under strong neon. Try a lighter material if they should stand out more.
+A26 [Sonnet | Risk 1/5] Run build.bat before committing A20, A21 and A22, since docs/ has not been rebuilt and the live site won't show them until it is.
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------
@@ -87,6 +90,11 @@ G15 [Sonnet | Risk 1/5] tests/perf-baseline.js: fail fast. Page errors are only 
 
 H. Completed
 ------------
+A20 [Sonnet | Risk 2/5] alley.js litter: crushed cans, broken bottles with shards, bottle caps and noodle cups. New draws follow the old ones in the litter
+    rng, so older litter stays put. With the door and graffiti work: vertices 165,836 to 174,312, merged meshes 71 to 74, graffiti atlas 3072 x 256.
+A21 [Opus   | Risk 2/5] alley.js: door frames (posts, head, threshold) and three hinges on the edge opposite the handle. No rng draws.
+A22 [Opus   | Risk 2/5] canvas-art.js genGraffiti / alley.js unitGraffiti: 8 pieces in an atlas, placed on shutters, blank walls, beside doors and under
+    window sills from their own rng. The older painted squiggles on the shutter texture are unchanged.
 A12 [Opus   | Risk 3/5] footprints.js: pool of 72 instanced boot marks left on each step, fading out over 20 s in the shader. Dark imprints in
     snow and pale slush on asphalt, which is too dark to darken further, with almost nothing in puddles. Left out of the reflection pass.
 A18 [Sonnet | Risk 1/5] alley.js acDrip: transparent rust and dirt streaks below wall-mounted AC units, stopping above the ledge. Four patterns in an

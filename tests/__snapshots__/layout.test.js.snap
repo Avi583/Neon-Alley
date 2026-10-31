@@ -636,9 +636,9 @@ exports[`generated layout > matches the snapshot 1`] = `
   ],
   "geometry": [
     {
-      "hash": "5a2382b9186e99d3",
+      "hash": "af66c26ccfe051a8",
       "material": "concrete",
-      "vertices": 1608,
+      "vertices": 1992,
     },
     {
       "hash": "fc9f50e8669e7d34",
@@ -666,14 +666,19 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 38922,
     },
     {
-      "hash": "8f930aaf2c996f44",
-      "material": "metal",
-      "vertices": 14920,
+      "hash": "95aa672f0933c603",
+      "material": "graffiti",
+      "vertices": 120,
     },
     {
-      "hash": "9ebc849de37fc01b",
+      "hash": "97d5728e200485f0",
+      "material": "metal",
+      "vertices": 16392,
+    },
+    {
+      "hash": "d49fdfe823246a89",
       "material": "metalLight",
-      "vertices": 5867,
+      "vertices": 10491,
     },
     {
       "hash": "c6ed0d32a3438926",
@@ -846,9 +851,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 4,
     },
     {
-      "hash": "7e39d1ee3ff9a0c8",
+      "hash": "949e1acef3976815",
       "material": "plasticRed",
-      "vertices": 180,
+      "vertices": 460,
     },
     {
       "hash": "42207ca24d9233e9",
@@ -866,9 +871,14 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 5325,
     },
     {
-      "hash": "834bcf715bee40bd",
+      "hash": "30622f2f51c718c4",
       "material": "foam",
-      "vertices": 1011,
+      "vertices": 1131,
+    },
+    {
+      "hash": "7afcd189dda00e00",
+      "material": "glassGreen",
+      "vertices": 380,
     },
     {
       "hash": "e0655d1370da6353",
@@ -889,6 +899,11 @@ exports[`generated layout > matches the snapshot 1`] = `
       "hash": "01b34465f4737f84",
       "material": "trashBlue",
       "vertices": 1065,
+    },
+    {
+      "hash": "0356f03d08f8ea58",
+      "material": "glassBrown",
+      "vertices": 1096,
     },
     {
       "hash": "8c87747cc709a9b2",

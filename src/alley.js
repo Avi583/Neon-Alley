@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { WALL } from './config.js';
 import { buildShops } from './shops.js';
 import { mulberry32 } from './noise.js';
-import { CAN_FLAVOURS } from './canvas-art.js';
+import { CAN_FLAVOURS, GRAFFITI_CELLS } from './canvas-art.js';
 
 export const ALLEY = {
   half: WALL,
@@ -38,6 +38,8 @@ function shopUnit(ctx, side, xi, zc, w, kind) {
     const c = pick(NEON);
     box(mats.metalDark, fx + out * 0.03, 1.1, zc, 0.06, 2.2, 1.05);
     box(mats.strip('#9fd8ff', 1.4), fx + out * 0.065, 1.7, zc, 0.01, 0.32, 0.45);
+    doorFrame(ctx, fx, out, zc);
+    doorHinges(ctx, fx, out, zc);
     doorHandle(ctx, fx, out, zc);
     box(mats.strip(c, 3.5), fx + out * 0.08, 1.3, zc + 0.68, 0.035, 2.4, 0.035);
     box(mats.strip(c, 3.5), fx + out * 0.08, 1.3, zc - 0.68, 0.035, 2.4, 0.035);
@@ -71,14 +73,68 @@ function shopUnit(ctx, side, xi, zc, w, kind) {
     }
     addCollider(fx, fx + out * 0.55, zc - n * 0.5, zc + n * 0.5);
   }
+  unitGraffiti(ctx, side, fx, out, zc, w, kind);
+}
+
+// Paint on a ground-floor unit, from its own rng so the kit's draws don't change.
+// Pieces keep to bare wall and shutters, clear of doors, glass and AC units.
+const ASPECT = 1.5; // of one atlas cell
+const graffitiRng = (side, zc) => mulberry32(Math.round(Math.abs(zc) * 100) * 2 + (side > 0 ? 1 : 0) + 31);
+function unitGraffiti(ctx, side, fx, out, zc, w, kind) {
+  const r = graffitiRng(side, zc);
+  const piece = (depth, y, z, pw) => ctx.atlasPlane(ctx.mats.graffiti, fx + out * depth, y, z, pw, pw / ASPECT,
+    Math.floor(r() * GRAFFITI_CELLS), GRAFFITI_CELLS, out * Math.PI / 2);
+  if (kind === 'shutter') {
+    if (r() < 0.55) {
+      const pw = Math.min(1.3 + r() * 0.9, w - 0.8);
+      piece(0.066, 0.55 + pw / ASPECT / 2 + r() * 0.5, zc + (r() - 0.5) * (w - 0.8 - pw), pw);
+    }
+  } else if (kind === 'door') {
+    // on the wall beside the door, outside its neon strips
+    const room = w / 2 - 0.82;
+    if (room > 0.4 && r() < 0.7) {
+      const pw = Math.min(0.55 + r() * 0.5, room), d = r() < 0.5 ? -1 : 1;
+      piece(0.008, 0.9 + r() * 0.8, zc + d * (0.75 + room / 2), pw);
+    }
+  } else if (kind === 'window') {
+    // a small tag under the sill
+    if (r() < 0.45) piece(0.008, 0.3, zc + (r() - 0.5) * (w - 1.6), 0.55 + r() * 0.15);
+  } else if (r() < 0.9) {
+    // blank wall: the big pieces, above the AC units
+    const pw = Math.min(1.7 + r() * 0.9, w - 0.3);
+    piece(0.008, 0.85 + pw / ASPECT / 2 + r() * 0.3, zc, pw);
+  }
+}
+
+// Which edge of the door the handle is on. The hinges go on the other one.
+const doorHand = (zc) => (Math.floor(Math.abs(zc) * 10) % 2 ? 1 : -1);
+
+// Two posts, a head and a threshold, between the door and its neon strips.
+function doorFrame(ctx, fx, out, zc) {
+  const { mats, box } = ctx;
+  const at = (d) => fx + out * d;
+  for (const d of [-1, 1]) box(mats.metal, at(0.045), 1.13, zc + d * 0.575, 0.09, 2.26, 0.1);
+  box(mats.metal, at(0.045), 2.25, zc, 0.09, 0.1, 1.25);
+  box(mats.concrete, at(0.07), 0.015, zc, 0.14, 0.03, 1.25, [2, 2]);
+}
+
+// Three butt hinges: a leaf on the door and on the post, either side of the knuckle.
+function doorHinges(ctx, fx, out, zc) {
+  const { mats, box, cyl } = ctx;
+  const at = (d) => fx + out * d;
+  const edge = -doorHand(zc);
+  for (const y of [0.32, 1.1, 1.88]) {
+    box(mats.metalLight, at(0.064), y, zc + edge * 0.495, 0.008, 0.1, 0.05);
+    box(mats.metalLight, at(0.094), y, zc + edge * 0.55, 0.008, 0.1, 0.04);
+    cyl(mats.metalLight, at(0.094), y, zc + edge * 0.525, 0.012, 0.11, 0, 0, 0, true);
+  }
 }
 
 // A knob, lever or pull bar. No rng draws: the door's position picks the style
 // and which edge it sits on.
 function doorHandle(ctx, fx, out, zc) {
   const { mats, box, cyl, sph } = ctx;
-  const n = Math.floor(Math.abs(zc) * 10);
-  const hand = n % 2 ? 1 : -1, style = n % 3;
+  const hand = doorHand(zc), style = Math.floor(Math.abs(zc) * 10) % 3;
   const hz = zc + hand * 0.42, y = 1.02, at = (d) => fx + out * d;
   if (style === 2) {
     cyl(mats.metalLight, at(0.115), y + 0.08, hz, 0.012, 0.42, 0, 0, 0, true);
@@ -312,6 +368,48 @@ function litter(ctx, side, zz) {
   for (let k = 0; k < paper; k++) {
     const x = px(), z = pz(), s = 0.03 + r() * 0.03;
     sph(mats.foam, x, s * 0.7, z, s, s * 0.75, s * 1.1, true);
+  }
+  // Draws below come after the ones above, so the older litter stays where it was.
+  const crushed = Math.floor(r() * 3);
+  for (let k = 0; k < crushed; k++) crushedCan(ctx, k % 2 ? mats.plasticRed : mats.metal, px(), pz(), r() * 3, 0.2 + r() * 0.35);
+  if (r() < 0.55) brokenBottle(ctx, r() < 0.5 ? mats.glassGreen : mats.glassBrown, px(), pz(), r);
+  const caps = Math.floor(r() * 4);
+  for (let k = 0; k < caps; k++) cyl(mats.metalLight, px(), 0.003, pz(), 0.013, 0.005, 0, 0, 0, true);
+  if (r() < 0.35) {
+    // a noodle cup on its side, with its lid beside it
+    const x = px(), z = pz(), ry = r() * 3, lx = px(), lz = pz();
+    cyl(mats.foam, x, 0.042, z, 0.042, 0.1, 0, ry, Math.PI / 2, true);
+    cyl(mats.plasticRed, lx, 0.002, lz, 0.044, 0.003, 0, 0, 0, true);
+  }
+}
+
+// A can stamped flat, bent in the middle. The caller draws the values.
+function crushedCan(ctx, mat, x, z, ry, bend) {
+  const { squashedCyl } = ctx;
+  const ax = Math.cos(ry), az = -Math.sin(ry), off = 0.024 * Math.cos(bend), y = 0.014 + 0.024 * Math.sin(bend);
+  for (const d of [-1, 1]) {
+    squashedCyl(mat, x + d * ax * off, y, z + d * az * off, 0.013, 0.05, 0.036, 0, ry, Math.PI / 2 + d * bend);
+  }
+}
+
+// The base and neck of a bottle, and shards lying flat around them.
+function brokenBottle(ctx, mat, x, z, r) {
+  const { cyl, prism } = ctx;
+  const ry = r() * 3, ax = Math.cos(ry), az = -Math.sin(ry);
+  cyl(mat, x, 0.032, z, 0.032, 0.08, 0, ry, Math.PI / 2);
+  // jagged teeth around the broken end
+  for (let k = 0; k < 5; k++) {
+    const a = k / 5 * Math.PI * 2, len = 0.02 + r() * 0.03;
+    const ox = -ax * (0.04 + len / 2) - az * Math.cos(a) * 0.025, oz = -az * (0.04 + len / 2) + ax * Math.cos(a) * 0.025;
+    prism(mat, x + ox, 0.032 + Math.sin(a) * 0.025, z + oz, 0.012, len, 0, ry, Math.PI / 2);
+  }
+  // the neck lies a little way off, turned its own way
+  const nx = x + (r() - 0.5) * 0.4, nz = z + (r() - 0.5) * 0.4, nry = r() * 3;
+  cyl(mat, nx, 0.016, nz, 0.016, 0.075, 0, nry, Math.PI / 2, true);
+  const shards = 4 + Math.floor(r() * 5);
+  for (let k = 0; k < shards; k++) {
+    const a = r() * Math.PI * 2, d = 0.06 + r() * 0.22;
+    prism(mat, x + Math.cos(a) * d, 0.002, z + Math.sin(a) * d, 0.01 + r() * 0.022, 0.004, 0, r() * 3);
   }
 }
 

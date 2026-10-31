@@ -32,6 +32,175 @@ export function genACDrip() {
   return canvasTexture(c, { repeat: false });
 }
 
+// ------------------------------------------------------- wall graffiti
+function paintDrips(ctx, rng, x0, x1, y, color, n) {
+  ctx.strokeStyle = color;
+  ctx.lineCap = 'round';
+  for (let k = 0; k < n; k++) {
+    const x = x0 + rng() * (x1 - x0);
+    ctx.lineWidth = 1.5 + rng() * 2.5;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 12 + rng() * 44); ctx.stroke();
+  }
+}
+
+// Soft dots of paint around a shape, as a spray can leaves.
+function overspray(ctx, rng, cx, cy, rx, ry, color, n) {
+  ctx.fillStyle = color;
+  for (let k = 0; k < n; k++) {
+    const a = rng() * Math.PI * 2, d = Math.sqrt(rng());
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(a) * rx * d, cy + Math.sin(a) * ry * d, 0.5 + rng() * 1.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function bubbleText(ctx, text, x, y, size, fill, line) {
+  ctx.font = `900 ${size}px ${FONT_LAT}`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  for (const [w, col, dx] of [[size * 0.34, 'rgba(8, 8, 14, 0.9)', 5], [size * 0.22, line, 0]]) {
+    ctx.lineWidth = w; ctx.strokeStyle = col;
+    ctx.strokeText(text, x + dx, y + dx);
+  }
+  ctx.fillStyle = fill;
+  ctx.fillText(text, x, y);
+}
+
+// One piece each, drawn in a W x H cell.
+const GRAFFITI = [
+  // a bubble-letter throw-up
+  (ctx, W, H, rng) => {
+    paintDrips(ctx, rng, W * 0.14, W * 0.86, H * 0.68, '#ff3fa4', 9);
+    bubbleText(ctx, 'NEON', W / 2, H * 0.46, 92, '#ff3fa4', '#f4f7ff');
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.fillRect(W * 0.12, H * 0.34, W * 0.76, 5);
+  },
+  // a fast marker tag
+  (ctx, W, H) => {
+    ctx.save();
+    ctx.translate(W / 2, H * 0.5); ctx.transform(1, -0.12, -0.35, 1, 0, 0);
+    ctx.font = `italic 700 88px ${FONT_LAT}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 5; ctx.lineJoin = 'round'; ctx.strokeStyle = '#33e1ff';
+    ctx.strokeText('KAZE', 0, 0);
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-150, 52); ctx.bezierCurveTo(-40, 86, 70, 30, 160, 60); ctx.lineTo(120, 74); ctx.stroke();
+    ctx.restore();
+  },
+  // a stencilled cat with a slogan
+  (ctx, W, H, rng) => {
+    overspray(ctx, rng, W / 2, H * 0.42, 110, 90, 'rgba(235, 238, 245, 0.45)', 180);
+    const cx = W / 2, cy = H * 0.42;
+    ctx.fillStyle = '#eceff5';
+    ctx.beginPath();
+    ctx.moveTo(cx - 70, cy - 74); ctx.lineTo(cx - 28, cy - 44); ctx.lineTo(cx + 28, cy - 44); ctx.lineTo(cx + 70, cy - 74);
+    ctx.lineTo(cx + 72, cy + 10); ctx.quadraticCurveTo(cx, cy + 86, cx - 72, cy + 10); ctx.closePath(); ctx.fill();
+    ctx.globalCompositeOperation = 'destination-out';
+    for (const d of [-1, 1]) { ctx.beginPath(); ctx.ellipse(cx + d * 30, cy - 4, 15, 19, 0, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillRect(cx - 5, cy + 22, 10, 7);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.font = `700 30px ${FONT_LAT}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('WAKE UP', cx, H * 0.89);
+  },
+  // a kanji over a spray-can halo
+  (ctx, W, H, rng) => {
+    const g = ctx.createRadialGradient(W / 2, H / 2, 16, W / 2, H / 2, H * 0.47);
+    g.addColorStop(0, 'rgba(93, 255, 180, 0.95)');
+    g.addColorStop(0.75, 'rgba(93, 255, 180, 0.72)');
+    g.addColorStop(1, 'rgba(93, 255, 180, 0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    paintDrips(ctx, rng, W * 0.3, W * 0.7, H * 0.72, 'rgba(93, 255, 180, 0.8)', 6);
+    ctx.font = `900 150px ${FONT_JP}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#0a0a12';
+    ctx.fillText(ART_TEXT.graffiti[0], W / 2, H / 2 + 6);
+  },
+  // a ghost with its name beside it
+  (ctx, W, H, rng) => {
+    const cx = W * 0.32, top = H * 0.14, bot = H * 0.8, r = 62;
+    ctx.fillStyle = '#a45cff';
+    ctx.strokeStyle = '#0a0a12'; ctx.lineWidth = 7; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx - r, bot);
+    ctx.lineTo(cx - r, top + r); ctx.arc(cx, top + r, r, Math.PI, 0); ctx.lineTo(cx + r, bot);
+    for (let k = 1; k <= 4; k++) ctx.lineTo(cx + r - k * r / 2, bot + (k % 2 ? -18 : 0));
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    for (const d of [-1, 1]) {
+      ctx.fillStyle = '#f4f7ff'; ctx.beginPath(); ctx.ellipse(cx + d * 24, top + r - 2, 15, 20, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0a0a12'; ctx.beginPath(); ctx.arc(cx + d * 24 + 4, top + r + 3, 7, 0, Math.PI * 2); ctx.fill();
+    }
+    paintDrips(ctx, rng, cx - r, cx + r, bot, '#a45cff', 4);
+    ctx.font = `900 62px ${FONT_JP}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#f9f871'; ctx.strokeStyle = '#0a0a12'; ctx.lineWidth = 8;
+    [...ART_TEXT.graffiti[1]].forEach((ch, k) => {
+      const y = H * 0.32 + k * 74;
+      ctx.strokeText(ch, W * 0.72, y); ctx.fillText(ch, W * 0.72, y);
+    });
+  },
+  // a crown over a crew number and an arrow
+  (ctx, W, H) => {
+    const cx = W / 2;
+    ctx.fillStyle = '#f9f871'; ctx.strokeStyle = '#0a0a12'; ctx.lineWidth = 6; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx - 70, H * 0.4); ctx.lineTo(cx - 84, H * 0.1); ctx.lineTo(cx - 36, H * 0.26); ctx.lineTo(cx, H * 0.05);
+    ctx.lineTo(cx + 36, H * 0.26); ctx.lineTo(cx + 84, H * 0.1); ctx.lineTo(cx + 70, H * 0.4);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    bubbleText(ctx, 'K-9', cx, H * 0.62, 66, '#ff6a2a', '#f9f871');
+    ctx.strokeStyle = '#33e1ff'; ctx.lineWidth = 9; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx - 110, H * 0.88); ctx.lineTo(cx + 110, H * 0.88);
+    ctx.moveTo(cx + 84, H * 0.8); ctx.lineTo(cx + 110, H * 0.88); ctx.lineTo(cx + 84, H * 0.96); ctx.stroke();
+  },
+  // a torn paste-up poster of an eye
+  (ctx, W, H, rng) => {
+    ctx.save();
+    ctx.translate(W / 2, H / 2); ctx.rotate(-0.05);
+    const w = W * 0.72, h = H * 0.84, steps = 16;
+    ctx.fillStyle = '#d9d4c3';
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, -h / 2); ctx.lineTo(w / 2, -h / 2); ctx.lineTo(w / 2, h / 2 - 20);
+    for (let k = 1; k <= steps; k++) ctx.lineTo(w / 2 - k * w / steps, h / 2 - rng() * 34);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#14141c';
+    ctx.beginPath();
+    ctx.moveTo(-110, -14); ctx.quadraticCurveTo(0, -94, 110, -14); ctx.quadraticCurveTo(0, 62, -110, -14); ctx.fill();
+    ctx.fillStyle = '#d9d4c3'; ctx.beginPath(); ctx.arc(0, -16, 33, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ff2d55'; ctx.beginPath(); ctx.arc(0, -16, 17, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#14141c';
+    ctx.font = `700 22px ${FONT_LAT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('THEY WATCH', 0, 66);
+    ctx.restore();
+  },
+  // a dripping heart with a year
+  (ctx, W, H, rng) => {
+    const cx = W * 0.34, cy = H * 0.3, s = 3.1;
+    ctx.fillStyle = '#ff2d55'; ctx.strokeStyle = '#f4f7ff'; ctx.lineWidth = 6; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + 46 * s / 2);
+    ctx.bezierCurveTo(cx - 52 * s / 2, cy + 8 * s / 2, cx - 40 * s / 2, cy - 30 * s / 2, cx, cy - 10 * s / 2);
+    ctx.bezierCurveTo(cx + 40 * s / 2, cy - 30 * s / 2, cx + 52 * s / 2, cy + 8 * s / 2, cx, cy + 46 * s / 2);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    paintDrips(ctx, rng, cx - 44, cx + 44, cy + 28, '#ff2d55', 7);
+    bubbleText(ctx, '2087', W * 0.66, H * 0.7, 62, '#33e1ff', '#0a0a12');
+  },
+];
+
+// Pieces side by side in one transparent atlas. Placed by graffitiPiece in alley.js.
+export const GRAFFITI_CELLS = GRAFFITI.length;
+export function genGraffiti(aniso) {
+  const CW = 384, H = 256;
+  const c = makeCanvas(CW * GRAFFITI_CELLS, H), ctx = c.getContext('2d');
+  const rng = mulberry32(214);
+  GRAFFITI.forEach((draw, cell) => {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(cell * CW, 0, CW, H); ctx.clip();
+    ctx.translate(cell * CW, 0);
+    draw(ctx, CW, H, rng);
+    ctx.restore();
+  });
+  return canvasTexture(c, { repeat: false, aniso });
+}
+
 // One boot sole in the alpha channel, toe at the top, with the tread cut out.
 export function genBootPrint(aniso) {
   const W = 64, H = 160;
