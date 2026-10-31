@@ -20,13 +20,35 @@ export function hash2(x, y, s = 0) {
 
 const sm = (t) => t * t * (3 - 2 * t);
 
+// Precomputed hash2 values for each (period, seed), built on first use.
+const lattices = new Map();
+
+function lattice(px, py, s) {
+  const key = s * 4194304 + px * 2048 + py; // periods stay well under 2048
+  let table = lattices.get(key);
+  if (!table) {
+    table = new Float64Array(px * py);
+    for (let y = 0; y < py; y++) {
+      for (let x = 0; x < px; x++) table[y * px + x] = hash2(x, y, s);
+    }
+    lattices.set(key, table);
+  }
+  return table;
+}
+
+// The tables are only needed while textures are being generated.
+export function clearNoiseCache() {
+  lattices.clear();
+}
+
 // Tileable value noise: px/py are the integer lattice periods.
 function vnoise(x, y, px, py, s) {
   const xi = Math.floor(x), yi = Math.floor(y);
   const fx = x - xi, fy = y - yi;
   const x0 = ((xi % px) + px) % px, y0 = ((yi % py) + py) % py;
   const x1 = (x0 + 1) % px, y1 = (y0 + 1) % py;
-  const a = hash2(x0, y0, s), b = hash2(x1, y0, s), c = hash2(x0, y1, s), d = hash2(x1, y1, s);
+  const table = lattice(px, py, s);
+  const a = table[y0 * px + x0], b = table[y0 * px + x1], c = table[y1 * px + x0], d = table[y1 * px + x1];
   const u = sm(fx), v = sm(fy);
   return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
 }

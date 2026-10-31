@@ -52,6 +52,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - tests/layout.test.js
 - tests/noise.test.js
 - tests/perf-baseline.js
+- tests/player.test.js
 - tests/quality.test.js
 - tests/signs.test.js
 - tests/textures-page.js

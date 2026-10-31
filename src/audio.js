@@ -30,7 +30,7 @@ export class AmbientAudio {
     const comp = ctx.createDynamicsCompressor();
     comp.connect(ctx.destination);
     this.master = ctx.createGain();
-    this.master.gain.value = 0.9;
+    this.master.gain.value = this.muted ? 0 : 0.9;
     this.master.connect(comp);
     this.white = noiseBuffer(ctx, 3);
     const brown = noiseBuffer(ctx, 5, true);

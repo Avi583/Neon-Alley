@@ -1,6 +1,7 @@
 // Generates every texture at load time. The generators live in pbr-textures.js
 // and canvas-art.js; shared helpers are in texture-core.js.
 import { nextFrame } from './texture-core.js';
+import { clearNoiseCache } from './noise.js';
 import { genConcrete, genBrick, genShutter, genAsphalt, genMetal, genFacade, genGrate, genCloud } from './pbr-textures.js';
 import { genACFront, genVending, genShopInterior, genAd, genHoloText } from './canvas-art.js';
 import { ART_TEXT } from './art-text.js';
@@ -35,5 +36,6 @@ export async function generateTextures(Q, aniso, progress) {
     await nextFrame();
     tx[steps[i][0]] = steps[i][1]();
   }
+  clearNoiseCache();
   return tx;
 }

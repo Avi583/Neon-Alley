@@ -10,6 +10,9 @@ const ui = {
 
 // Where the player is, for carrying across a quality reload. Empty until play starts.
 let currentView = () => ({});
+// Mute also survives a quality reload, including one made while still loading.
+const startMuted = new URLSearchParams(location.search).has('mute');
+let isMuted = () => startMuted;
 
 export function createQualityPills(qKey) {
   for (const box of [ui.pills, ui.pausePills]) {
@@ -22,6 +25,7 @@ export function createQualityPills(qKey) {
         const u = new URL(location.href);
         u.searchParams.set('q', k);
         for (const [key, v] of Object.entries(currentView())) u.searchParams.set(key, v.toFixed(3));
+        if (isMuted()) u.searchParams.set('mute', '1'); else u.searchParams.delete('mute');
         location.href = u.toString();
       });
       box.appendChild(b);
@@ -58,27 +62,40 @@ export function createStates({ player, audio, canvas, auto }) {
     if (!auto) {
       audio.start();
       audio.resume();
-      if (hasLock) canvas.requestPointerLock();
+      // Browsers can refuse the lock just after Esc. Older ones return no promise and only fire pointerlockerror.
+      if (hasLock) canvas.requestPointerLock()?.catch(pause);
     }
+  }
+  function pause() {
+    if (state !== 'play') return;
+    state = 'paused';
+    player.enabled = false;
+    player.keys.clear();
+    ui.pause.classList.remove('hidden');
+    audio.suspend();
   }
   ui.enter.addEventListener('click', play);
   ui.resume.addEventListener('click', play);
   document.addEventListener('pointerlockchange', () => {
-    if (!document.pointerLockElement && state === 'play' && hasLock) {
-      state = 'paused';
-      player.enabled = false;
-      player.keys.clear();
-      ui.pause.classList.remove('hidden');
-      audio.suspend();
-    }
+    if (!document.pointerLockElement && hasLock) pause();
+  });
+  document.addEventListener('pointerlockerror', () => {
+    if (hasLock) pause();
   });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) audio.suspend();
     else if (state === 'play') audio.resume();
   });
-  const toggleSound = () => {
-    ui.sound.textContent = ui.pauseSound.textContent = audio.toggleMute() ? 'SOUND OFF' : 'SOUND ON';
+  const showSound = () => {
+    ui.sound.textContent = ui.pauseSound.textContent = audio.muted ? 'SOUND OFF' : 'SOUND ON';
   };
+  const toggleSound = () => {
+    audio.toggleMute();
+    showSound();
+  };
+  audio.muted = startMuted;
+  isMuted = () => audio.muted;
+  showSound();
   let showFps = false;
   window.addEventListener('keydown', (e) => {
     if (e.code === 'KeyM') toggleSound();

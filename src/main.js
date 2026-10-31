@@ -94,7 +94,9 @@ async function init() {
 
   const post = createPost(renderer, scene, camera, Q);
   const size = new THREE.Vector2();
+  let redraw = false; // resizing clears the canvas, so a paused frame must be drawn again
   function resize() {
+    redraw = true;
     const w = window.innerWidth, h = window.innerHeight;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
@@ -126,16 +128,20 @@ async function init() {
 
   // -------------------------------------------------------------- loop
   const adaptive = new AdaptiveScale();
-  let last = performance.now();
+  let last = performance.now(), lastHum = 0;
   let t = num('t', 0), frames = 0, fpsFrames = 0, fpsTime = 0;
-  function frame() {
+  function frame(now) {
     if (FREEZE && frames >= 12) { window.__ready = true; return; } // freeze for screenshots
     if (bench?.done) return;
     requestAnimationFrame(frame);
-    const now = performance.now();
-    const elapsed = now - last;
-    const dt = FREEZE || BENCH ? 1 / 60 : Math.min(elapsed / 1000, 0.05);
+    const elapsed = Math.max(now - last, 0); // the first timestamp can be older than last
     last = now;
+    if (!FREEZE && !BENCH && states.state === 'paused' && !redraw) {
+      adaptive.reset();
+      return;
+    }
+    redraw = false;
+    const dt = FREEZE || BENCH ? 1 / 60 : Math.min(elapsed / 1000, 0.05);
     t += dt;
     bench?.begin();
     if (!FREEZE && !BENCH && states.state === 'play') {
@@ -154,7 +160,6 @@ async function init() {
     signs.update(t);
     mats.blink.color.copy(mats.blinkBase).multiplyScalar(Math.sin(t * 4) > 0 ? 1 : 0.05);
     pool.update(camera);
-    renderer.getDrawingBufferSize(size);
     snow.update(t, camera, size.y);
     steam.update(t);
     ground.uniforms.uTime.value = t;
@@ -162,7 +167,9 @@ async function init() {
     post.render(t);
     bench?.end();
 
-    if (audio.ctx) {
+    // About 30 Hz: often enough to keep the flicker's stutter in the hum.
+    if (audio.ctx?.state === 'running' && now - lastHum >= 30) {
+      lastHum = now;
       let hum = 0;
       for (const s of signs.lights) {
         const d2 = s.pos.distanceToSquared(camera.position);
@@ -170,7 +177,7 @@ async function init() {
       }
       audio.setHum(hum);
     }
-    fpsFrames++; fpsTime += dt;
+    fpsFrames++; fpsTime += elapsed / 1000;
     if (fpsTime > 0.5) {
       const res = adaptive.scale < 1 ? ` · ${Math.round(adaptive.scale * 100)}%` : '';
       setFps(`${Math.round(fpsFrames / fpsTime)} FPS · ${Q.label}${res}`);
@@ -181,7 +188,7 @@ async function init() {
   progress(1, 'Ready');
   states.ready();
   bench?.loaded();
-  frame();
+  requestAnimationFrame(frame);
 }
 
 init().catch((err) => {

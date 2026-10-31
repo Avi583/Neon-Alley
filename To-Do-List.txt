@@ -30,21 +30,12 @@ B3  [Opus   | Risk 3/5] ground.js / atmosphere.js: use layers to leave snow, ste
     smaller target.
 B4  [Opus   | Risk 4/5] signs.js: put signs in a texture atlas and draw them as one mesh with a per-sign flicker attribute.
     There are 23 separate meshes, materials and canvas textures, all drawn again in the reflection pass.
-B6  [Sonnet | Risk 2/5] main.js: skip or throttle rendering while paused (not on the title screen, which animates the
-    camera). The full scene and reflection keep rendering behind the overlay.
-B9  [Sonnet | Risk 2/5] main.js / audio.js: throttle setHum and stop calling it while audio is suspended. It schedules an
-    automation event every frame, and they pile up while the audio clock is stopped. The hum follows sign flicker (up to
-    24 Hz), so too low a throttle rate loses the stutter.
-B12 [Sonnet | Risk 2/5] main.js frame: get the drawing buffer size in resize() rather than every frame, and use the rAF
-    timestamp instead of two performance.now() calls.
 
 C. Load time and memory
 -----------------------
 C1 [Opus   | Risk 4/5] textures.js / pbr-textures.js / noise.js: move texture generation to a Web Worker. Loops block the main thread and only
    yield between textures. Concrete costs 14 octaves x 4 hashes per texel, about 235M hash calls at 2048 x 2048.
    (Canvas-drawn parts such as the shutter graffiti must stay on the main thread.)
-C2 [Sonnet | Risk 2/5] noise.js: precompute a lattice table per (period, seed) so vnoise does lookups rather than 4 hash2
-   calls. Output must stay identical or every texture changes.
 C4 [Opus   | Risk 3/5] texture-core.js: use DataTexture where no canvas drawing is needed (only shutter draws afterwards).
    Canvases stay alive through texture.image, keeping an extra CPU copy of each map. genCloud also loses alpha precision
    to canvas premultiplication. Watch flipY and colour space, which differ between CanvasTexture and DataTexture.
@@ -62,13 +53,8 @@ F. Bugs found during the review
 F1 [Opus   | Risk 3/5] player.js / ui.js: touch detection is true on any touchscreen laptop, which disables pointer lock, and
    mouse look requires pointer lock, so the mouse can't look around on those devices. Choose the mode from the input
    actually used (pointerType).
-F2 [Sonnet | Risk 2/5] ui.js play(): no handling for a failed requestPointerLock. Browsers can reject it just after Esc,
-   which leaves state 'play' with no mouse look and no pause. Handle pointerlockerror and the rejected promise.
-F3 [Sonnet | Risk 1/5] main.js FPS counter: uses dt clamped to 0.05, so it can never show below 20 FPS. Use unclamped time.
 F4 [Sonnet | Risk 2/5] style.css title screen: on short viewports the ENTER button is off screen and can't be reached, since the
    page has overflow: hidden. At 640 x 360 (a landscape phone) its top is at y = 416. Touch devices have no Enter key to fall back on.
-F5 [Sonnet | Risk 1/5] ui.js / audio.js: mute is lost when a quality change reloads the page, so sound comes back on. Carry it in the
-   URL like the player's position. The pause menu makes this easy to hit.
 F7 [Opus   | Risk 2/5] adaptive-scale.js: it can't tell a slow GPU from a capped display. A browser held to 30 FPS (battery saver) drops to
    60% and stays there, even if the GPU has room to spare. Consider detecting a steady cap, or measuring GPU time (see G14).
 F6 [Opus   | Risk 2/5] Touch devices never see the pause menu (it only exists with pointer lock), so they can't change quality or mute
@@ -77,16 +63,13 @@ F6 [Opus   | Risk 2/5] Touch devices never see the pause menu (it only exists wi
 G. Testing recommendations
 --------------------------
 Vitest is set up (npm test) and Playwright for browser tests (npm run test:textures). All test files live in tests/.
-G1-G3, G5, G6, G9, G10, G13 are done (see H).
-G4  [Sonnet | Risk 2/5] player.js: unit test movement with a stub camera and dom. Cover push-out from each side of a collider,
-    walk bounds, equal diagonal and straight speed, the pitch clamp, no movement while disabled, keys cleared on blur,
-    and onStep firing. Also test that running at the largest dt (0.05, per F3) can't carry the player through a collider.
+G1-G6, G9, G10, G13 are done (see H).
 G7  [Opus   | Risk 3/5] Add a Playwright smoke test (Playwright is now set up) against vite preview: load each ?q= preset, fail on any console error or
     shader compile error, start the game, hold W and confirm the player moved, then pause and resume. Run the built
     output too, so a wrong asset base path is caught before it reaches Pages.
 G8  [Opus   | Risk 3/5] Add browser regression tests for the input bugs: rejected pointer lock (F2), mouse look on a touchscreen
-    laptop (F1), and the FPS counter on slow frames (F3). Write each one to fail before its fix. F3 needs the FPS
-    calculation moved into a small testable function.
+    laptop (F1), and the FPS counter on slow frames (F3). F2 and F3 are already fixed, so confirm those tests fail with
+    the fix temporarily reverted. F3 needs the FPS calculation moved into a small testable function.
 G14 [Opus   | Risk 2/5] bench.js: make frame timing trustworthy. Two runs of the same build on High gave a P50 of 2.5 and 3.8 ms, and Low
     (4.0 ms) read slower than High (3.0 ms), so small timing differences mean nothing yet. Draw calls, triangles and memory
     counts were identical between runs and can be trusted. Try EXT_disjoint_timer_query_webgl2, a larger fixed viewport, and
@@ -143,3 +126,13 @@ G9  [Opus   | Risk 3/5] tests/textures.pw.js: hash the raw pixels of every gener
 G13 [Sonnet | Risk 1/5] Write a short manual checklist for what automation can't judge: a real phone (joystick and drag-look),
     a touchscreen laptop, Chrome, Firefox and Safari, audio starting after the first click and muting, Esc and resume,
     resizing, and how fog and reflections look.
+B6  [Sonnet | Risk 2/5] main.js: rendering stops while paused, with one redraw after a resize (which clears the canvas).
+B9  [Sonnet | Risk 2/5] main.js: the hum updates at about 30 Hz, and only while the audio context is running.
+B12 [Sonnet | Risk 2/5] main.js frame: the drawing buffer size comes from resize(), and timing uses the rAF timestamp.
+C2  [Sonnet | Risk 2/5] noise.js: lattice table per (period, seed), cleared after texture generation. Output is identical.
+    About 20% faster in a Node timing of four fbm layers at 1024 x 1024 (280 ms to 225 ms). The Map lookup limits the gain.
+F2  [Sonnet | Risk 2/5] ui.js: a refused pointer lock (rejected promise or pointerlockerror) opens the pause menu.
+F3  [Sonnet | Risk 1/5] main.js FPS counter: uses unclamped time, so it can show below 20 FPS.
+F5  [Sonnet | Risk 1/5] ui.js / audio.js: mute carries across a quality reload through ?mute=1.
+G4  [Sonnet | Risk 2/5] tests/player.test.js: collisions, walk bounds, speed, pitch clamp, disabled state, blur and footsteps.
+    Running at the largest dt doesn't pass through even a zero-thickness wall.
