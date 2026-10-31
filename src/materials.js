@@ -57,7 +57,10 @@ export function createMaterials(tx) {
   m.woodWorn = wood(0xc4c6c4, 0xc4c6c4);
   m.foam = std({ color: 0xf0f3f6, roughness: 0.8 });
   m.awningBlue = std({ color: 0x14508c, roughness: 0.7 });
-  m.noren = std({ map: tx.noren, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.95 });
+  const noren = (map) => std({ map, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.95 });
+  m.noren = noren(tx.noren);
+  m.norenSushi = noren(tx.norenSushi);
+  m.norenRamen = noren(tx.norenRamen);
 
   const cache = new Map();
   m.strip = (hex, k = 5) => {
@@ -76,6 +79,9 @@ export function createMaterials(tx) {
   m.shopMart = basicMap(tx.shopMart, 1.4);
   m.shopFish = basicMap(tx.shopFish, 0.7);
   m.shopOnigiri = basicMap(tx.shopOnigiri, 0.85);
+  m.shopSushi = basicMap(tx.shopSushi, 0.8);
+  // The ramen storefront's back wall: shopRamen is too bright for a wall this close.
+  m.shopRamenFront = basicMap(tx.shopRamen, 0.85);
   m.vendingHeader = basicMap(tx.vendingHeader, 0.8);
   m.vendingPanel = basicMap(tx.vendingPanel, 0.8);
   // Lit from inside the cabinet, which the alley's lights can't reach.

@@ -1,4 +1,4 @@
-// Two hand-placed shopfronts: a fish market and an onigiri shop. They sit over
+// Hand-placed shopfronts: fish market, onigiri, sushi and ramen. They sit over
 // the shutters already on those stretches of wall. Nothing here may touch the
 // kit's rng (that includes kit.snow and kit.icicles) or the layout shifts, so
 // any variation comes from a separate seeded rng.
@@ -14,6 +14,15 @@ const FISH_BODY = [[1, 0], [0.5, 0.38], [-0.2, 0.3], [-0.62, 0.06], [-1, 0.34], 
 const FISH_GILL = [[0.28, 0.26], [0.18, 0], [0.28, -0.26]];
 const RICE_BALL = [[0, 1], [0.85, -0.45], [0.7, -0.7], [-0.7, -0.7], [-0.85, -0.45], [0, 1]];
 const NORI = [[-0.32, -0.7], [-0.32, -0.1], [0.32, -0.1], [0.32, -0.7], [-0.32, -0.7]];
+const NIGIRI_RICE = [[-0.85, -0.45], [-0.95, -0.1], [-0.7, 0.1], [0.7, 0.1], [0.95, -0.1], [0.85, -0.45], [-0.85, -0.45]];
+const NIGIRI_FISH = [[-1.05, 0.12], [-0.55, 0.45], [0.55, 0.45], [1.05, 0.12], [0, 0.14], [-1.05, 0.12]];
+const circle = (r) => Array.from({ length: 13 }, (_, k) => [r * Math.cos(k * Math.PI / 6), r * Math.sin(k * Math.PI / 6)]);
+const MAKI_NORI = circle(0.9);
+const MAKI_RICE = circle(0.55);
+const BOWL = [[-1, 0.2], [1, 0.2], [0.75, -0.45], [0.35, -0.7], [-0.35, -0.7], [-0.75, -0.45], [-1, 0.2]];
+const NOODLES = [[-0.7, 0.36], [-0.35, 0.52], [0, 0.34], [0.35, 0.52], [0.7, 0.36]];
+const CHOPSTICK = [[0.15, 0.25], [0.65, 0.65], [1.15, 1.05]];
+const WISP = [[0, 0.7], [-0.14, 0.95], [0.06, 1.2], [-0.08, 1.45]];
 
 // One neon tube in the plane of the shopfront. turn swaps the axes, so a fish hangs nose down.
 function neon(ctx, mat, x, y, z, s, shape, turn = false, segs = 36) {
@@ -38,6 +47,36 @@ function shell(ctx, at, side, zc, w, interior) {
   plane(interior, at(SHELL + 0.006), 1.75, zc, w - 0.2, 1.7, side * -Math.PI / 2);
   box(mats.metalDark, at(SHELL + 0.03), 2.62, zc, 0.06, 0.06, w - 0.1);
   for (const d of [-1, 1]) box(mats.metalDark, at(SHELL + 0.03), 1.75, zc + d * (w / 2 - 0.08), 0.06, 1.8, 0.06);
+}
+
+// Tiled eave: a sloped base with ridges running down it, then snow.
+function tiledEave(ctx, at, side, zc, w) {
+  const { mats, box, cyl } = ctx;
+  const roll = -side * (Math.PI / 2 - ROOF_TILT);
+  box(mats.metalDark, at(0.775), 2.82, zc, 0.85, 0.03, w, null, 0, 0, side * ROOF_TILT);
+  const n = Math.round(w / 0.175);
+  for (let k = 0; k < n; k++) {
+    cyl(mats.metalDark, at(0.775), 2.845, zc + (k - (n - 1) / 2) * 0.175, 0.04, 0.85, 0, 0, roll, true);
+  }
+  box(mats.snow, at(0.66), 2.92, zc, 0.5, 0.025, w - 0.14, null, 0, 0, side * ROOF_TILT);
+}
+
+// Noren on a rod in front of the counter. The rod spans the shop, the cloth is cw wide.
+function norenCurtain(ctx, at, side, zc, w, cw, mat) {
+  ctx.cyl(ctx.mats.wood, at(0.72), 2.56, zc, 0.014, w - 0.1, Math.PI / 2);
+  ctx.plane(mat, at(0.72), 2.25, zc, cw, 0.62, -side * Math.PI / 2);
+}
+
+// A paper lantern at each end.
+function lanterns(ctx, at, zc, w, mat) {
+  const { mats, cyl, sph } = ctx;
+  for (const d of [-1, 1]) {
+    const lz = zc + d * (w / 2 - 0.15);
+    cyl(mats.cable, at(1.02), 2.53, lz, 0.004, 0.14, 0, 0, 0, true);
+    sph(mat, at(1.02), 2.32, lz, 0.13, 0.19, 0.13);
+    cyl(mats.metalDark, at(1.02), 2.51, lz, 0.07, 0.03);
+    cyl(mats.metalDark, at(1.02), 2.13, lz, 0.07, 0.03);
+  }
 }
 
 function fishMarket(ctx) {
@@ -83,10 +122,9 @@ function fishMarket(ctx) {
 }
 
 function onigiriShop(ctx) {
-  const { mats, box, sph, cyl, plane, addLight, addCollider } = ctx;
+  const { mats, box, addLight, addCollider } = ctx;
   const side = 1, zc = -18.5, w = 2.6;
   const at = (d) => side * (WALL - d);
-  const out = -side;
   shell(ctx, at, side, zc, w, mats.shopOnigiri);
 
   // wooden counter
@@ -103,33 +141,101 @@ function onigiriShop(ctx) {
     neon(ctx, nori, at(cd + 0.08), 1.13, oz, 0.17, NORI, false, 16);
   }
 
-  // tiled eave: a sloped base with ridges running down it, then snow
-  const roll = -side * (Math.PI / 2 - ROOF_TILT);
-  box(mats.metalDark, at(0.775), 2.82, zc, 0.85, 0.03, w, null, 0, 0, side * ROOF_TILT);
-  for (let k = 0; k < 15; k++) {
-    cyl(mats.metalDark, at(0.775), 2.845, zc + (k - 7) * 0.175, 0.04, 0.85, 0, 0, roll, true);
-  }
-  box(mats.snow, at(0.66), 2.92, zc, 0.5, 0.025, w - 0.14, null, 0, 0, side * ROOF_TILT);
+  tiledEave(ctx, at, side, zc, w);
   box(mats.strip('#ffd9a0', 2.5), at(SHELL + 0.08), 2.7, zc, 0.04, 0.04, w - 0.5);
-
-  // noren on a rod in front of the counter
-  cyl(mats.wood, at(0.72), 2.56, zc, 0.014, w - 0.1, Math.PI / 2);
-  plane(mats.noren, at(0.72), 2.25, zc, w - 0.3, 0.62, out * Math.PI / 2);
-
-  // paper lanterns at each end
-  for (const d of [-1, 1]) {
-    const lz = zc + d * (w / 2 - 0.15);
-    cyl(mats.cable, at(1.02), 2.53, lz, 0.004, 0.14, 0, 0, 0, true);
-    sph(mats.lantern, at(1.02), 2.32, lz, 0.13, 0.19, 0.13);
-    cyl(mats.metalDark, at(1.02), 2.51, lz, 0.07, 0.03);
-    cyl(mats.metalDark, at(1.02), 2.13, lz, 0.07, 0.03);
-  }
+  norenCurtain(ctx, at, side, zc, w, w - 0.3, mats.noren);
+  lanterns(ctx, at, zc, w, mats.lantern);
 
   addLight(at(1.4), 1.7, zc, '#ffb070', 3, 8);
   addCollider(at(SHELL + COUNTER + 0.04), at(-0.35), zc - w / 2, zc + w / 2);
 }
 
+function sushiShop(ctx) {
+  const { mats, box, cyl, sph, addLight, addCollider } = ctx;
+  const side = -1, zc = -57.3, w = 3.4;
+  const at = (d) => side * (WALL - d);
+  shell(ctx, at, side, zc, w, mats.shopSushi);
+
+  // pale wooden counter with a lit edge
+  const cd = SHELL + COUNTER / 2, wood = [0.8, 0.8];
+  box(mats.woodDark, at(cd), 0.4, zc, COUNTER, 0.8, w - 0.1, wood);
+  box(mats.wood, at(cd + 0.01), 0.82, zc, COUNTER + 0.06, 0.04, w, wood);
+  box(mats.strip('#ffe6c0', 1.6), at(SHELL + COUNTER + 0.045), 0.78, zc, 0.01, 0.03, w);
+
+  // conveyor belt with rails, carrying plates of neon sushi
+  const salmon = mats.strip('#ff7a5a', 3.5), rice = mats.strip('#fff1d6', 3.5), nori = mats.strip('#5dffb4', 3.5);
+  box(mats.metalDark, at(cd), 0.85, zc, 0.2, 0.02, w - 0.2);
+  for (const d of [-1, 1]) box(mats.metalLight, at(cd + d * 0.11), 0.86, zc, 0.02, 0.04, w - 0.2);
+  for (let k = 0; k < 6; k++) {
+    const pz = zc + (k - 2.5) * 0.52;
+    cyl(k % 2 ? mats.metalRed : mats.foam, at(cd), 0.87, pz, 0.085, 0.012);
+    cyl(mats.metalDark, at(cd), 0.91, pz, 0.005, 0.08, 0, 0, 0, true);
+    if (k % 3 === 2) {
+      neon(ctx, nori, at(cd), 1.07, pz, 0.12, MAKI_NORI, false, 24);
+      neon(ctx, rice, at(cd), 1.07, pz, 0.12, MAKI_RICE, false, 16);
+      sph(salmon, at(cd), 1.07, pz, 0.018, 0.018, 0.018, true);
+    } else {
+      neon(ctx, rice, at(cd), 1.03, pz, 0.15, NIGIRI_RICE);
+      neon(ctx, salmon, at(cd), 1.03, pz, 0.15, NIGIRI_FISH);
+    }
+  }
+
+  // plain indigo awning, snowed over
+  box(mats.awningBlue, at(0.775), 2.82, zc, 0.85, 0.03, w, null, 0, 0, side * ROOF_TILT);
+  box(mats.snow, at(0.68), 2.885, zc, 0.5, 0.025, w - 0.14, null, 0, 0, side * ROOF_TILT);
+  box(mats.strip('#fff0d8', 1.6), at(SHELL + 0.08), 2.7, zc, 0.04, 0.04, w - 0.5);
+
+  norenCurtain(ctx, at, side, zc, w, 1.66, mats.norenSushi);
+  lanterns(ctx, at, zc, w, mats.strip('#ffe2b8', 1.2));
+
+  addLight(at(1.5), 1.5, zc, '#ffe6c0', 3, 8);
+  addCollider(at(SHELL + COUNTER + 0.04), at(-0.35), zc - w / 2, zc + w / 2);
+}
+
+function ramenShop(ctx) {
+  const { mats, box, cyl, addLight, addCollider } = ctx;
+  const side = 1, zc = -8.3, w = 3.3;
+  const at = (d) => side * (WALL - d);
+  shell(ctx, at, side, zc, w, mats.shopRamenFront);
+
+  // dark wooden counter with a lit edge
+  const cd = SHELL + COUNTER / 2, wood = [0.8, 0.8];
+  box(mats.woodDark, at(cd), 0.4, zc, COUNTER, 0.8, w - 0.1, wood);
+  box(mats.woodDark, at(cd + 0.01), 0.82, zc, COUNTER + 0.06, 0.04, w, wood);
+  box(mats.strip('#ff6a3a', 3), at(SHELL + COUNTER + 0.045), 0.78, zc, 0.01, 0.03, w);
+
+  // neon bowls on a riser, each with noodles, chopsticks and steam
+  const bowl = mats.strip('#ff4a3a', 3.5), noodle = mats.strip('#ffd166', 3.5), pale = mats.strip('#f4f8ff', 2.5);
+  box(mats.woodDark, at(cd + 0.06), 0.9, zc, 0.14, 0.12, w - 0.3, wood);
+  for (let k = 0; k < 3; k++) {
+    const bz = zc + (k - 1) * 0.98, by = 1.14, s = 0.19;
+    neon(ctx, bowl, at(cd + 0.06), by, bz, s, BOWL);
+    neon(ctx, noodle, at(cd + 0.06), by, bz, s, NOODLES, false, 20);
+    neon(ctx, noodle, at(cd + 0.06), by, bz, s, CHOPSTICK, false, 6);
+    for (const u of [-0.35, 0.3]) neon(ctx, pale, at(cd + 0.06), by, bz + u * s, s, WISP, false, 14);
+  }
+
+  // stools in front of the counter
+  const sd = SHELL + COUNTER + 0.22;
+  for (let k = 0; k < 4; k++) {
+    const sz = zc + (k - 1.5) * 0.72;
+    cyl(mats.metalDark, at(sd), 0.015, sz, 0.1, 0.03);
+    cyl(mats.metalDark, at(sd), 0.27, sz, 0.018, 0.5, 0, 0, 0, true);
+    cyl(mats.metalRed, at(sd), 0.53, sz, 0.13, 0.05);
+  }
+
+  tiledEave(ctx, at, side, zc, w);
+  box(mats.strip('#ffb070', 2.5), at(SHELL + 0.08), 2.7, zc, 0.04, 0.04, w - 0.5);
+  norenCurtain(ctx, at, side, zc, w, w - 0.3, mats.norenRamen);
+  lanterns(ctx, at, zc, w, mats.lantern);
+
+  addLight(at(1.5), 1.6, zc, '#ff9a5a', 3, 8);
+  addCollider(at(sd + 0.15), at(-0.35), zc - w / 2, zc + w / 2);
+}
+
 export function buildShops(ctx) {
   fishMarket(ctx);
   onigiriShop(ctx);
+  sushiShop(ctx);
+  ramenShop(ctx);
 }

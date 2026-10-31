@@ -32,7 +32,10 @@ export async function generateTextures(Q, aniso, progress) {
     ['shopMart', () => genShopInterior('mart')],
     ['shopFish', () => genShopInterior('fish')],
     ['shopOnigiri', () => genShopInterior('onigiri')],
+    ['shopSushi', () => genShopInterior('sushi')],
     ['noren', () => genNoren(ART_TEXT.onigiri)],
+    ['norenSushi', () => genNoren(ART_TEXT.sushi, '#16245c', '#f0ead8')],
+    ['norenRamen', () => genNoren(ART_TEXT.ramen, '#8c1a1a', '#f6e6c8')],
     ['holoText', () => genHoloText()],
     ['ads', () => [
       genAd('NEXA', ART_TEXT.ads[0], '#ff2d8a', '#3a0b5e', 1),

@@ -539,7 +539,37 @@ function drawOnigiri(ctx, W, H, rng) {
   ctx.font = `700 18px ${FONT_LAT}`; ctx.fillText('ONIGIRI', W / 2, 69);
 }
 
-const SHOPS = { ramen: drawRamen, bar: drawBar, mart: drawMart, fish: drawFish, onigiri: drawOnigiri };
+function drawSushi(ctx, W, H, rng) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#f2e2c0'); g.addColorStop(1, '#a87c4c');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // a shelf of sake bottles
+  ctx.fillStyle = '#4a2a14'; ctx.fillRect(10, 196, W * 0.62, 8);
+  for (let k = 0; k < 11; k++) {
+    const x = 26 + k * 27, bh = 44 + rng() * 14;
+    ctx.fillStyle = ['#1f4a34', '#f4efe2', '#5a2f10', '#22365c'][Math.floor(rng() * 4)];
+    ctx.fillRect(x - 8, 196 - bh, 16, bh);
+    ctx.fillRect(x - 3, 196 - bh - 14, 6, 14);
+    ctx.fillStyle = '#f4e5c4'; ctx.fillRect(x - 6, 196 - bh * 0.7, 12, bh * 0.4);
+  }
+  // wooden menu tags
+  for (let k = 0; k < 5; k++) {
+    const x = W * 0.68 + k * 32;
+    ctx.fillStyle = '#f4e5c4'; ctx.fillRect(x, 100, 26, 96 + rng() * 40);
+    ctx.fillStyle = '#3a1a10'; ctx.font = `900 22px ${FONT_JP}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    [...ART_TEXT.sushi].forEach((ch, j) => ctx.fillText(ch, x + 13, 122 + j * 30));
+  }
+  // chefs' counter along the bottom
+  ctx.fillStyle = '#3a2214'; ctx.fillRect(0, 240, W, 80);
+  ctx.fillStyle = '#d8c49a'; ctx.fillRect(0, 240, W, 8);
+  ctx.fillStyle = '#16245c'; ctx.fillRect(0, 0, W, 84);
+  ctx.fillStyle = '#f6f1e4'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `900 50px ${FONT_JP}`; ctx.fillText(ART_TEXT.sushi, W / 2, 34);
+  ctx.font = `700 18px ${FONT_LAT}`; ctx.fillText('SUSHI', W / 2, 69);
+}
+
+const SHOPS = { ramen: drawRamen, bar: drawBar, mart: drawMart, fish: drawFish, onigiri: drawOnigiri, sushi: drawSushi };
 
 export function genShopInterior(kind) {
   const W = 512, H = 320;
@@ -555,16 +585,16 @@ export function genShopInterior(kind) {
 }
 
 // Split shop curtain: one cloth panel per character, with see-through gaps.
-export function genNoren(text) {
+export function genNoren(text, cloth = '#1c2452', ink = '#c9c2b2') {
   const W = 512, H = 192;
   const c = makeCanvas(W, H), ctx = c.getContext('2d');
   const chars = [...text], pw = W / chars.length;
-  ctx.fillStyle = '#1c2452'; ctx.fillRect(0, 0, W, 20);
+  ctx.fillStyle = cloth; ctx.fillRect(0, 0, W, 20);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `900 84px ${FONT_JP}`;
   chars.forEach((ch, k) => {
-    ctx.fillStyle = '#1c2452'; ctx.fillRect(k * pw + 3, 0, pw - 6, H);
-    ctx.fillStyle = '#c9c2b2'; ctx.fillText(ch, (k + 0.5) * pw, H * 0.56);
+    ctx.fillStyle = cloth; ctx.fillRect(k * pw + 3, 0, pw - 6, H);
+    ctx.fillStyle = ink; ctx.fillText(ch, (k + 0.5) * pw, H * 0.56);
   });
   return canvasTexture(c, { repeat: false });
 }
