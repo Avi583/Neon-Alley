@@ -85,6 +85,8 @@ export function createMaterials(tx) {
   m.vendingHeader = basicMap(tx.vendingHeader, 0.8);
   m.vendingPanel = basicMap(tx.vendingPanel, 0.8);
   m.vendingPrice = basicMap(tx.vendingPrice, 0.9);
+  m.priceRamen = basicMap(tx.priceRamen, 1.2);
+  m.priceOnigiri = basicMap(tx.priceOnigiri, 1.2);
   // Lit from inside the cabinet, which the alley's lights can't reach.
   m.vendingCans = std({ map: tx.canLabels, emissiveMap: tx.canLabels, emissive: 0xffffff, emissiveIntensity: 0.42, roughness: 0.4, metalness: 0.2 });
   m.vendingGlass = std({ color: 0xcfe6ff, roughness: 0.12, metalness: 0, envMapIntensity: 1, transparent: true, opacity: 0.05, depthWrite: false });

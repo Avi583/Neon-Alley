@@ -36,6 +36,7 @@ function shopUnit(ctx, side, xi, zc, w, kind) {
     for (const d of [-1, 1]) box(mats.metalDark, fx + out * 0.05, sh / 2, zc + d * (sw / 2 + 0.04), 0.1, sh, 0.08);
   } else if (kind === 'door') {
     const c = pick(NEON);
+    ctx.doors.push({ face: fx + out * 0.1, z: zc });
     box(mats.metalDark, fx + out * 0.03, 1.1, zc, 0.06, 2.2, 1.05);
     box(mats.strip('#9fd8ff', 1.4), fx + out * 0.065, 1.7, zc, 0.01, 0.32, 0.45);
     doorFrame(ctx, fx, out, zc);
@@ -657,7 +658,7 @@ export function buildAlley(kit, mats, signSpecs) {
   // Shopfront signs stay out: nearSign decides what gets built, which changes the rng draws.
   for (const s of signSpecs) if (s.side && !s.shopfront) signZ[s.side].push(s.z);
   const nearSign = (side, z, r) => signZ[side].some((sz) => Math.abs(sz - z) < r);
-  const ctx = { ...kit, mats, vents, addLight, addCollider, nearSign };
+  const ctx = { ...kit, mats, vents, addLight, addCollider, nearSign, doors: [], neonForms: [] };
 
   // All of these draw from one rng, so this order fixes the layout.
   buildBuildings(ctx);
@@ -667,5 +668,5 @@ export function buildAlley(kit, mats, signSpecs) {
   buildSkyline(ctx);
   buildShops(ctx);
 
-  return { colliders, vents, lights, vending: ctx.vending };
+  return { colliders, vents, lights, vending: ctx.vending, doors: ctx.doors, neonForms: ctx.neonForms };
 }

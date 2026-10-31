@@ -693,9 +693,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "980049b2b6fe3340",
+      "hash": "19181a6576ce7463",
       "material": "metalDark",
-      "vertices": 41306,
+      "vertices": 41354,
     },
     {
       "hash": "c9c833975b13f244",
@@ -723,9 +723,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 5200,
     },
     {
-      "hash": "12b3f436885f119f",
+      "hash": "bbc6ca733e467f8c",
       "material": "cable",
-      "vertices": 16436,
+      "vertices": 16596,
     },
     {
       "hash": "24581ae6a66d49d0",
@@ -763,14 +763,14 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 312,
     },
     {
-      "hash": "901ff2e92bedb280",
+      "hash": "a0a74babd15c95d4",
       "material": "strip:#5dffb4:3.5",
-      "vertices": 1026,
+      "vertices": 216,
     },
     {
-      "hash": "f991fc72e422d721",
+      "hash": "7e74f62492b39c19",
       "material": "strip:#ffd166:3.5",
-      "vertices": 792,
+      "vertices": 288,
     },
     {
       "hash": "1fd646ab0fd754bf",
@@ -1003,14 +1003,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 4,
     },
     {
-      "hash": "d709d15c271f3108",
-      "material": "strip:#7fd8ff:3",
-      "vertices": 2130,
-    },
-    {
-      "hash": "a48fa34427c0a228",
-      "material": "strip:#ff6a5a:3.5",
-      "vertices": 1404,
+      "hash": "d714b55b5a17b507",
+      "material": "strip:#7fd8ff:1.8",
+      "vertices": 24,
     },
     {
       "hash": "b050ac97eabbe55d",
@@ -1023,11 +1018,6 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 4,
     },
     {
-      "hash": "7c4dd7cca2bc26f5",
-      "material": "strip:#fff1d6:3.5",
-      "vertices": 2202,
-    },
-    {
       "hash": "8249df3258275300",
       "material": "strip:#ffd9a0:2.5",
       "vertices": 24,
@@ -1035,6 +1025,11 @@ exports[`generated layout > matches the snapshot 1`] = `
     {
       "hash": "0a7dc397f89f0b96",
       "material": "noren",
+      "vertices": 4,
+    },
+    {
+      "hash": "67f25719b02d9625",
+      "material": "priceOnigiri",
       "vertices": 4,
     },
     {
@@ -1046,11 +1041,6 @@ exports[`generated layout > matches the snapshot 1`] = `
       "hash": "cd6e6339dcec2ebb",
       "material": "strip:#ffe6c0:1.6",
       "vertices": 24,
-    },
-    {
-      "hash": "efad6270ade23bb1",
-      "material": "strip:#ff7a5a:3.5",
-      "vertices": 1014,
     },
     {
       "hash": "b50ca1d1247e8ab1",
@@ -1078,16 +1068,6 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 24,
     },
     {
-      "hash": "cef1af8235706a4d",
-      "material": "strip:#ff4a3a:3.5",
-      "vertices": 666,
-    },
-    {
-      "hash": "5e1f1cb1a879074a",
-      "material": "strip:#f4f8ff:2.5",
-      "vertices": 540,
-    },
-    {
       "hash": "54b4b247ece06fae",
       "material": "strip:#ffb070:2.5",
       "vertices": 24,
@@ -1095,6 +1075,11 @@ exports[`generated layout > matches the snapshot 1`] = `
     {
       "hash": "936d53449ff19e8b",
       "material": "norenRamen",
+      "vertices": 4,
+    },
+    {
+      "hash": "3597fc882fd0fea7",
+      "material": "priceRamen",
       "vertices": 4,
     },
   ],

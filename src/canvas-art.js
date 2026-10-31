@@ -410,6 +410,18 @@ export function genVendingPrice() {
   return canvasTexture(c, { repeat: false });
 }
 
+// A shop's menu board: the dish in Japanese over its price.
+export function genShopPrice(name, price) {
+  const W = 420, H = 180;
+  const c = makeCanvas(W, H), ctx = c.getContext('2d');
+  ctx.fillStyle = '#160a08'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#ffb36b'; ctx.lineWidth = 5; ctx.strokeRect(8, 8, W - 16, H - 16);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffe9c8'; ctx.font = `900 44px ${FONT_JP}`; ctx.fillText(name, W / 2, 56, W - 40);
+  ctx.fillStyle = '#ffd166'; ctx.font = `900 70px ${FONT_LAT}`; ctx.fillText(price, W / 2, 124, W - 40);
+  return canvasTexture(c, { repeat: false });
+}
+
 // One label per cell. u = 0.5 of a cell faces the viewer, so the can's round
 // shading is painted in: the sides fall away to dark, with a highlight left of centre.
 export const CAN_FLAVOURS = 6;

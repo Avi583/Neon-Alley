@@ -11,6 +11,7 @@ import { SIGN_SPECS, SIGN_TEXT } from './sign-specs.js';
 import { PlanarReflection, createGround } from './ground.js';
 import { Footprints } from './footprints.js';
 import { Vending, inReach } from './vending.js';
+import { NeonFood } from './neon-food.js';
 import { createSky, Snow, Steam } from './atmosphere.js';
 import { buildEnvironment } from './environment.js';
 import { LightPool } from './lights.js';
@@ -28,6 +29,7 @@ const AUTO = params.has('autostart'); // used for automated screenshots
 const FREEZE = AUTO || params.has('freeze');
 const BENCH = params.has('bench'); // used for the performance baseline
 const num = (k, d) => (params.has(k) ? parseFloat(params.get(k)) : d);
+const BUY = 'BUY A DRINK ¥120', KNOCK = 'KNOCK', KNOCK_COOLDOWN = 1000; // ms, the length of three raps
 
 createQualityPills(qKey);
 
@@ -75,6 +77,7 @@ async function init() {
   const signs = buildSigns(kit, mats, tx.holoText, Q.signPPM, scene);
   batch.build(scene);
   const vending = new Vending(alley.vending, mats, scene);
+  const neonFood = new NeonFood(alley.neonForms, scene);
 
   const refl = new PlanarReflection(Q.reflScale);
   const ground = createGround(tx, Q, refl, renderer);
@@ -132,10 +135,23 @@ async function init() {
   pool.update(camera);
   try { await renderer.compileAsync(scene, camera); } catch { renderer.compile(scene, camera); }
 
-  const canVend = () => player.enabled && inReach(alley.vending, player.pos.x, player.pos.y, player.yaw);
+  const reaches = (spot) => inReach(spot, player.pos.x, player.pos.y, player.yaw);
+  const useAction = () => {
+    if (!player.enabled) return null;
+    if (reaches(alley.vending)) return BUY;
+    return alley.doors.some(reaches) ? KNOCK : null;
+  };
+  let nextKnock = 0;
   const states = createStates({
     player, audio, canvas: renderer.domElement, auto: AUTO || BENCH,
-    onUse: () => { if (canVend() && vending.buy()) audio.clunk(); },
+    onUse: () => {
+      const action = useAction();
+      if (action === BUY && vending.buy()) audio.clunk();
+      if (action === KNOCK && performance.now() >= nextKnock) {
+        nextKnock = performance.now() + KNOCK_COOLDOWN;
+        audio.knock();
+      }
+    },
   });
   const bench = BENCH ? createBench(renderer, player, ALLEY, num('bench', 600)) : null;
 
@@ -171,7 +187,8 @@ async function init() {
     footprints.update(t);
     player.update(dt);
     vending.update(dt);
-    states.showVendPrompt(canVend());
+    neonFood.update(t);
+    states.showPrompt(useAction());
     sky.position.copy(camera.position);
     signs.update(t);
     mats.blink.color.copy(mats.blinkBase).multiplyScalar(Math.sin(t * 4) > 0 ? 1 : 0.05);

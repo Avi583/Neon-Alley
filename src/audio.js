@@ -131,6 +131,27 @@ export class AmbientAudio {
     }
   }
 
+  // Three raps on a door: a dull thump with a short slap of noise on each.
+  knock() {
+    const ctx = this.ctx;
+    if (!ctx || this.muted) return;
+    for (const at of [0, 0.2, 0.4]) {
+      const t = ctx.currentTime + at;
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(190, t); o.frequency.exponentialRampToValueAtTime(85, t + 0.09);
+      const og = ctx.createGain();
+      og.gain.setValueAtTime(0.6, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+      o.connect(og).connect(this.master);
+      o.start(t); o.stop(t + 0.12);
+      const src = ctx.createBufferSource(); src.buffer = this.white;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 650; bp.Q.value = 1.2;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+      src.connect(bp).connect(g).connect(this.master);
+      src.start(t, Math.random() * 2, 0.06);
+    }
+  }
+
   toggleMute() {
     this.muted = !this.muted;
     if (this.master) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.9, this.ctx.currentTime, 0.05);

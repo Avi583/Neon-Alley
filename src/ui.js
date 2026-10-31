@@ -103,14 +103,20 @@ export function createStates({ player, audio, canvas, auto, onUse }) {
     if (e.code === 'Enter' && state === 'title' && !ui.enter.disabled) play();
     if (e.code === 'KeyE' && !e.repeat && state === 'play') onUse();
   });
-  ui.vend.textContent = (player.touch ? 'TAP' : 'E') + ' · BUY A DRINK ¥120';
   ui.vend.addEventListener('click', onUse);
+  let shownPrompt = null;
   ui.sound.addEventListener('click', toggleSound);
   ui.pauseSound.addEventListener('click', toggleSound);
 
   return {
     get state() { return state; },
-    showVendPrompt(show) { ui.vend.classList.toggle('hidden', !show); },
+    // Called every frame with the action in reach, or null for none.
+    showPrompt(action) {
+      if (action === shownPrompt) return;
+      shownPrompt = action;
+      ui.vend.classList.toggle('hidden', !action);
+      if (action) ui.vend.textContent = (player.touch ? 'TAP' : 'E') + ' · ' + action;
+    },
     // Loading is finished: let the player in.
     ready() {
       ui.enter.disabled = false;

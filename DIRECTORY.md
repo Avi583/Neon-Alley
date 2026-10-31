@@ -35,6 +35,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/main.js
 - src/materials.js
 - src/math.js
+- src/neon-food.js
 - src/noise.js
 - src/pbr-textures.js
 - src/player.js
@@ -58,6 +59,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - tests/adaptive-scale.test.js
 - tests/footprints.test.js
 - tests/layout.test.js
+- tests/neon-food.test.js
 - tests/noise.test.js
 - tests/perf-baseline.js
 - tests/player.test.js
@@ -74,6 +76,6 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 
 ## docs/ (deployed build output)
 - docs/.nojekyll
-- docs/assets/index-BXRTUsSW.js
 - docs/assets/index-DIPauJIT.css
+- docs/assets/index-LdynAErL.js
 - docs/index.html
