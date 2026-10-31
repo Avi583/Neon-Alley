@@ -3,7 +3,7 @@
 import { nextFrame } from './texture-core.js';
 import { clearNoiseCache } from './noise.js';
 import { genConcrete, genBrick, genShutter, genAsphalt, genMetal, genFacade, genGrate, genWood, genCloud } from './pbr-textures.js';
-import { genACFront, genVending, genShopInterior, genNoren, genAd, genHoloText } from './canvas-art.js';
+import { genACFront, genVendingHeader, genVendingPanel, genCanLabels, genShopInterior, genNoren, genAd, genHoloText } from './canvas-art.js';
 import { ART_TEXT } from './art-text.js';
 
 // Generate everything with progress callbacks, yielding to the browser
@@ -21,7 +21,9 @@ export async function generateTextures(Q, aniso, progress) {
     ['wood', () => genWood(256, aniso)],
     ['acFront', () => genACFront(256)],
     ['cloud', () => genCloud(128)],
-    ['vending', () => genVending()],
+    ['vendingHeader', () => genVendingHeader()],
+    ['vendingPanel', () => genVendingPanel()],
+    ['canLabels', () => genCanLabels()],
     ['shopRamen', () => genShopInterior('ramen')],
     ['shopBar', () => genShopInterior('bar')],
     ['shopMart', () => genShopInterior('mart')],

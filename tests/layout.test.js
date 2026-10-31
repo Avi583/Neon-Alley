@@ -42,7 +42,7 @@ function fakeMaterials() {
   const maps = { map: null, normalMap: null, roughnessMap: null, emissiveMap: null };
   const m = createMaterials({
     concrete: maps, brick: maps, shutter: maps, facade: maps, metal: maps, grate: maps, wood: maps,
-    acFront: null, shopRamen: null, shopBar: null, shopMart: null, shopFish: null, shopOnigiri: null, noren: null, vending: null,
+    acFront: null, shopRamen: null, shopBar: null, shopMart: null, shopFish: null, shopOnigiri: null, noren: null, vendingHeader: null, vendingPanel: null, canLabels: null,
     ads: [null, null, null],
   });
   for (const [k, v] of Object.entries(m)) if (v.isMaterial) v.name = k;

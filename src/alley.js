@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { WALL } from './config.js';
 import { buildShops } from './shops.js';
 import { mulberry32 } from './noise.js';
+import { CAN_FLAVOURS } from './canvas-art.js';
 
 export const ALLEY = {
   half: WALL,
@@ -339,7 +340,7 @@ function buildOverhead(ctx) {
 
 // ------------------------------------------------------- street props
 function buildStreetProps(ctx) {
-  const { mats, R, rng, pick, box, cyl, sph, plane, icicles, snow, tube, vents, addLight, addCollider } = ctx;
+  const { mats, R, rng, pick, box, cyl, sph, plane, atlasCyl, icicles, snow, tube, vents, addLight, addCollider } = ctx;
   // Paper lanterns at the izakaya
   for (const lz of [-5.6, -8.0]) {
     const lx = -WALL + 0.45;
@@ -375,8 +376,51 @@ function buildStreetProps(ctx) {
   {
     const vz = -26.5, side = 1, d = 0.75;
     const cx = side * (WALL + 0.05 - d / 2);
-    box(mats.metalRed, cx, 0.95, vz, d, 1.9, 0.95);
-    plane(mats.vending, cx - side * (d / 2 + 0.005), 1.0, vz, 0.82, 1.64, -side * Math.PI / 2);
+    const face = cx - side * d / 2, ry = -side * Math.PI / 2;
+    const inset = (depth) => face + side * depth;
+    // Cabinet: hollow between y = 0.72 and 1.62, with the back wall at depth 0.46.
+    for (const e of [-1, 1]) box(mats.metalRed, cx, 0.95, vz + e * 0.46, d, 1.9, 0.03);
+    box(mats.metalRed, cx, 1.76, vz, d, 0.28, 0.89);
+    box(mats.metalRed, cx, 0.48, vz, d, 0.48, 0.89);
+    box(mats.metalRed, inset(0.605), 1.17, vz, 0.29, 0.9, 0.89);
+    plane(mats.strip('#bcd8ff', 0.4), inset(0.455), 1.17, vz, 0.89, 0.9, ry);
+    box(mats.strip('#eaf6ff', 2.2), inset(0.2), 1.6, vz, 0.04, 0.02, 0.76);
+    // Pickup bin: a real recess in the base, behind a tilted flap.
+    box(mats.metalRed, inset(0.415), 0.12, vz, 0.67, 0.24, 0.89);
+    box(mats.metalDark, inset(0.04), 0.05, vz, 0.08, 0.1, 0.89);
+    for (const e of [-1, 1]) box(mats.metalRed, inset(0.04), 0.17, vz + e * 0.345, 0.08, 0.14, 0.19);
+    box(mats.cable, inset(0.076), 0.17, vz, 0.008, 0.14, 0.5);
+    box(mats.metalDark, inset(0.035), 0.175, vz, 0.012, 0.125, 0.48, null, 0, 0, side * 0.22);
+    box(mats.metalLight, inset(0.008), 0.243, vz, 0.016, 0.012, 0.52);
+    box(mats.metalLight, inset(0.008), 0.097, vz, 0.016, 0.012, 0.52);
+    // Door frame around the glass, with a dark gasket inside it
+    for (const e of [-1, 1]) {
+      box(mats.metalRed, inset(0.02), 1.17, vz + e * 0.4175, 0.04, 0.9, 0.055);
+      box(mats.metalDark, inset(0.025), 1.17, vz + e * 0.385, 0.03, 0.9, 0.01);
+    }
+    for (const y of [0.725, 1.615]) box(mats.metalDark, inset(0.025), y, vz, 0.03, 0.01, 0.78);
+    // Shelves with price rails, then one can, price tag and button per slot.
+    for (let row = 0; row < 4; row++) {
+      const base = 0.745 + row * 0.22;
+      box(mats.metalLight, inset(0.25), base - 0.008, vz, 0.4, 0.016, 0.89);
+      box(mats.metalDark, inset(0.055), base - 0.02, vz, 0.012, 0.04, 0.76);
+      for (let k = 0; k < 6; k++) {
+        const z = vz + (k - 2.5) * 0.125;
+        atlasCyl(mats.vendingCans, inset(0.2), base + 0.075, z, 0.042, 0.15, (k * (row % 2 ? 5 : 1) + row * 2) % CAN_FLAVOURS, CAN_FLAVOURS, side * Math.PI / 2);
+        cyl(mats.metalLight, inset(0.2), base + 0.152, z, 0.036, 0.004);
+        box(mats.strip('#ffffff', 0.55), inset(0.048), base - 0.012, z - 0.018, 0.002, 0.02, 0.05);
+        box(mats.strip('#ff3d5a', 0.9), inset(0.047), base - 0.012, z + 0.036, 0.006, 0.018, 0.018);
+      }
+    }
+    plane(mats.vendingGlass, inset(0.03), 1.17, vz, 0.78, 0.9, ry);
+    // Header sign and control panel, with a coin plate and return button on it
+    plane(mats.vendingHeader, face - side * 0.002, 1.76, vz, 0.89, 0.24, ry);
+    plane(mats.vendingPanel, face - side * 0.002, 0.48, vz, 0.89, 0.48, ry);
+    const hardwareZ = vz + 0.27;
+    box(mats.metalLight, face - side * 0.008, 0.55, hardwareZ, 0.016, 0.16, 0.12);
+    box(mats.cable, face - side * 0.017, 0.585, hardwareZ, 0.002, 0.05, 0.008);
+    box(mats.cable, face - side * 0.017, 0.52, hardwareZ, 0.002, 0.012, 0.06);
+    cyl(mats.plasticRed, face - side * 0.012, 0.425, hardwareZ, 0.022, 0.024, 0, 0, Math.PI / 2);
     snow(cx, 1.9, vz, d, 0.95, 0.06);
     icicles(cx - side * d / 2, 1.88, vz - 0.45, cx - side * d / 2, 1.88, vz + 0.45, 0.5, 0.25);
     addCollider(cx - d / 2, cx + d / 2, vz - 0.5, vz + 0.5);

@@ -661,9 +661,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "016f77d1ba0be84f",
+      "hash": "f113fb4638ae1d11",
       "material": "metalDark",
-      "vertices": 38682,
+      "vertices": 38922,
     },
     {
       "hash": "8f930aaf2c996f44",
@@ -671,9 +671,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 14920,
     },
     {
-      "hash": "b586d30663402437",
+      "hash": "9ebc849de37fc01b",
       "material": "metalLight",
-      "vertices": 3875,
+      "vertices": 5867,
     },
     {
       "hash": "c6ed0d32a3438926",
@@ -686,9 +686,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 5200,
     },
     {
-      "hash": "1647faa5e15614cf",
+      "hash": "52645953bd3107c9",
       "material": "cable",
-      "vertices": 16204,
+      "vertices": 16276,
     },
     {
       "hash": "e14689dd946360e7",
@@ -796,14 +796,54 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 120,
     },
     {
-      "hash": "de71771497a5c925",
+      "hash": "c55c3ccc20892aa0",
       "material": "metalRed",
+      "vertices": 240,
+    },
+    {
+      "hash": "64e5416d86dd85c1",
+      "material": "strip:#bcd8ff:0.4",
+      "vertices": 4,
+    },
+    {
+      "hash": "2095e2aeef421547",
+      "material": "strip:#eaf6ff:2.2",
       "vertices": 24,
     },
     {
-      "hash": "85deeea96116645f",
-      "material": "vending",
+      "hash": "a67f01e48ee49881",
+      "material": "vendingCans",
+      "vertices": 624,
+    },
+    {
+      "hash": "9d2c16dcc517f5cc",
+      "material": "strip:#ffffff:0.55",
+      "vertices": 576,
+    },
+    {
+      "hash": "24a47645bac7a431",
+      "material": "strip:#ff3d5a:0.9",
+      "vertices": 576,
+    },
+    {
+      "hash": "77da1c0d95179b28",
+      "material": "vendingGlass",
       "vertices": 4,
+    },
+    {
+      "hash": "f310bfc0c5b44839",
+      "material": "vendingHeader",
+      "vertices": 4,
+    },
+    {
+      "hash": "9ece1455871b8fae",
+      "material": "vendingPanel",
+      "vertices": 4,
+    },
+    {
+      "hash": "7e39d1ee3ff9a0c8",
+      "material": "plasticRed",
+      "vertices": 180,
     },
     {
       "hash": "42207ca24d9233e9",
@@ -824,11 +864,6 @@ exports[`generated layout > matches the snapshot 1`] = `
       "hash": "834bcf715bee40bd",
       "material": "foam",
       "vertices": 1011,
-    },
-    {
-      "hash": "28a8016e3af81d8a",
-      "material": "plasticRed",
-      "vertices": 104,
     },
     {
       "hash": "e0655d1370da6353",

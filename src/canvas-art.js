@@ -37,33 +37,80 @@ export function genACFront(S) {
 }
 
 // ----------------------------------------------------- emissive canvases
-export function genVending() {
-  const W = 256, H = 512;
+export function genVendingHeader() {
+  const W = 512, H = 138;
   const c = makeCanvas(W, H), ctx = c.getContext('2d');
-  ctx.fillStyle = '#e9f3ff'; ctx.fillRect(0, 0, W, H);
   const top = ctx.createLinearGradient(0, 0, W, 0);
   top.addColorStop(0, '#ff3d7f'); top.addColorStop(1, '#ff8a3d');
-  ctx.fillStyle = top; ctx.fillRect(0, 0, W, 70);
+  ctx.fillStyle = top; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `900 30px ${FONT_JP}`; ctx.fillText(ART_TEXT.vending, W / 2, 26);
-  ctx.font = `700 16px ${FONT_LAT}`; ctx.fillText('ICE COLD DRINKS', W / 2, 54);
-  const cans = ['#ff3355', '#2d7dff', '#ffd23f', '#2bd47d', '#b25cff', '#ff8a2b', '#1ad4ff', '#ffffff'];
-  const rng = mulberry32(5);
-  for (let row = 0; row < 4; row++) {
-    const y0 = 90 + row * 70;
-    ctx.fillStyle = '#cfe6ff'; ctx.fillRect(10, y0 - 4, W - 20, 62);
-    for (let k = 0; k < 6; k++) {
-      const x0 = 18 + k * 38;
-      ctx.fillStyle = cans[Math.floor(rng() * cans.length)];
-      roundRect(ctx, x0, y0 + 2, 28, 44, 6); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fillRect(x0 + 5, y0 + 6, 5, 36);
-      ctx.fillStyle = '#ff2a4a'; ctx.fillRect(x0 + 6, y0 + 50, 16, 6);
+  ctx.font = `900 62px ${FONT_JP}`; ctx.fillText(ART_TEXT.vending, W / 2, 52);
+  ctx.font = `700 26px ${FONT_LAT}`; ctx.fillText('ICE COLD DRINKS', W / 2, 112);
+  return canvasTexture(c, { repeat: false });
+}
+
+// The control panel between the glass and the pickup bin.
+export function genVendingPanel() {
+  const W = 512, H = 276;
+  const c = makeCanvas(W, H), ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#2a2d36'); g.addColorStop(1, '#16181e');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = 'middle';
+  // price display
+  ctx.fillStyle = '#050608'; roundRect(ctx, 28, 28, 200, 62, 6); ctx.fill();
+  ctx.fillStyle = '#3dff9a'; ctx.textAlign = 'right';
+  ctx.font = `700 38px ${FONT_LAT}`; ctx.fillText('¥ 120', 214, 60);
+  // poster
+  const ad = ctx.createLinearGradient(28, 0, 300, 0);
+  ad.addColorStop(0, '#1a6dff'); ad.addColorStop(1, '#14d8ff');
+  ctx.fillStyle = ad; roundRect(ctx, 28, 110, 272, 136, 8); ctx.fill();
+  ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+  ctx.font = `900 50px ${FONT_JP}`; ctx.fillText(ART_TEXT.vending, 164, 160);
+  ctx.font = `700 20px ${FONT_LAT}`; ctx.fillText('COLD · ¥120', 164, 214);
+  // labels above the coin plate and the return button
+  ctx.fillStyle = '#c4c8d0'; ctx.font = `700 16px ${FONT_LAT}`;
+  ctx.fillText('COINS', 410, 24);
+  ctx.fillText('RETURN', 410, 206);
+  return canvasTexture(c, { repeat: false });
+}
+
+// One label per cell. u = 0.5 of a cell faces the viewer, so the can's round
+// shading is painted in: the sides fall away to dark, with a highlight left of centre.
+export const CAN_FLAVOURS = 6;
+export function genCanLabels() {
+  const S = 128, W = S * CAN_FLAVOURS, H = 256;
+  const c = makeCanvas(W, H), ctx = c.getContext('2d');
+  const flavours = [
+    ['#e0162e', '#ffffff', 'COLA'],
+    ['#1a5cff', '#d8f4ff', 'SODA'],
+    ['#ffc21f', '#c81e32', 'LEMON'],
+    ['#14b866', '#f4fff0', 'MATCHA'],
+    ['#8a35e0', '#ffe0ff', 'GRAPE'],
+    ['#ff7a14', '#fff4d8', 'MIKAN'],
+  ];
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  flavours.forEach(([base, ink, name], i) => {
+    const x = i * S, mid = x + S / 2;
+    ctx.fillStyle = base; ctx.fillRect(x, 0, S, H);
+    // Only the middle of a cell faces the viewer, so the name runs up the can.
+    ctx.save(); ctx.translate(mid, H / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = ink; ctx.font = `900 30px ${FONT_LAT}`;
+    ctx.fillText(name, 0, 0, H - 64);
+    ctx.restore();
+    // bare metal shoulders at the top and bottom
+    for (const [y, h] of [[0, 18], [H - 14, 14]]) {
+      const m = ctx.createLinearGradient(0, y, 0, y + h);
+      m.addColorStop(0, '#f0f3f8'); m.addColorStop(1, '#868c96');
+      ctx.fillStyle = m; ctx.fillRect(x, y, S, h);
     }
-  }
-  ctx.fillStyle = '#20232b'; ctx.fillRect(0, 380, W, 132);
-  ctx.fillStyle = '#0a0b0f'; roundRect(ctx, 30, 430, 196, 56, 6); ctx.fill();
-  ctx.fillStyle = '#3dff9a'; ctx.fillRect(196, 392, 40, 20);
-  ctx.fillStyle = '#ffd23f'; ctx.fillRect(150, 392, 30, 20);
+    const shade = ctx.createLinearGradient(x, 0, x + S, 0);
+    shade.addColorStop(0.2, 'rgba(0,0,0,0.8)');
+    shade.addColorStop(0.42, 'rgba(255,255,255,0.28)');
+    shade.addColorStop(0.5, 'rgba(255,255,255,0)');
+    shade.addColorStop(0.8, 'rgba(0,0,0,0.8)');
+    ctx.fillStyle = shade; ctx.fillRect(x, 0, S, H);
+  });
   return canvasTexture(c, { repeat: false });
 }
 
