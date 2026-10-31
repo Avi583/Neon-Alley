@@ -2,4 +2,7 @@ To-Do List
 ==========
 Ideas and planned work. Place any suggestions not implemented by the user here.
 
-- (empty)
+- Audit code
+- Make fog less blocky
+- Add interaction with the vending machine
+- Make boxes more detailed
