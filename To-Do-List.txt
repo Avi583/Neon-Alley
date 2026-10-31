@@ -44,6 +44,7 @@ C5 [Sonnet | Risk 3/5] batch.js: stop cloning geometry for every prop (compute i
 
 E. Cleanup
 ----------
+E8 [Sonnet | Risk 1/5] README.md: "Run locally" says the build goes to dist/, but it goes to docs/. The file table also lacks src/shops.js.
 E7 [Sonnet | Risk 3/5] Deploy with a GitHub Action rather than committing docs/. Each build changes the hashed filenames, which
    also forces a DIRECTORY.md update. Needs the repo's Pages source switched, so the live site can break if done wrong.
 

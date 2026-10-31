@@ -20,32 +20,6 @@ npm run preview    # serve the production build
 
 Requires a browser with WebGL 2 (any current Chrome, Edge, Firefox or Safari).
 
-## Deploy to GitHub Pages (from a branch)
-
-The ready-to-serve site is the `docs/` folder. It is committed to the repo, so
-GitHub Pages can serve it directly without any build step on GitHub.
-
-1. Push this folder to a repository, on the `main` branch, including `docs/`.
-2. In the repo, open **Settings → Pages**.
-3. Under **Build and deployment**, set **Source** to **Deploy from a branch**,
-   then pick branch **main** and folder **/docs**. Save.
-4. After a minute the site is live at `https://<user>.github.io/<repo>/`.
-
-Note: don't point Pages at the repo root (`/ (root)`). The root `index.html` is
-the development source and only works through Vite.
-
-**After you change the code**, rebuild and commit the new `docs/`:
-
-```bash
-npm run build
-git add docs
-git commit -m "Rebuild site"
-git push
-```
-
-`vite.config.js` uses `base: './'`, so the build works under any repository name.
-`docs/.nojekyll` stops GitHub from running Jekyll over the files.
-
 ## Controls
 
 | Input | Action |
