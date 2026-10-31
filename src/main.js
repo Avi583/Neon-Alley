@@ -1,17 +1,21 @@
 import * as THREE from 'three';
 import './style.css';
 import { PRESETS, detectQuality } from './quality.js';
-import { generateTextures, nextFrame } from './textures.js';
-import { createMaterials, hdr } from './materials.js';
+import { generateTextures } from './textures.js';
+import { nextFrame } from './texture-core.js';
+import { createMaterials } from './materials.js';
 import { Batch, makeKit } from './batch.js';
 import { buildAlley, ALLEY } from './alley.js';
-import { buildSigns, SIGN_SPECS, SIGN_TEXT } from './signs.js';
+import { buildSigns } from './signs.js';
+import { SIGN_SPECS, SIGN_TEXT } from './sign-specs.js';
 import { PlanarReflection, createGround } from './ground.js';
 import { createSky, Snow, Steam } from './atmosphere.js';
+import { buildEnvironment } from './environment.js';
 import { LightPool } from './lights.js';
 import { createPost } from './post.js';
 import { Player } from './player.js';
 import { AmbientAudio } from './audio.js';
+import { createQualityPills, createStates, progress, setFps, showError } from './ui.js';
 
 const params = new URLSearchParams(location.search);
 const qKey = PRESETS[params.get('q')] ? params.get('q') : detectQuality();
@@ -20,29 +24,7 @@ const AUTO = params.has('autostart'); // used for automated screenshots
 const FREEZE = AUTO || params.has('freeze');
 const num = (k, d) => (params.has(k) ? parseFloat(params.get(k)) : d);
 
-const $ = (id) => document.getElementById(id);
-const ui = {
-  title: $('title'), bar: $('bar'), status: $('status'), enter: $('enter'),
-  hud: $('hud'), pause: $('pause'), fps: $('fps'), sound: $('sound'), pills: $('qpills'),
-};
-
-for (const [k, p] of Object.entries(PRESETS)) {
-  const b = document.createElement('button');
-  b.textContent = p.label;
-  b.className = 'pill' + (k === qKey ? ' on' : '');
-  b.addEventListener('click', () => {
-    if (k === qKey) return;
-    const u = new URL(location.href);
-    u.searchParams.set('q', k);
-    location.href = u.toString();
-  });
-  ui.pills.appendChild(b);
-}
-
-function progress(f, msg) {
-  ui.bar.style.width = (f * 100).toFixed(1) + '%';
-  ui.status.textContent = msg;
-}
+createQualityPills(qKey);
 
 async function loadFonts() {
   if (!document.fonts) return;
@@ -52,31 +34,6 @@ async function loadFonts() {
     Promise.all(faces.map((f) => document.fonts.load(f, text).catch(() => null))),
     new Promise((r) => setTimeout(r, 5000)),
   ]);
-}
-
-// A tiny neon "room" baked into an environment map, so metal, glass, ice
-// and wet surfaces pick up coloured highlights from every angle.
-function buildEnvironment(renderer) {
-  const s = new THREE.Scene();
-  s.add(new THREE.Mesh(new THREE.BoxGeometry(20, 20, 20), new THREE.MeshBasicMaterial({ color: 0x07060e, side: THREE.BackSide })));
-  const panel = (hex, k, x, y, z, w, h, ry, rx = 0) => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: hdr(hex, k), side: THREE.DoubleSide }));
-    m.position.set(x, y, z); m.rotation.set(rx, ry, 0); s.add(m);
-  };
-  panel('#ff3fa4', 6, -9.5, 2, -3, 4, 1.4, Math.PI / 2);
-  panel('#38e8ff', 6, 9.5, 3, -5, 3, 1.2, -Math.PI / 2);
-  panel('#b66bff', 4, -9.5, 5, 5, 2, 3, Math.PI / 2);
-  panel('#ffd08a', 3, 9.5, 1, 4, 4, 1, -Math.PI / 2);
-  panel('#ff4d6d', 5, 0, 4, -9.5, 6, 1, 0);
-  panel('#5dffb4', 3, 0, 2, 9.5, 3, 0.8, Math.PI);
-  panel('#2a3260', 0.8, 0, 9.5, 0, 20, 20, 0, Math.PI / 2);
-  const pm = new THREE.PMREMGenerator(renderer);
-  const tex = pm.fromScene(s, 0.03).texture;
-  pm.dispose();
-  s.traverse((o) => {
-    if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); }
-  });
-  return tex;
 }
 
 async function init() {
@@ -90,7 +47,7 @@ async function init() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = num('exposure', 1.05);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  $('app').appendChild(renderer.domElement);
+  document.getElementById('app').appendChild(renderer.domElement);
   const aniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 
   const scene = new THREE.Scene();
@@ -161,45 +118,7 @@ async function init() {
   pool.update(camera);
   try { await renderer.compileAsync(scene, camera); } catch { renderer.compile(scene, camera); }
 
-  // ------------------------------------------------------------ states
-  let state = 'title';
-  const hasLock = !player.touch && 'requestPointerLock' in renderer.domElement;
-
-  function play() {
-    state = 'play';
-    player.enabled = !AUTO;
-    ui.title.classList.add('hidden');
-    ui.pause.classList.add('hidden');
-    ui.hud.classList.remove('hidden');
-    document.body.classList.toggle('touch', player.touch);
-    if (!AUTO) {
-      audio.start();
-      audio.resume();
-      if (hasLock) renderer.domElement.requestPointerLock();
-    }
-  }
-  ui.enter.addEventListener('click', play);
-  ui.pause.addEventListener('click', play);
-  document.addEventListener('pointerlockchange', () => {
-    if (!document.pointerLockElement && state === 'play' && hasLock) {
-      state = 'paused';
-      player.enabled = false;
-      player.keys.clear();
-      ui.pause.classList.remove('hidden');
-      audio.suspend();
-    }
-  });
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) audio.suspend();
-    else if (state === 'play') audio.resume();
-  });
-  let showFps = false;
-  window.addEventListener('keydown', (e) => {
-    if (e.code === 'KeyM') ui.sound.textContent = audio.toggleMute() ? 'SOUND OFF' : 'SOUND ON';
-    if (e.code === 'KeyF') { showFps = !showFps; ui.fps.classList.toggle('hidden', !showFps); }
-    if (e.code === 'Enter' && state === 'title' && !ui.enter.disabled) play();
-  });
-  ui.sound.addEventListener('click', () => { ui.sound.textContent = audio.toggleMute() ? 'SOUND OFF' : 'SOUND ON'; });
+  const states = createStates({ player, audio, canvas: renderer.domElement, auto: AUTO });
 
   // -------------------------------------------------------------- loop
   let last = performance.now();
@@ -210,7 +129,7 @@ async function init() {
     const dt = FREEZE ? 1 / 60 : Math.min((performance.now() - last) / 1000, 0.05);
     last = performance.now();
     t += dt;
-    if (state === 'title') {
+    if (states.state === 'title') {
       player.yaw = start.yaw + Math.sin(t * 0.15) * 0.1;
       player.pitch = start.pitch + 0.04 + Math.sin(t * 0.11) * 0.03;
     }
@@ -235,19 +154,16 @@ async function init() {
       audio.setHum(hum);
     }
     fpsFrames++; fpsTime += dt;
-    if (fpsTime > 0.5) { ui.fps.textContent = `${Math.round(fpsFrames / fpsTime)} FPS · ${Q.label}`; fpsFrames = 0; fpsTime = 0; }
+    if (fpsTime > 0.5) { setFps(`${Math.round(fpsFrames / fpsTime)} FPS · ${Q.label}`); fpsFrames = 0; fpsTime = 0; }
     frames++;
   }
   frame();
 
   progress(1, 'Ready');
-  ui.enter.disabled = false;
-  ui.enter.textContent = player.touch ? 'TAP TO ENTER' : 'ENTER THE ALLEY';
-  if (AUTO) play();
+  states.ready();
 }
 
 init().catch((err) => {
   console.error(err);
-  ui.status.textContent = 'Something went wrong: ' + err.message + ' (WebGL 2 is required)';
-  ui.bar.style.background = '#ff3355';
+  showError(err);
 });

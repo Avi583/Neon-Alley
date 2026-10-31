@@ -1,6 +1,6 @@
 # Manual test checklist
 
-Automated tests (`npm test`) cover noise, quality presets and sign data. This checklist covers what they can't judge. Run it before each deploy and after any change to rendering, input or audio.
+Automated tests cover noise, quality presets, sign data and the generated layout (`npm test`), plus texture pixels in Chromium (`npm run test:textures`, after `npx playwright install chromium`). The texture snapshot is per platform and machine, so a failure on another machine doesn't by itself mean a texture changed. This checklist covers what they can't judge. Run it before each deploy and after any change to rendering, input or audio.
 
 ## Devices and browsers
 - [ ] Real phone: joystick (left side) moves, dragging the right side looks around, no page scroll or zoom

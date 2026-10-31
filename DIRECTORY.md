@@ -13,28 +13,45 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - index.html
 - package-lock.json
 - package.json
+- playwright.config.js
 - vite.config.js
 
 ## src/
+- src/__snapshots__/layout.test.js.snap
 - src/alley.js
 - src/atmosphere.js
 - src/audio.js
 - src/batch.js
+- src/canvas-art.js
 - src/config.js
+- src/environment.js
 - src/ground.js
+- src/holo-shader.js
+- src/layout.test.js
 - src/lights.js
 - src/main.js
 - src/materials.js
 - src/noise.js
 - src/noise.test.js
+- src/pbr-textures.js
 - src/player.js
 - src/post.js
 - src/quality.js
 - src/quality.test.js
+- src/sign-canvas.js
+- src/sign-specs.js
 - src/signs.js
 - src/signs.test.js
 - src/style.css
+- src/texture-core.js
 - src/textures.js
+- src/ui.js
+
+## tests/
+- tests/textures-page.js
+- tests/textures.html
+- tests/textures.pw.js
+- tests/textures.pw.js-snapshots/textures-chromium-win32.json
 
 ## public/
 - public/.nojekyll

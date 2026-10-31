@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SIGN_SPECS, SIGN_TEXT } from './signs.js';
+import { SIGN_SPECS, SIGN_TEXT } from './sign-specs.js';
 
 const STYLES = ['border', 'box', 'tube', 'circle'];
 const FLICKER = ['steady', 'flicker', 'broken', 'pulse'];

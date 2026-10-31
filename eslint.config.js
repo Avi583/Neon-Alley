@@ -10,7 +10,11 @@ export default [
     rules: { 'no-unused-vars': ['warn', { args: 'none', caughtErrors: 'none' }] },
   },
   {
-    files: ['vite.config.js', 'eslint.config.js'],
+    files: ['tests/**/*.js'],
+    languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.browser },
+  },
+  {
+    files: ['vite.config.js', 'eslint.config.js', 'playwright.config.js'],
     languageOptions: { globals: globals.node },
   },
 ];

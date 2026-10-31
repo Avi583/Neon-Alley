@@ -15,104 +15,97 @@ export const ALLEY = {
 
 const NEON = ['#ff3fa4', '#38e8ff', '#b66bff', '#ff4d6d', '#5dffb4', '#ffd166'];
 
-export function buildAlley(kit, mats, signSpecs) {
-  const { R, rng, pick, box, cyl, sph, plane, icicles, snow, catenary, tube } = kit;
-  const colliders = [];
-  const vents = [];
-  const lights = [];
-  const addLight = (x, y, z, color, intensity, range = 10) =>
-    lights.push({ pos: new THREE.Vector3(x, y, z), color: new THREE.Color(color), intensity, range });
-  const addCollider = (x0, x1, z0, z1) =>
-    colliders.push({ minX: Math.min(x0, x1), maxX: Math.max(x0, x1), minZ: Math.min(z0, z1), maxZ: Math.max(z0, z1) });
+// ctx is the placement kit plus mats, vents, addLight, addCollider and nearSign.
 
-  const signZ = { '-1': [], '1': [] };
-  for (const s of signSpecs) if (s.side) signZ[s.side].push(s.z);
-  const nearSign = (side, z, r) => signZ[side].some((sz) => Math.abs(sz - z) < r);
+// --------------------------------------------------- ground-floor units
+function shopUnit(ctx, side, xi, zc, w, kind) {
+  const { mats, rng, pick, box, plane, icicles, snow, addLight, addCollider } = ctx;
+  const out = -side;
+  const fx = side * xi; // signed x of this wall face
+  const faceRot = out * Math.PI / 2; // plane rotation so it faces into the alley
 
-  // --------------------------------------------------- ground-floor units
-  function shopUnit(side, xi, zc, w, kind) {
-    const out = -side;
-    const fx = side * xi; // signed x of this wall face
-    const faceRot = out * Math.PI / 2; // plane rotation so it faces into the alley
-
-    if (kind === 'shutter') {
-      const sw = w - 0.5, sh = 2.7;
-      box(mats.shutter, fx + out * 0.03, sh / 2, zc, 0.06, sh, sw, [2, 2]);
-      box(mats.metalDark, fx + out * 0.17, sh + 0.18, zc, 0.34, 0.36, sw + 0.12);
-      snow(fx + out * 0.17, sh + 0.36, zc, 0.34, sw + 0.1);
-      icicles(fx + out * 0.33, sh, zc - sw / 2, fx + out * 0.33, sh, zc + sw / 2, 0.55, 0.4);
-      for (const d of [-1, 1]) box(mats.metalDark, fx + out * 0.05, sh / 2, zc + d * (sw / 2 + 0.04), 0.1, sh, 0.08);
-    } else if (kind === 'door') {
-      const c = pick(NEON);
-      box(mats.metalDark, fx + out * 0.03, 1.1, zc, 0.06, 2.2, 1.05);
-      box(mats.strip('#9fd8ff', 1.4), fx + out * 0.065, 1.7, zc, 0.01, 0.32, 0.45);
-      box(mats.strip(c, 3.5), fx + out * 0.08, 1.3, zc + 0.68, 0.035, 2.4, 0.035);
-      box(mats.strip(c, 3.5), fx + out * 0.08, 1.3, zc - 0.68, 0.035, 2.4, 0.035);
-      box(mats.strip(c, 3.5), fx + out * 0.08, 2.5, zc, 0.035, 0.035, 1.4);
-      addLight(fx + out * 0.7, 1.6, zc, c, 3.2, 7);
-      if (rng() < 0.65) {
-        const aw = Math.min(w - 0.2, 2.6), tilt = side * 0.22;
-        box(mats.metalDark, fx + out * 0.55, 2.95, zc, 1.1, 0.06, aw, null, 0, 0, tilt);
-        box(mats.snow, fx + out * 0.55, 3.0, zc, 1.08, 0.06, aw - 0.04, null, 0, 0, tilt);
-        icicles(fx + out * 1.08, 2.82, zc - aw / 2, fx + out * 1.08, 2.82, zc + aw / 2, 0.75, 0.5);
-        box(mats.strip('#dff6ff', 3), fx + out * 0.3, 2.86, zc, 0.05, 0.04, aw - 0.4);
-        addLight(fx + out * 0.6, 2.4, zc, '#cfeaff', 4, 8);
-      }
-    } else if (kind === 'window') {
-      const shop = pick([mats.shopRamen, mats.shopBar, mats.shopMart]);
-      const ww = w - 0.8;
-      plane(shop, fx + out * 0.035, 1.5, zc, ww, 1.6, faceRot);
-      box(mats.metalDark, fx + out * 0.06, 0.66, zc, 0.12, 0.08, ww + 0.1);
-      box(mats.metalDark, fx + out * 0.06, 2.34, zc, 0.12, 0.08, ww + 0.1);
-      for (const d of [-1, 1]) box(mats.metalDark, fx + out * 0.06, 1.5, zc + d * (ww / 2 + 0.02), 0.12, 1.75, 0.06);
-      box(mats.concrete, fx + out * 0.12, 0.6, zc, 0.24, 0.08, ww + 0.2, [2, 2]);
-      snow(fx + out * 0.12, 0.64, zc, 0.24, ww + 0.15, 0.04);
-      const col = shop === mats.shopRamen ? '#ffb36b' : shop === mats.shopBar ? '#ff6ad5' : '#d8f1ff';
-      addLight(fx + out * 0.9, 1.6, zc, col, 3, 7);
-    } else {
-      // blank wall with ground-level AC units and junk
-      const n = rng() < 0.5 ? 1 : 2;
-      for (let k = 0; k < n; k++) {
-        const az = zc + (k - (n - 1) / 2) * 0.95;
-        acUnit(side, xi, 0.34, az, true);
-      }
-      addCollider(fx, fx + out * 0.55, zc - n * 0.5, zc + n * 0.5);
+  if (kind === 'shutter') {
+    const sw = w - 0.5, sh = 2.7;
+    box(mats.shutter, fx + out * 0.03, sh / 2, zc, 0.06, sh, sw, [2, 2]);
+    box(mats.metalDark, fx + out * 0.17, sh + 0.18, zc, 0.34, 0.36, sw + 0.12);
+    snow(fx + out * 0.17, sh + 0.36, zc, 0.34, sw + 0.1);
+    icicles(fx + out * 0.33, sh, zc - sw / 2, fx + out * 0.33, sh, zc + sw / 2, 0.55, 0.4);
+    for (const d of [-1, 1]) box(mats.metalDark, fx + out * 0.05, sh / 2, zc + d * (sw / 2 + 0.04), 0.1, sh, 0.08);
+  } else if (kind === 'door') {
+    const c = pick(NEON);
+    box(mats.metalDark, fx + out * 0.03, 1.1, zc, 0.06, 2.2, 1.05);
+    box(mats.strip('#9fd8ff', 1.4), fx + out * 0.065, 1.7, zc, 0.01, 0.32, 0.45);
+    box(mats.strip(c, 3.5), fx + out * 0.08, 1.3, zc + 0.68, 0.035, 2.4, 0.035);
+    box(mats.strip(c, 3.5), fx + out * 0.08, 1.3, zc - 0.68, 0.035, 2.4, 0.035);
+    box(mats.strip(c, 3.5), fx + out * 0.08, 2.5, zc, 0.035, 0.035, 1.4);
+    addLight(fx + out * 0.7, 1.6, zc, c, 3.2, 7);
+    if (rng() < 0.65) {
+      const aw = Math.min(w - 0.2, 2.6), tilt = side * 0.22;
+      box(mats.metalDark, fx + out * 0.55, 2.95, zc, 1.1, 0.06, aw, null, 0, 0, tilt);
+      box(mats.snow, fx + out * 0.55, 3.0, zc, 1.08, 0.06, aw - 0.04, null, 0, 0, tilt);
+      icicles(fx + out * 1.08, 2.82, zc - aw / 2, fx + out * 1.08, 2.82, zc + aw / 2, 0.75, 0.5);
+      box(mats.strip('#dff6ff', 3), fx + out * 0.3, 2.86, zc, 0.05, 0.04, aw - 0.4);
+      addLight(fx + out * 0.6, 2.4, zc, '#cfeaff', 4, 8);
     }
-  }
-
-  function acUnit(side, faceX, y, z, ground = false) {
-    const out = -side;
-    const fx = side * faceX;
-    const d = 0.34;
-    box(mats.metalLight, fx + out * (d / 2 + 0.02), y, z, d, 0.62, 0.86);
-    plane(mats.acFront, fx + out * (d + 0.025), y, z, 0.86, 0.62, out * Math.PI / 2);
-    snow(fx + out * (d / 2 + 0.02), y + 0.31, z, d, 0.86);
-    icicles(fx + out * (d + 0.02), y - 0.31, z - 0.4, fx + out * (d + 0.02), y - 0.31, z + 0.4, 0.6, ground ? 0.1 : 0.25);
-    if (!ground) {
-      box(mats.metalDark, fx + out * 0.2, y - 0.34, z - 0.3, 0.4, 0.04, 0.04);
-      box(mats.metalDark, fx + out * 0.2, y - 0.34, z + 0.3, 0.4, 0.04, 0.04);
-      cyl(mats.metalDark, fx + out * 0.05, y - 1.0, z + 0.36, 0.02, 1.4, 0, 0, 0, true);
+  } else if (kind === 'window') {
+    const shop = pick([mats.shopRamen, mats.shopBar, mats.shopMart]);
+    const ww = w - 0.8;
+    plane(shop, fx + out * 0.035, 1.5, zc, ww, 1.6, faceRot);
+    box(mats.metalDark, fx + out * 0.06, 0.66, zc, 0.12, 0.08, ww + 0.1);
+    box(mats.metalDark, fx + out * 0.06, 2.34, zc, 0.12, 0.08, ww + 0.1);
+    for (const d of [-1, 1]) box(mats.metalDark, fx + out * 0.06, 1.5, zc + d * (ww / 2 + 0.02), 0.12, 1.75, 0.06);
+    box(mats.concrete, fx + out * 0.12, 0.6, zc, 0.24, 0.08, ww + 0.2, [2, 2]);
+    snow(fx + out * 0.12, 0.64, zc, 0.24, ww + 0.15, 0.04);
+    const col = shop === mats.shopRamen ? '#ffb36b' : shop === mats.shopBar ? '#ff6ad5' : '#d8f1ff';
+    addLight(fx + out * 0.9, 1.6, zc, col, 3, 7);
+  } else {
+    // blank wall with ground-level AC units and junk
+    const n = rng() < 0.5 ? 1 : 2;
+    for (let k = 0; k < n; k++) {
+      const az = zc + (k - (n - 1) / 2) * 0.95;
+      acUnit(ctx, side, xi, 0.34, az, true);
     }
+    addCollider(fx, fx + out * 0.55, zc - n * 0.5, zc + n * 0.5);
   }
+}
 
-  function fireEscape(side, faceX, fz, H) {
-    const out = -side;
-    const fx = side * faceX;
-    for (let fy = 6.0; fy < Math.min(H - 1.5, 16); fy += 3.2) {
-      box(mats.metalDark, fx + out * 0.55, fy, fz, 1.1, 0.06, 3.2);
-      snow(fx + out * 0.55, fy + 0.03, fz, 1.06, 3.15, 0.04);
-      for (const ry of [0.5, 1.0]) box(mats.metalDark, fx + out * 1.08, fy + ry, fz, 0.04, 0.04, 3.2);
-      for (let pz = fz - 1.6; pz <= fz + 1.61; pz += 0.4) box(mats.metalDark, fx + out * 1.08, fy + 0.5, pz, 0.03, 1.0, 0.03);
-      for (const ez of [-1.6, 1.6]) box(mats.metalDark, fx + out * 0.55, fy + 1.0, fz + ez, 1.1, 0.04, 0.04);
-      icicles(fx + out * 1.1, fy - 0.03, fz - 1.6, fx + out * 1.1, fy - 0.03, fz + 1.6, 0.6, 0.35);
-      // ladder up to the next platform
-      const lz = fz + 1.2;
-      for (const dz of [-0.18, 0.18]) box(mats.metalDark, fx + out * 0.85, fy + 1.6, lz + dz, 0.03, 3.2, 0.03);
-      for (let ly = fy + 0.3; ly < fy + 3.2; ly += 0.3) box(mats.metalDark, fx + out * 0.85, ly, lz, 0.025, 0.025, 0.36);
-    }
+function acUnit(ctx, side, faceX, y, z, ground = false) {
+  const { mats, box, cyl, plane, icicles, snow } = ctx;
+  const out = -side;
+  const fx = side * faceX;
+  const d = 0.34;
+  box(mats.metalLight, fx + out * (d / 2 + 0.02), y, z, d, 0.62, 0.86);
+  plane(mats.acFront, fx + out * (d + 0.025), y, z, 0.86, 0.62, out * Math.PI / 2);
+  snow(fx + out * (d / 2 + 0.02), y + 0.31, z, d, 0.86);
+  icicles(fx + out * (d + 0.02), y - 0.31, z - 0.4, fx + out * (d + 0.02), y - 0.31, z + 0.4, 0.6, ground ? 0.1 : 0.25);
+  if (!ground) {
+    box(mats.metalDark, fx + out * 0.2, y - 0.34, z - 0.3, 0.4, 0.04, 0.04);
+    box(mats.metalDark, fx + out * 0.2, y - 0.34, z + 0.3, 0.4, 0.04, 0.04);
+    cyl(mats.metalDark, fx + out * 0.05, y - 1.0, z + 0.36, 0.02, 1.4, 0, 0, 0, true);
   }
+}
 
-  // ------------------------------------------------------------ buildings
+function fireEscape(ctx, side, faceX, fz, H) {
+  const { mats, box, icicles, snow } = ctx;
+  const out = -side;
+  const fx = side * faceX;
+  for (let fy = 6.0; fy < Math.min(H - 1.5, 16); fy += 3.2) {
+    box(mats.metalDark, fx + out * 0.55, fy, fz, 1.1, 0.06, 3.2);
+    snow(fx + out * 0.55, fy + 0.03, fz, 1.06, 3.15, 0.04);
+    for (const ry of [0.5, 1.0]) box(mats.metalDark, fx + out * 1.08, fy + ry, fz, 0.04, 0.04, 3.2);
+    for (let pz = fz - 1.6; pz <= fz + 1.61; pz += 0.4) box(mats.metalDark, fx + out * 1.08, fy + 0.5, pz, 0.03, 1.0, 0.03);
+    for (const ez of [-1.6, 1.6]) box(mats.metalDark, fx + out * 0.55, fy + 1.0, fz + ez, 1.1, 0.04, 0.04);
+    icicles(fx + out * 1.1, fy - 0.03, fz - 1.6, fx + out * 1.1, fy - 0.03, fz + 1.6, 0.6, 0.35);
+    // ladder up to the next platform
+    const lz = fz + 1.2;
+    for (const dz of [-0.18, 0.18]) box(mats.metalDark, fx + out * 0.85, fy + 1.6, lz + dz, 0.03, 3.2, 0.03);
+    for (let ly = fy + 0.3; ly < fy + 3.2; ly += 0.3) box(mats.metalDark, fx + out * 0.85, ly, lz, 0.025, 0.025, 0.36);
+  }
+}
+
+// ------------------------------------------------------------ buildings
+function buildBuildings(ctx) {
+  const { mats, R, rng, pick, box, cyl, sph, icicles, snow, nearSign } = ctx;
   for (const side of [-1, 1]) {
     let z = ALLEY.zStart + 8;
     while (z > ALLEY.zEnd + 0.5) {
@@ -146,7 +139,7 @@ export function buildAlley(kit, mats, signSpecs) {
         else if (side === 1 && uc > -7 && uc < 0) kind = 'window';
         else kind = rr < 0.34 ? 'shutter' : rr < 0.62 ? 'door' : rr < 0.82 ? 'window' : 'blank';
         if (uc > ALLEY.walkZMax + 2) kind = 'shutter';
-        shopUnit(side, xi, uc, w, kind);
+        shopUnit(ctx, side, xi, uc, w, kind);
         if (rng() < 0.45) cyl(mats.metal, side * (xi - 0.08), gf / 2, u - w - 0.1, R(0.035, 0.07), gf);
         u -= w + R(0.1, 0.5);
       }
@@ -159,7 +152,7 @@ export function buildAlley(kit, mats, signSpecs) {
         const ay = R(5.2, Math.min(H - 1.5, 17));
         const az = R(z1 + 0.6, z0 - 0.6);
         if (nearSign(side, az, 1.5)) continue;
-        acUnit(side, up, ay, az);
+        acUnit(ctx, side, up, ay, az);
       }
       // vertical drain pipes
       const nP = rng() < 0.6 ? 1 : 2;
@@ -168,7 +161,7 @@ export function buildAlley(kit, mats, signSpecs) {
         cyl(mats.metal, side * (up - r - 0.02), H / 2, R(z1 + 0.3, z0 - 0.3), r, H);
       }
       // fire escapes
-      if (rng() < 0.42 && H > 14 && !nearSign(side, zc, 3.4)) fireEscape(side, up, zc, H);
+      if (rng() < 0.42 && H > 14 && !nearSign(side, zc, 3.4)) fireEscape(ctx, side, up, zc, H);
       // neon accent strip running up a corner
       if (rng() < 0.32) {
         box(mats.strip(pick(NEON), 5), side * (up - 0.03), gf + (H - gf) / 2, z0 - 0.06, 0.04, H - gf, 0.04);
@@ -193,8 +186,11 @@ export function buildAlley(kit, mats, signSpecs) {
   box(mats.concrete, 0, 2.1, ALLEY.zStart + 7, 20, 4.2, 14, [2, 2]);
   box(mats.shutter, 0, 1.35, ALLEY.zStart - 0.03, 3.4, 2.7, 0.06, [2, 2]);
   box(mats.strip('#ff3fa4', 5), 0, 2.9, ALLEY.zStart - 0.06, 3.6, 0.04, 0.04);
+}
 
-  // ---------------------------------------------------------- overhead
+// ---------------------------------------------------------- overhead
+function buildOverhead(ctx) {
+  const { mats, R, rng, pick, sph, catenary, tube } = ctx;
   for (let i = 0; i < 30; i++) {
     const zz = R(ALLEY.zEnd + 3, ALLEY.zStart - 3);
     const y1 = R(5, 13.5), y2 = y1 + R(-1.5, 1.5);
@@ -223,8 +219,11 @@ export function buildAlley(kit, mats, signSpecs) {
       tube(catenary(a, b, 0.25, 16), 0.018, mats.cable, 24);
     }
   }
+}
 
-  // ------------------------------------------------------- street props
+// ------------------------------------------------------- street props
+function buildStreetProps(ctx) {
+  const { mats, R, rng, pick, box, cyl, sph, plane, icicles, snow, tube, vents, addLight, addCollider } = ctx;
   // Paper lanterns at the izakaya
   for (const lz of [-5.6, -8.0]) {
     const lx = -WALL + 0.45;
@@ -305,8 +304,11 @@ export function buildAlley(kit, mats, signSpecs) {
       addCollider(cx - 0.3, cx + 0.3, zz - 0.3, zz + 0.3);
     }
   }
+}
 
-  // ------------------------------------------------ end of the alley
+// ------------------------------------------------ end of the alley
+function buildCrossStreet(ctx) {
+  const { mats, box, cyl, sph, plane, snow, addLight } = ctx;
   for (const bx of [-1.6, -0.55, 0.55, 1.6]) {
     cyl(mats.plasticYellow, bx, 0.45, -89.5, 0.09, 0.9);
     snow(bx, 0.9, -89.5, 0.16, 0.16, 0.05);
@@ -327,8 +329,11 @@ export function buildAlley(kit, mats, signSpecs) {
   box(mats.snow, 0, 0.12, -105.3, 160, 0.24, 1.0);
   box(mats.snow, -30, 0.1, -92.6, 54, 0.2, 0.8);
   box(mats.snow, 30, 0.1, -92.6, 54, 0.2, 0.8);
+}
 
-  // -------------------------------------------------------- skyline
+// -------------------------------------------------------- skyline
+function buildSkyline(ctx) {
+  const { mats, R, rng, pick, box, sph, plane } = ctx;
   let adIdx = 0;
   for (let i = 0; i < 70; i++) {
     let x, z;
@@ -347,6 +352,28 @@ export function buildAlley(kit, mats, signSpecs) {
       adIdx++;
     }
   }
+}
+
+export function buildAlley(kit, mats, signSpecs) {
+  const colliders = [];
+  const vents = [];
+  const lights = [];
+  const addLight = (x, y, z, color, intensity, range = 10) =>
+    lights.push({ pos: new THREE.Vector3(x, y, z), color: new THREE.Color(color), intensity, range });
+  const addCollider = (x0, x1, z0, z1) =>
+    colliders.push({ minX: Math.min(x0, x1), maxX: Math.max(x0, x1), minZ: Math.min(z0, z1), maxZ: Math.max(z0, z1) });
+
+  const signZ = { '-1': [], '1': [] };
+  for (const s of signSpecs) if (s.side) signZ[s.side].push(s.z);
+  const nearSign = (side, z, r) => signZ[side].some((sz) => Math.abs(sz - z) < r);
+  const ctx = { ...kit, mats, vents, addLight, addCollider, nearSign };
+
+  // All of these draw from one rng, so this order fixes the layout.
+  buildBuildings(ctx);
+  buildOverhead(ctx);
+  buildStreetProps(ctx);
+  buildCrossStreet(ctx);
+  buildSkyline(ctx);
 
   return { colliders, vents, lights };
 }

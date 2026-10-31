@@ -1,0 +1,1340 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generated layout > matches the snapshot 1`] = `
+{
+  "alleyLights": [
+    {
+      "color": "b66bff",
+      "intensity": 3.2,
+      "pos": [
+        -1.7068,
+        1.6,
+        8.1955,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "cfeaff",
+      "intensity": 4,
+      "pos": [
+        -1.8068,
+        2.4,
+        8.1955,
+      ],
+      "range": 8,
+    },
+    {
+      "color": "5dffb4",
+      "intensity": 3.2,
+      "pos": [
+        -1.7788,
+        1.6,
+        -2.5457,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "cfeaff",
+      "intensity": 4,
+      "pos": [
+        -1.8788,
+        2.4,
+        -2.5457,
+      ],
+      "range": 8,
+    },
+    {
+      "color": "ffd166",
+      "intensity": 3.2,
+      "pos": [
+        -1.7788,
+        1.6,
+        -5.5606,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "cfeaff",
+      "intensity": 4,
+      "pos": [
+        -1.8788,
+        2.4,
+        -5.5606,
+      ],
+      "range": 8,
+    },
+    {
+      "color": "ff3fa4",
+      "intensity": 3.2,
+      "pos": [
+        -1.9951,
+        1.6,
+        -38.8432,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "cfeaff",
+      "intensity": 4,
+      "pos": [
+        -2.0951,
+        2.4,
+        -38.8432,
+      ],
+      "range": 8,
+    },
+    {
+      "color": "ff4d6d",
+      "intensity": 3.2,
+      "pos": [
+        -1.8083,
+        1.6,
+        -53.4634,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "ffd166",
+      "intensity": 3.2,
+      "pos": [
+        -1.8803,
+        1.6,
+        -68.1478,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "cfeaff",
+      "intensity": 4,
+      "pos": [
+        -1.9803,
+        2.4,
+        -68.1478,
+      ],
+      "range": 8,
+    },
+    {
+      "color": "ff3fa4",
+      "intensity": 3.2,
+      "pos": [
+        -1.7805,
+        1.6,
+        -72.9592,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "ffb36b",
+      "intensity": 3,
+      "pos": [
+        -1.7363,
+        1.6,
+        -82.1132,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "ffd166",
+      "intensity": 3.2,
+      "pos": [
+        -1.9363,
+        1.6,
+        -88.6468,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "cfeaff",
+      "intensity": 4,
+      "pos": [
+        -2.0363,
+        2.4,
+        -88.6468,
+      ],
+      "range": 8,
+    },
+    {
+      "color": "d8f1ff",
+      "intensity": 3,
+      "pos": [
+        1.5503,
+        1.6,
+        7.1321,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "ffb36b",
+      "intensity": 3,
+      "pos": [
+        1.567,
+        1.6,
+        -1.6098,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "ff3fa4",
+      "intensity": 3.2,
+      "pos": [
+        1.8507,
+        1.6,
+        -15.5678,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "cfeaff",
+      "intensity": 4,
+      "pos": [
+        1.9507,
+        2.4,
+        -15.5678,
+      ],
+      "range": 8,
+    },
+    {
+      "color": "b66bff",
+      "intensity": 3.2,
+      "pos": [
+        1.9899,
+        1.6,
+        -28.7302,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "cfeaff",
+      "intensity": 4,
+      "pos": [
+        2.0899,
+        2.4,
+        -28.7302,
+      ],
+      "range": 8,
+    },
+    {
+      "color": "ff4d6d",
+      "intensity": 3.2,
+      "pos": [
+        1.9899,
+        1.6,
+        -34.1147,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "ffd166",
+      "intensity": 3.2,
+      "pos": [
+        1.9899,
+        1.6,
+        -36.937,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "cfeaff",
+      "intensity": 4,
+      "pos": [
+        2.0899,
+        2.4,
+        -36.937,
+      ],
+      "range": 8,
+    },
+    {
+      "color": "ffb36b",
+      "intensity": 3,
+      "pos": [
+        1.7899,
+        1.6,
+        -39.997,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "b66bff",
+      "intensity": 3.2,
+      "pos": [
+        1.9874,
+        1.6,
+        -50.9511,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "cfeaff",
+      "intensity": 4,
+      "pos": [
+        2.0874,
+        2.4,
+        -50.9511,
+      ],
+      "range": 8,
+    },
+    {
+      "color": "5dffb4",
+      "intensity": 3.2,
+      "pos": [
+        1.9874,
+        1.6,
+        -60.5551,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "cfeaff",
+      "intensity": 4,
+      "pos": [
+        2.0874,
+        2.4,
+        -60.5551,
+      ],
+      "range": 8,
+    },
+    {
+      "color": "ff6ad5",
+      "intensity": 3,
+      "pos": [
+        1.5163,
+        1.6,
+        -68.1305,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "5dffb4",
+      "intensity": 3.2,
+      "pos": [
+        1.7163,
+        1.6,
+        -71.1569,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "cfeaff",
+      "intensity": 4,
+      "pos": [
+        1.8163,
+        2.4,
+        -71.1569,
+      ],
+      "range": 8,
+    },
+    {
+      "color": "ff3fa4",
+      "intensity": 3.2,
+      "pos": [
+        1.7163,
+        1.6,
+        -74.4495,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "ffb36b",
+      "intensity": 3,
+      "pos": [
+        1.6258,
+        1.6,
+        -82.733,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "ff6ad5",
+      "intensity": 3,
+      "pos": [
+        1.6258,
+        1.6,
+        -85.719,
+      ],
+      "range": 7,
+    },
+    {
+      "color": "ff5a2a",
+      "intensity": 2.5,
+      "pos": [
+        -1.65,
+        3,
+        -5.6,
+      ],
+      "range": 6,
+    },
+    {
+      "color": "ff5a2a",
+      "intensity": 2.5,
+      "pos": [
+        -1.65,
+        3,
+        -8,
+      ],
+      "range": 6,
+    },
+    {
+      "color": "dff2ff",
+      "intensity": 2.5,
+      "pos": [
+        1.075,
+        1.2,
+        -26.5,
+      ],
+      "range": 6,
+    },
+    {
+      "color": "ff4fd8",
+      "intensity": 28,
+      "pos": [
+        0,
+        4,
+        -99,
+      ],
+      "range": 22,
+    },
+    {
+      "color": "38e8ff",
+      "intensity": 18,
+      "pos": [
+        -14,
+        3,
+        -103,
+      ],
+      "range": 18,
+    },
+    {
+      "color": "ffd166",
+      "intensity": 16,
+      "pos": [
+        14,
+        3,
+        -103,
+      ],
+      "range": 18,
+    },
+  ],
+  "colliders": [
+    [
+      -2.4788,
+      -1.9288,
+      0.6054,
+      1.6054,
+    ],
+    [
+      -2.4995,
+      -1.9495,
+      -12.1482,
+      -10.1482,
+    ],
+    [
+      -2.4995,
+      -1.9495,
+      -15.6132,
+      -13.6132,
+    ],
+    [
+      -2.6951,
+      -2.1451,
+      -35.8541,
+      -34.8541,
+    ],
+    [
+      -2.5803,
+      -2.0303,
+      -65.333,
+      -64.333,
+    ],
+    [
+      2.1399,
+      2.6899,
+      -32.411,
+      -30.411,
+    ],
+    [
+      2.1374,
+      2.6874,
+      -55.0215,
+      -53.0215,
+    ],
+    [
+      2.1374,
+      2.6874,
+      -58.1852,
+      -56.1852,
+    ],
+    [
+      1.8663,
+      2.4163,
+      -65.2148,
+      -64.2148,
+    ],
+    [
+      1.9758,
+      2.5258,
+      -89.2246,
+      -88.2246,
+    ],
+    [
+      1.7,
+      2.45,
+      -27,
+      -26,
+    ],
+    [
+      -2.35,
+      -1.35,
+      -42,
+      -40,
+    ],
+    [
+      -2.3,
+      -1.8,
+      -18.7836,
+      -18.1436,
+    ],
+    [
+      1.75,
+      2.4,
+      -69.9645,
+      -68.7645,
+    ],
+    [
+      -2.4,
+      -1.75,
+      -16.6713,
+      -15.4713,
+    ],
+    [
+      1.8,
+      2.3,
+      -11.8936,
+      -11.2536,
+    ],
+    [
+      -2.3,
+      -1.8,
+      -33.4065,
+      -32.7665,
+    ],
+    [
+      -2.3,
+      -1.8,
+      -67.1249,
+      -66.4849,
+    ],
+    [
+      -2.3,
+      -1.7,
+      -81.6342,
+      -81.0342,
+    ],
+    [
+      1.75,
+      2.4,
+      -35.3821,
+      -34.1821,
+    ],
+    [
+      1.75,
+      2.4,
+      -24.2278,
+      -23.0278,
+    ],
+    [
+      -2.3,
+      -1.8,
+      -11.8748,
+      -11.2348,
+    ],
+    [
+      1.7,
+      2.3,
+      -78.9232,
+      -78.3232,
+    ],
+    [
+      -2.4,
+      -1.75,
+      -25.4295,
+      -24.2295,
+    ],
+    [
+      -2.3,
+      -1.7,
+      -63.7374,
+      -63.1374,
+    ],
+    [
+      1.7,
+      2.3,
+      -69.3009,
+      -68.7009,
+    ],
+    [
+      -2.4,
+      -1.75,
+      -71.2798,
+      -70.0798,
+    ],
+    [
+      -2.4,
+      -1.75,
+      -55.5796,
+      -54.3796,
+    ],
+    [
+      -2.3,
+      -1.8,
+      -48.0438,
+      -47.4038,
+    ],
+    [
+      1.7,
+      2.3,
+      -34.3325,
+      -33.7325,
+    ],
+    [
+      -2.3,
+      -1.7,
+      -73.8617,
+      -73.2617,
+    ],
+  ],
+  "geometry": [
+    {
+      "hash": "a6bb87ca9d8a1f5a",
+      "material": "concrete",
+      "vertices": 1560,
+    },
+    {
+      "hash": "fc9f50e8669e7d34",
+      "material": "facade",
+      "vertices": 576,
+    },
+    {
+      "hash": "88297b045362b43b",
+      "material": "snow",
+      "vertices": 5688,
+    },
+    {
+      "hash": "1077ed4a95b95df2",
+      "material": "ice",
+      "vertices": 35070,
+    },
+    {
+      "hash": "ad028a5eb4a37cc1",
+      "material": "shutter",
+      "vertices": 576,
+    },
+    {
+      "hash": "6d325344bd33bb60",
+      "material": "metalDark",
+      "vertices": 22840,
+    },
+    {
+      "hash": "b84b280dc82c038e",
+      "material": "metal",
+      "vertices": 6156,
+    },
+    {
+      "hash": "54c12578e2030cf6",
+      "material": "metalLight",
+      "vertices": 1560,
+    },
+    {
+      "hash": "c6ed0d32a3438926",
+      "material": "acFront",
+      "vertices": 260,
+    },
+    {
+      "hash": "e14689dd946360e7",
+      "material": "strip:#5dffb4:5",
+      "vertices": 144,
+    },
+    {
+      "hash": "5a0b6fd2eee1fc78",
+      "material": "beacon",
+      "vertices": 4083,
+    },
+    {
+      "hash": "3185fd41cebe20d9",
+      "material": "brick",
+      "vertices": 216,
+    },
+    {
+      "hash": "a676d104ff071d4b",
+      "material": "strip:#9fd8ff:1.4",
+      "vertices": 384,
+    },
+    {
+      "hash": "50b1764edab4b048",
+      "material": "strip:#b66bff:3.5",
+      "vertices": 216,
+    },
+    {
+      "hash": "80e91384212695b9",
+      "material": "strip:#dff6ff:3",
+      "vertices": 288,
+    },
+    {
+      "hash": "a0a74babd15c95d4",
+      "material": "strip:#5dffb4:3.5",
+      "vertices": 216,
+    },
+    {
+      "hash": "7e74f62492b39c19",
+      "material": "strip:#ffd166:3.5",
+      "vertices": 288,
+    },
+    {
+      "hash": "1fd646ab0fd754bf",
+      "material": "strip:#ff4d6d:5",
+      "vertices": 72,
+    },
+    {
+      "hash": "3efb40a89171bb06",
+      "material": "strip:#38e8ff:5",
+      "vertices": 96,
+    },
+    {
+      "hash": "1a33ad7386fce851",
+      "material": "strip:#ff3fa4:3.5",
+      "vertices": 288,
+    },
+    {
+      "hash": "5438f7cc1d78b391",
+      "material": "strip:#ffd166:5",
+      "vertices": 96,
+    },
+    {
+      "hash": "3521708deecccdea",
+      "material": "strip:#ff4d6d:3.5",
+      "vertices": 144,
+    },
+    {
+      "hash": "89a2696732251c3a",
+      "material": "strip:#ff3fa4:5",
+      "vertices": 120,
+    },
+    {
+      "hash": "67f9b1201b245230",
+      "material": "shopRamen",
+      "vertices": 36,
+    },
+    {
+      "hash": "2876488597d1d246",
+      "material": "shopMart",
+      "vertices": 20,
+    },
+    {
+      "hash": "db502158c6356a6e",
+      "material": "shopBar",
+      "vertices": 24,
+    },
+    {
+      "hash": "eafc305076bd02ea",
+      "material": "cable",
+      "vertices": 10044,
+    },
+    {
+      "hash": "fc956cc33633957e",
+      "material": "strip:#ffd08a:2.5",
+      "vertices": 5481,
+    },
+    {
+      "hash": "59d25db729f85d08",
+      "material": "strip:#8ae8ff:2.5",
+      "vertices": 1827,
+    },
+    {
+      "hash": "105d3f7419ed7ceb",
+      "material": "lantern",
+      "vertices": 330,
+    },
+    {
+      "hash": "c4bcf59d516d2912",
+      "material": "grate",
+      "vertices": 120,
+    },
+    {
+      "hash": "de71771497a5c925",
+      "material": "metalRed",
+      "vertices": 24,
+    },
+    {
+      "hash": "85deeea96116645f",
+      "material": "vending",
+      "vertices": 4,
+    },
+    {
+      "hash": "085d2433ff8fbe22",
+      "material": "metalGreen",
+      "vertices": 48,
+    },
+    {
+      "hash": "da4835872aed01e7",
+      "material": "plasticBlue",
+      "vertices": 24,
+    },
+    {
+      "hash": "b6bcdcc981ce2b48",
+      "material": "trash",
+      "vertices": 1134,
+    },
+    {
+      "hash": "61c7443abd8e0fb1",
+      "material": "plasticRed",
+      "vertices": 168,
+    },
+    {
+      "hash": "8860bd8f4182f0a7",
+      "material": "plasticYellow",
+      "vertices": 448,
+    },
+    {
+      "hash": "8927a3e9db82936f",
+      "material": "blink",
+      "vertices": 495,
+    },
+    {
+      "hash": "f3422f5d3f8d9a80",
+      "material": "strip:#b66bff:5",
+      "vertices": 48,
+    },
+    {
+      "hash": "6eb4434e21e11bad",
+      "material": "tower",
+      "vertices": 1680,
+    },
+    {
+      "hash": "fd9bacd4013959bb",
+      "material": "strip:#b66bff:4",
+      "vertices": 144,
+    },
+    {
+      "hash": "827592f580f81853",
+      "material": "strip:#ff4d6d:4",
+      "vertices": 120,
+    },
+    {
+      "hash": "2900e287992d7b63",
+      "material": "ads0",
+      "vertices": 8,
+    },
+    {
+      "hash": "0d466e099c56f4f3",
+      "material": "strip:#ffd166:4",
+      "vertices": 144,
+    },
+    {
+      "hash": "1202667c5edde5c0",
+      "material": "strip:#5dffb4:4",
+      "vertices": 72,
+    },
+    {
+      "hash": "b6d64f01bc0401d4",
+      "material": "ads1",
+      "vertices": 8,
+    },
+    {
+      "hash": "9c14fe9c094f1a0a",
+      "material": "ads2",
+      "vertices": 8,
+    },
+    {
+      "hash": "8e875951e6503b59",
+      "material": "strip:#ff3fa4:4",
+      "vertices": 72,
+    },
+  ],
+  "nextRng": 0.4420283392537385,
+  "signLights": [
+    {
+      "color": "c070ff",
+      "intensity": 9,
+      "pos": [
+        1.77,
+        2.62,
+        -3.4,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "ff4fd8",
+      "intensity": 10,
+      "pos": [
+        1.42,
+        4.66,
+        -9.5,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "ff2d55",
+      "intensity": 9,
+      "pos": [
+        -1.27,
+        4.375,
+        -6.8,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "ff3fb4",
+      "intensity": 12,
+      "pos": [
+        -1.87,
+        8.1,
+        -12.5,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "38e8ff",
+      "intensity": 8,
+      "pos": [
+        -1.87,
+        5.32,
+        -16.5,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "9a7bff",
+      "intensity": 14,
+      "pos": [
+        -0.896,
+        9.1,
+        -20.2,
+      ],
+      "range": 16,
+    },
+    {
+      "color": "b66bff",
+      "intensity": 9,
+      "pos": [
+        1.96,
+        7.08,
+        -23.5,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "ff7a2f",
+      "intensity": 7,
+      "pos": [
+        -1.47,
+        4.59,
+        -28,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "38e8ff",
+      "intensity": 8,
+      "pos": [
+        -1.27,
+        4.99,
+        -34,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "ff4fd8",
+      "intensity": 9,
+      "pos": [
+        1.87,
+        8.22,
+        -36,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "2bff88",
+      "intensity": 7,
+      "pos": [
+        1.62,
+        4.19,
+        -42,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "a970ff",
+      "intensity": 8,
+      "pos": [
+        -1.82,
+        9.34,
+        -46,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "ffb340",
+      "intensity": 7,
+      "pos": [
+        -1.87,
+        4.96,
+        -50,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "38e8ff",
+      "intensity": 8,
+      "pos": [
+        1.17,
+        4.42,
+        -55,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "fff0d0",
+      "intensity": 6,
+      "pos": [
+        -1.67,
+        3.93,
+        -60,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "ff3fa4",
+      "intensity": 8,
+      "pos": [
+        1.92,
+        6.98,
+        -64,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "5dffb4",
+      "intensity": 8,
+      "pos": [
+        -1.32,
+        5.23,
+        -70,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "ff2d55",
+      "intensity": 6,
+      "pos": [
+        1.87,
+        4.26,
+        -74,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "ffd166",
+      "intensity": 7,
+      "pos": [
+        -1.62,
+        3.52,
+        -80,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "38e8ff",
+      "intensity": 8,
+      "pos": [
+        1.57,
+        4.79,
+        -83,
+      ],
+      "range": 13,
+    },
+    {
+      "color": "38e8ff",
+      "intensity": 10,
+      "pos": [
+        0,
+        5.56,
+        14.4,
+      ],
+      "range": 13,
+    },
+  ],
+  "signMeshes": [
+    {
+      "hash": "bfc8ea87c7aa1163",
+      "pos": [
+        1.77,
+        2.95,
+        -3.4,
+      ],
+    },
+    {
+      "hash": "6dcedcd3c9399fa9",
+      "pos": [
+        1.42,
+        4.9,
+        -9.5,
+      ],
+    },
+    {
+      "hash": "0f367a982f286f77",
+      "pos": [
+        -1.27,
+        4.6,
+        -6.8,
+      ],
+    },
+    {
+      "hash": "242d10448d8510ec",
+      "pos": [
+        -1.87,
+        9,
+        -12.5,
+      ],
+    },
+    {
+      "hash": "3da5a9908d9fb538",
+      "pos": [
+        -1.87,
+        6.4,
+        -16.5,
+      ],
+    },
+    {
+      "hash": "78a5f770541a7619",
+      "pos": [
+        -1.496,
+        9.6,
+        -21,
+      ],
+    },
+    {
+      "hash": "8e60e8ffda2fe39c",
+      "pos": [
+        1.72,
+        10.5,
+        -15.5,
+      ],
+    },
+    {
+      "hash": "04de004dd9c1f505",
+      "pos": [
+        1.96,
+        8.4,
+        -23.5,
+      ],
+    },
+    {
+      "hash": "7b06ff7c38f68fc0",
+      "pos": [
+        2.24,
+        2.35,
+        -12.2,
+      ],
+    },
+    {
+      "hash": "7be6970a213b6c9d",
+      "pos": [
+        -1.47,
+        4.8,
+        -28,
+      ],
+    },
+    {
+      "hash": "ab02f048cc5addb9",
+      "pos": [
+        -1.27,
+        5.2,
+        -34,
+      ],
+    },
+    {
+      "hash": "cbe161d1733cb2a8",
+      "pos": [
+        1.87,
+        9,
+        -36,
+      ],
+    },
+    {
+      "hash": "b231ff4e3c285393",
+      "pos": [
+        1.62,
+        4.4,
+        -42,
+      ],
+    },
+    {
+      "hash": "108c863074726ec4",
+      "pos": [
+        -1.82,
+        10,
+        -46,
+      ],
+    },
+    {
+      "hash": "74a80658cc8110e6",
+      "pos": [
+        -1.87,
+        5.5,
+        -50,
+      ],
+    },
+    {
+      "hash": "f05995f72d57b42c",
+      "pos": [
+        1.17,
+        4.6,
+        -55,
+      ],
+    },
+    {
+      "hash": "576dd5a1a5c6c4ff",
+      "pos": [
+        -1.67,
+        4.2,
+        -60,
+      ],
+    },
+    {
+      "hash": "58883c6b0f8c1ded",
+      "pos": [
+        1.92,
+        8,
+        -64,
+      ],
+    },
+    {
+      "hash": "52c54562804dd51f",
+      "pos": [
+        -1.32,
+        5.5,
+        -70,
+      ],
+    },
+    {
+      "hash": "097c2b743929d77e",
+      "pos": [
+        1.87,
+        4.5,
+        -74,
+      ],
+    },
+    {
+      "hash": "b6e47e1815bae678",
+      "pos": [
+        -1.62,
+        3.7,
+        -80,
+      ],
+    },
+    {
+      "hash": "a707833343f4b08c",
+      "pos": [
+        1.57,
+        5,
+        -83,
+      ],
+    },
+    {
+      "hash": "4ba423262cc98cdc",
+      "pos": [
+        0,
+        8.5,
+        -105.7,
+      ],
+    },
+    {
+      "hash": "cd87951bd581817c",
+      "pos": [
+        0,
+        6.2,
+        15.9,
+      ],
+    },
+  ],
+  "vents": [
+    {
+      "pos": [
+        0.9,
+        0.05,
+        -9.4,
+      ],
+      "scale": 1.1,
+      "tint": [
+        1,
+        0.78,
+        0.95,
+      ],
+    },
+    {
+      "pos": [
+        -0.9,
+        0.05,
+        -31,
+      ],
+      "scale": 1,
+      "tint": [
+        0.72,
+        0.95,
+        1.1,
+      ],
+    },
+    {
+      "pos": [
+        0.5,
+        0.05,
+        -53,
+      ],
+      "scale": 1,
+      "tint": [
+        0.92,
+        0.75,
+        1.1,
+      ],
+    },
+    {
+      "pos": [
+        -0.6,
+        0.05,
+        -76,
+      ],
+      "scale": 0.9,
+      "tint": [
+        1,
+        0.8,
+        0.9,
+      ],
+    },
+    {
+      "pos": [
+        0,
+        0.05,
+        -97,
+      ],
+      "scale": 1.6,
+      "tint": [
+        1.1,
+        0.75,
+        0.95,
+      ],
+    },
+    {
+      "pos": [
+        -2,
+        0.5,
+        -20.5,
+      ],
+      "scale": 0.7,
+      "tint": [
+        0.75,
+        0.95,
+        1.1,
+      ],
+    },
+  ],
+}
+`;
