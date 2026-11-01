@@ -33,6 +33,8 @@ html, body {
   display: grid;
   place-items: center;
   padding: 16px;
+  overflow-y: auto;
+  touch-action: pan-y; /* body turns touch scrolling off for the game */
   background:
     radial-gradient(120% 80% at 50% 100%, rgba(255, 63, 164, 0.16), transparent 60%),
     linear-gradient(180deg, rgba(6, 5, 12, 0.55), rgba(6, 5, 12, 0.82));
@@ -157,12 +159,19 @@ html, body {
 /* ----------------------------------------------------------------- HUD */
 #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
 #fps {
-  position: absolute; top: 12px; left: 12px;
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  left: calc(12px + env(safe-area-inset-left));
   font-size: 12px; color: var(--cyan); letter-spacing: 0.1em;
   text-shadow: 0 0 6px rgba(56, 232, 255, 0.8);
 }
-#sound {
-  position: absolute; top: 10px; right: 12px;
+#hud-buttons {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+}
+#hud-buttons button {
   pointer-events: auto;
   font: inherit; font-size: 11px; letter-spacing: 0.18em;
   padding: 6px 10px;
@@ -172,8 +181,11 @@ html, body {
   border-radius: 4px;
   cursor: pointer;
 }
+#pause-button, #fullscreen { display: none; }
+body.touch #pause-button, body.touch #fullscreen { display: block; }
+body.touch #hud-buttons button { min-height: 44px; min-width: 96px; }
 #vend {
-  position: absolute; left: 50%; bottom: 58px; transform: translateX(-50%);
+  position: absolute; left: 50%; bottom: calc(58px + env(safe-area-inset-bottom)); transform: translateX(-50%);
   pointer-events: auto;
   font: inherit; font-size: 13px; letter-spacing: 0.14em; white-space: nowrap;
   padding: 8px 14px;
@@ -185,7 +197,7 @@ html, body {
   cursor: pointer;
 }
 .hint {
-  position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+  position: absolute; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%);
   font-size: 12px; letter-spacing: 0.14em; color: rgba(233, 230, 255, 0.55);
   white-space: nowrap;
   animation: fadeout 1s ease 7s forwards;
@@ -220,4 +232,20 @@ body.touch .hint.mobile { display: block; }
 @media (max-width: 520px) {
   .tag { font-size: 14px; }
   .keys { display: none; }
+}
+
+/* Landscape phones: the title panel must fit with ENTER on screen. */
+@media (max-height: 520px) {
+  .logo {
+    margin: 8px 0;
+    font-size: clamp(30px, 12vh, 56px);
+    flex-flow: row wrap;
+    justify-content: center;
+    gap: 0 0.4em;
+  }
+  .tag, .keys { display: none; }
+  .loader { margin: 10px auto; }
+  #enter, #resume { padding: 10px 24px; }
+  .panel.small .row { margin-top: 8px; }
+  .panel.small p { margin: 8px 0 10px; font-size: 12px; }
 }

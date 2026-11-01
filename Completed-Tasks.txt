@@ -113,6 +113,14 @@ C2  [Sonnet | Risk 2/5] noise.js: lattice table per (period, seed), cleared afte
 F2  [Sonnet | Risk 2/5] ui.js: a refused pointer lock (rejected promise or pointerlockerror) opens the pause menu.
 F3  [Sonnet | Risk 1/5] main.js FPS counter: uses unclamped time, so it can show below 20 FPS.
 F5  [Sonnet | Risk 1/5] ui.js / audio.js: mute carries across a quality reload through ?mute=1.
+A69 [Sonnet | Risk 1/5] style.css: the HUD buttons, FPS counter, prompt and hints are offset by env(safe-area-inset-*). The buttons now share a flex column, #hud-buttons.
+A70 [Sonnet | Risk 1/5] style.css: HUD buttons are at least 44 px tall in touch mode. The desktop HUD is unchanged.
+A71 [Sonnet | Risk 2/5] index.html / ui.js: a FULLSCREEN button in touch mode, hidden where document.fullscreenEnabled is false. A quality reload leaves fullscreen, as browsers don't allow restoring it without a tap.
+A72 [Sonnet | Risk 2/5] ui.js / player.js: Slow, Normal and Fast look speed pills in the pause menu (0.6, 1 and 1.6 times), for mouse and touch. Carried across a quality reload through ?look=, but not saved between visits.
+F1  [Opus   | Risk 3/5] player.js / ui.js: touch controls are set up on any touchscreen, and pointerType picks the mode. A touch releases the lock without pausing, and a mouse click on the canvas takes it back.
+F4  [Sonnet | Risk 2/5] style.css: below 520 px high the title drops the tagline and key list and puts the logo on one line, so ENTER fits at 640 x 360. Overlays also scroll. Without the fix the test puts ENTER's bottom edge at y = 467.
+F6  [Opus   | Risk 2/5] index.html / ui.js: a PAUSE button in the HUD in touch mode opens the pause menu, with quality and sound. A held look drag no longer turns the view while paused.
+F7  [Opus   | Risk 2/5] adaptive-scale.js: if even the lowest step doesn't cut frame time by 10%, resolution wasn't the limit, so it returns to where the drops began and holds until frames turn fast. Retests after 64 s, doubling up to 512 s, in case a busy scene spoiled the test.
 G4  [Sonnet | Risk 2/5] tests/player.test.js: collisions, walk bounds, speed, pitch clamp, disabled state, blur and footsteps.
     Running at the largest dt doesn't pass through even a zero-thickness wall.
 G7  [Opus   | Risk 3/5] tests/smoke.pw.js: runs the production build under a /Neon-Alley/ subpath. Every ?q= preset loads and draws with no

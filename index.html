@@ -46,6 +46,10 @@
           <span class="label">Graphics</span>
           <div class="pills" id="pause-qpills"></div>
         </div>
+        <div class="row">
+          <span class="label">Look speed</span>
+          <div class="pills" id="look-pills"></div>
+        </div>
         <p>Changing graphics reloads the alley, and you stay where you are.</p>
         <button id="resume">RESUME</button>
       </div>
@@ -53,7 +57,11 @@
 
     <div id="hud" class="hidden">
       <div id="fps" class="hidden">-- FPS</div>
-      <button id="sound">SOUND ON</button>
+      <div id="hud-buttons">
+        <button id="sound">SOUND ON</button>
+        <button id="pause-button">PAUSE</button>
+        <button id="fullscreen" class="hidden">FULLSCREEN</button>
+      </div>
       <button id="vend" class="hidden"></button>
       <div class="hint desktop">WASD move · Shift run · Esc pause</div>
       <div class="hint mobile">Left thumb: walk · Right thumb: look</div>

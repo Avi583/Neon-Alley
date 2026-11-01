@@ -14,6 +14,7 @@ export class Player {
     this.vel = new THREE.Vector2();
     this.yaw = start.yaw || 0;
     this.pitch = start.pitch || 0;
+    this.lookSpeed = 1;
     this.keys = new Set();
     this.joy = { x: 0, y: 0 };
     this.bob = 0;
@@ -21,7 +22,9 @@ export class Player {
     this.enabled = false;
     this.radius = 0.3;
     this.eye = 1.68;
-    this.touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    // A touchscreen laptop has both, so touch is only the mode until ui.js sees which input is used.
+    const touchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    this.touch = touchScreen && !window.matchMedia?.('(pointer: fine)').matches;
 
     window.addEventListener('keydown', (e) => {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
@@ -33,13 +36,13 @@ export class Player {
       if (!this.enabled || document.pointerLockElement !== this.dom) return;
       this.look(e.movementX * 0.0022, e.movementY * 0.0022);
     });
-    if (this.touch) this.setupTouch();
+    if (touchScreen) this.setupTouch();
     this.apply(0);
   }
 
   look(dx, dy) {
-    this.yaw -= dx;
-    this.pitch = THREE.MathUtils.clamp(this.pitch - dy, -1.35, 1.35);
+    this.yaw -= dx * this.lookSpeed;
+    this.pitch = THREE.MathUtils.clamp(this.pitch - dy * this.lookSpeed, -1.35, 1.35);
   }
 
   setupTouch() {
@@ -69,7 +72,7 @@ export class Player {
           this.joy.x = dx; this.joy.y = dy;
           knob.style.transform = `translate(${dx * 40}px, ${dy * 40}px)`;
         } else if (t.identifier === lookId) {
-          this.look((t.clientX - lx) * 0.005, (t.clientY - ly) * 0.005);
+          if (this.enabled) this.look((t.clientX - lx) * 0.005, (t.clientY - ly) * 0.005);
           lx = t.clientX; ly = t.clientY;
         }
       }

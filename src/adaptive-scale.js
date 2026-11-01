@@ -1,6 +1,8 @@
 // Picks a render scale from recent frame times. Pure logic, so it can be tested
 // without a renderer. Each change reallocates the HDR, bloom and reflection
 // targets, so it drops quickly but rises slowly, and backs off if a rise fails.
+// Frame time alone can't tell a slow GPU from a capped display, so if even the
+// lowest step didn't help, resolution wasn't the limit and it goes back up.
 
 export const SCALE_STEPS = [1, 0.85, 0.7, 0.6];
 
@@ -12,6 +14,9 @@ const MAX_FRAME_MS = 3000; // longer means a hidden tab, not GPU load
 const DROP_WAIT_MS = 1000;
 const RAISE_WAIT_MS = 8000;
 const MAX_RAISE_WAIT_MS = 64000;
+const NO_GAIN = 0.9; // the lowest step must beat this share of the frame time before the drops
+const HOLD_MS = 64000; // before testing again, in case a busy scene spoiled the last test
+const MAX_HOLD_MS = 512000;
 
 export class AdaptiveScale {
   constructor() {
@@ -19,6 +24,9 @@ export class AdaptiveScale {
     this.raiseWait = RAISE_WAIT_MS;
     this.sinceChange = RAISE_WAIT_MS;
     this.justRaised = false;
+    this.probe = null; // where the current run of drops began
+    this.holding = false; // resolution wasn't the limit, so slow frames don't count
+    this.holdWait = HOLD_MS;
     this.reset();
   }
 
@@ -41,11 +49,30 @@ export class AdaptiveScale {
     // The median, so a single hitch doesn't cost resolution.
     const median = this.frames.sort((a, b) => a - b)[this.frames.length >> 1];
     this.reset();
+    if (median <= SLOW_MS) this.probe = null;
+    if (median < FAST_MS) {
+      this.holding = false;
+      this.holdWait = HOLD_MS;
+    }
+    if (median > SLOW_MS && this.holding) {
+      if (this.sinceChange < this.holdWait) return null;
+      this.holding = false;
+      this.holdWait = Math.min(this.holdWait * 2, MAX_HOLD_MS);
+    }
     if (median > SLOW_MS && this.sinceChange >= DROP_WAIT_MS && this.step < SCALE_STEPS.length - 1) {
       // The last rise didn't hold, so wait longer before trying it again.
       if (this.justRaised) this.raiseWait = Math.min(this.raiseWait * 2, MAX_RAISE_WAIT_MS);
       this.justRaised = false;
+      this.probe ??= { step: this.step, ms: median };
       return this.change(this.step + 1);
+    }
+    if (median > SLOW_MS && this.probe) {
+      const { step, ms } = this.probe;
+      this.probe = null;
+      if (median >= ms * NO_GAIN) {
+        this.holding = true;
+        return this.change(step);
+      }
     }
     if (median < FAST_MS && this.sinceChange >= this.raiseWait && this.step > 0) {
       this.justRaised = true;

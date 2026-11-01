@@ -183,6 +183,30 @@ describe('touch', () => {
     expect(listeners.touchstart).toBeUndefined();
   });
 
+  it('keeps touch controls but starts in mouse mode with a fine pointer (F1)', () => {
+    window.matchMedia = () => ({ matches: true });
+    const player = touchPlayer();
+    expect(player.touch).toBe(false);
+    expect(listeners.touchstart).toHaveLength(1);
+  });
+
+  it('scales a drag by the look speed (A72)', () => {
+    const player = touchPlayer();
+    player.lookSpeed = 2;
+    fire('touchstart', touches([1, 800, 300]));
+    fire('touchmove', touches([1, 810, 300]));
+    expect(player.yaw).toBeCloseTo(-0.1, 10);
+  });
+
+  it('does not look around while paused', () => {
+    const player = touchPlayer();
+    fire('touchstart', touches([1, 800, 300]));
+    player.enabled = false;
+    fire('touchmove', touches([1, 840, 280]));
+    expect(player.yaw).toBe(0);
+    expect(player.pitch).toBe(0);
+  });
+
   it('shows the joystick where a left-side touch lands', () => {
     touchPlayer();
     fire('touchstart', touches([1, 100, 300]));

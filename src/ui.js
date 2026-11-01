@@ -4,15 +4,24 @@ import { PRESETS } from './quality.js';
 const $ = (id) => document.getElementById(id);
 const ui = {
   title: $('title'), bar: $('bar'), status: $('status'), enter: $('enter'),
-  hud: $('hud'), pause: $('pause'), fps: $('fps'), sound: $('sound'), pills: $('qpills'),
+  hud: $('hud'), pause: $('pause'), fps: $('fps'), sound: $('sound'), pauseButton: $('pause-button'), pills: $('qpills'),
   resume: $('resume'), pauseSound: $('pause-sound'), pausePills: $('pause-qpills'), vend: $('vend'),
+  fullscreen: $('fullscreen'), lookPills: $('look-pills'),
+};
+
+const LOOK_SPEEDS = {
+  slow: { label: 'Slow', speed: 0.6 },
+  normal: { label: 'Normal', speed: 1 },
+  fast: { label: 'Fast', speed: 1.6 },
 };
 
 // Where the player is, for carrying across a quality reload. Empty until play starts.
 let currentView = () => ({});
-// Mute also survives a quality reload, including one made while still loading.
-const startMuted = new URLSearchParams(location.search).has('mute');
+// Mute and look speed also survive a quality reload, including one made while still loading.
+const params = new URLSearchParams(location.search);
+const startMuted = params.has('mute');
 let isMuted = () => startMuted;
+let lookKey = Object.hasOwn(LOOK_SPEEDS, params.get('look')) ? params.get('look') : 'normal';
 
 export function createQualityPills(qKey) {
   for (const box of [ui.pills, ui.pausePills]) {
@@ -26,6 +35,7 @@ export function createQualityPills(qKey) {
         u.searchParams.set('q', k);
         for (const [key, v] of Object.entries(currentView())) u.searchParams.set(key, v.toFixed(3));
         if (isMuted()) u.searchParams.set('mute', '1'); else u.searchParams.delete('mute');
+        if (lookKey !== 'normal') u.searchParams.set('look', lookKey); else u.searchParams.delete('look');
         location.href = u.toString();
       });
       box.appendChild(b);
@@ -49,8 +59,18 @@ export function setFps(text) {
 
 export function createStates({ player, audio, canvas, auto, onUse }) {
   let state = 'title';
-  const hasLock = !player.touch && 'requestPointerLock' in canvas;
+  const hasLock = 'requestPointerLock' in canvas;
+  const usesLock = () => !player.touch && hasLock;
   currentView = () => (state === 'title' ? {} : { x: player.pos.x, z: player.pos.y, yaw: player.yaw, pitch: player.pitch });
+
+  // Browsers can refuse the lock just after Esc. Older ones return no promise and only fire pointerlockerror.
+  const lock = () => canvas.requestPointerLock()?.catch(pause);
+  // Set before the lock is released, so that release doesn't count as a pause.
+  function setTouch(touch) {
+    player.touch = touch;
+    document.body.classList.toggle('touch', touch);
+    if (touch && document.pointerLockElement) document.exitPointerLock();
+  }
 
   function play() {
     state = 'play';
@@ -58,12 +78,11 @@ export function createStates({ player, audio, canvas, auto, onUse }) {
     ui.title.classList.add('hidden');
     ui.pause.classList.add('hidden');
     ui.hud.classList.remove('hidden');
-    document.body.classList.toggle('touch', player.touch);
+    setTouch(player.touch);
     if (!auto) {
       audio.start();
       audio.resume();
-      // Browsers can refuse the lock just after Esc. Older ones return no promise and only fire pointerlockerror.
-      if (hasLock) canvas.requestPointerLock()?.catch(pause);
+      if (usesLock()) lock();
     }
   }
   function pause() {
@@ -76,11 +95,20 @@ export function createStates({ player, audio, canvas, auto, onUse }) {
   }
   ui.enter.addEventListener('click', play);
   ui.resume.addEventListener('click', play);
+  ui.pauseButton.addEventListener('click', pause);
+  // The input actually used picks the mode. In play the mouse only takes over from
+  // the canvas, as the lock would swallow the click on a HUD button.
+  window.addEventListener('pointerdown', (e) => {
+    const touch = e.pointerType !== 'mouse' || !hasLock;
+    if (state === 'play' && !touch && e.target !== canvas) return;
+    setTouch(touch);
+    if (state === 'play' && !touch && !auto && !document.pointerLockElement) lock();
+  }, true);
   document.addEventListener('pointerlockchange', () => {
-    if (!document.pointerLockElement && hasLock) pause();
+    if (!document.pointerLockElement && usesLock()) pause();
   });
   document.addEventListener('pointerlockerror', () => {
-    if (hasLock) pause();
+    if (usesLock()) pause();
   });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) audio.suspend();
@@ -100,7 +128,10 @@ export function createStates({ player, audio, canvas, auto, onUse }) {
   window.addEventListener('keydown', (e) => {
     if (e.code === 'KeyM') toggleSound();
     if (e.code === 'KeyF') { showFps = !showFps; ui.fps.classList.toggle('hidden', !showFps); }
-    if (e.code === 'Enter' && state === 'title' && !ui.enter.disabled) play();
+    if (e.code === 'Enter' && state === 'title' && !ui.enter.disabled) {
+      setTouch(!hasLock);
+      play();
+    }
     if (e.code === 'KeyE' && !e.repeat && state === 'play') onUse();
   });
   ui.vend.addEventListener('click', onUse);
@@ -108,14 +139,39 @@ export function createStates({ player, audio, canvas, auto, onUse }) {
   ui.sound.addEventListener('click', toggleSound);
   ui.pauseSound.addEventListener('click', toggleSound);
 
+  // Left out where the browser can't do it, such as iPhone Safari.
+  ui.fullscreen.classList.toggle('hidden', !document.fullscreenEnabled);
+  ui.fullscreen.addEventListener('click', () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen()?.catch(() => {});
+  });
+  document.addEventListener('fullscreenchange', () => {
+    ui.fullscreen.textContent = document.fullscreenElement ? 'EXIT FULL' : 'FULLSCREEN';
+  });
+
+  player.lookSpeed = LOOK_SPEEDS[lookKey].speed;
+  const lookPills = Object.entries(LOOK_SPEEDS).map(([k, { label, speed }]) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.className = 'pill' + (k === lookKey ? ' on' : '');
+    b.addEventListener('click', () => {
+      lookKey = k;
+      player.lookSpeed = speed;
+      for (const other of lookPills) other.className = 'pill' + (other === b ? ' on' : '');
+    });
+    ui.lookPills.appendChild(b);
+    return b;
+  });
+
   return {
     get state() { return state; },
     // Called every frame with the action in reach, or null for none.
     showPrompt(action) {
-      if (action === shownPrompt) return;
-      shownPrompt = action;
+      const label = action && (player.touch ? 'TAP' : 'E') + ' · ' + action;
+      if (label === shownPrompt) return;
+      shownPrompt = label;
       ui.vend.classList.toggle('hidden', !action);
-      if (action) ui.vend.textContent = (player.touch ? 'TAP' : 'E') + ' · ' + action;
+      if (action) ui.vend.textContent = label;
     },
     // Loading is finished: let the player in.
     ready() {

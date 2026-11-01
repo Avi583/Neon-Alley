@@ -53,18 +53,6 @@ E. Cleanup
 E7 [Sonnet | Risk 3/5] Deploy with a GitHub Action rather than committing docs/. Each build changes the hashed filenames, which
    also forces a DIRECTORY.md update. Needs the repo's Pages source switched, so the live site can break if done wrong.
 
-F. Bugs found during the review
--------------------------------
-F1 [Opus   | Risk 3/5] player.js / ui.js: touch detection is true on any touchscreen laptop, which disables pointer lock, and
-   mouse look requires pointer lock, so the mouse can't look around on those devices. Choose the mode from the input
-   actually used (pointerType).
-F4 [Sonnet | Risk 2/5] style.css title screen: on short viewports the ENTER button is off screen and can't be reached, since the
-   page has overflow: hidden. At 640 x 360 (a landscape phone) its top is at y = 416. Touch devices have no Enter key to fall back on.
-F7 [Opus   | Risk 2/5] adaptive-scale.js: it can't tell a slow GPU from a capped display. A browser held to 30 FPS (battery saver) drops to
-   60% and stays there, even if the GPU has room to spare. Consider detecting a steady cap, or measuring GPU time (bench.js has a timer query, see G14).
-F6 [Opus   | Risk 2/5] Touch devices never see the pause menu (it only exists with pointer lock), so they can't change quality or mute
-   from it. Touch users have the HUD sound button but can only change quality on the title screen.
-
 G. Testing recommendations
 --------------------------
 Vitest is set up (npm test) and Playwright for browser tests (npm run test:browser). All test files live in tests/.
@@ -92,3 +80,6 @@ A62 [Sonnet | Risk 1/5] Listen to the A34 pickup tick on speakers and try taking
 A63 [Sonnet | Risk 1/5] Watch the A58 splash in motion on a real GPU on High and Ultra. It was only seen in one frozen frame on software rendering, where the ring reads fairly bold on the dark water; tune the 0.55 alpha in splashes.js if needed. The A61 barrier's rails also read dim from a distance, as nothing lights them; a small light in buildCrossStreet would lift them.
 A64 [Sonnet | Risk 1/5] Look at the moved izakaya lantern at z = -4.15 in the browser. It has about 0.1 clearance to the door awning on each side, worked out from the numbers and never seen.
 A66 [Sonnet | Risk 1/5] Watch the boot-shaped splash and the hovering neon goods in motion on a real GPU. The splash was only seen in one frozen frame from above on software rendering, so check it still reads as a boot from eye level; size is RING_MIN and RING_RUN in splashes.js. The 1.5 cm bob was never seen moving; tune BOB and BOB_SPEED in neon-food.js if needed.
+A67 [Sonnet | Risk 1/5] Try F1 and F6 on real hardware: a touchscreen laptop switching between mouse and touch mid-game, and a phone using the PAUSE button and changing quality. So far only run with Chromium's touch emulation, and the F4 layout only with fallback fonts rather than the real Monoton logo.
+A68 [Sonnet | Risk 1/5] Try F7 under a real 30 FPS cap (battery saver) and on a slow GPU. Only unit tested with simulated frame times. Expect about 4 s of falling resolution, then full scale again, with the same test about every 64 s if the cap lasts and twice as long each time after that. Tune NO_GAIN and HOLD_MS in adaptive-scale.js if it misjudges.
+A73 [Sonnet | Risk 1/5] Try the A69-A72 touch changes on a real phone: HUD buttons, the prompt and the hints clear of the notch and home bar (emulation has no notch, so the insets were 0), fullscreen on Android, no fullscreen button on iPhone Safari, and whether Slow and Fast feel right (0.6 and 1.6 in ui.js LOOK_SPEEDS).

@@ -50,7 +50,7 @@ function fakes({ touch = false, lock = () => Promise.resolve() } = {}) {
       start: vi.fn(), resume: vi.fn(), suspend: vi.fn(),
       toggleMute() { this.muted = !this.muted; },
     },
-    canvas: { requestPointerLock: vi.fn(lock) },
+    canvas: lock ? { requestPointerLock: vi.fn(lock) } : {},
     onUse: vi.fn(),
   };
 }
@@ -259,6 +259,184 @@ describe('prompts', () => {
     expect(el('vend').textContent).toBe('TAP · KNOCK');
     el('vend').fire('click');
     expect(onUse).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('input mode (F1)', () => {
+  const down = (pointerType, target) => listeners.window.fire('pointerdown', { pointerType, target });
+
+  it('a mouse click on ENTER uses the lock on a touchscreen', async () => {
+    const { states, canvas, player } = await startStates({ touch: true });
+    states.ready();
+    down('mouse', el('enter'));
+    el('enter').fire('click');
+    expect(player.touch).toBe(false);
+    expect(canvas.requestPointerLock).toHaveBeenCalledTimes(1);
+  });
+
+  it('a tap on ENTER plays without the lock, even if the mouse was the guess', async () => {
+    const { states, canvas, player } = await startStates();
+    states.ready();
+    down('touch', el('enter'));
+    el('enter').fire('click');
+    expect(player.touch).toBe(true);
+    expect(document.body.classList.contains('touch')).toBe(true);
+    expect(canvas.requestPointerLock).not.toHaveBeenCalled();
+  });
+
+  it('the Enter key uses the lock on a touchscreen', async () => {
+    const { states, canvas, player } = await startStates({ touch: true });
+    states.ready();
+    key('Enter');
+    expect(player.touch).toBe(false);
+    expect(canvas.requestPointerLock).toHaveBeenCalledTimes(1);
+  });
+
+  it('a touch during mouse play releases the lock without pausing', async () => {
+    const { states, player } = await playing();
+    document.pointerLockElement = {};
+    document.exitPointerLock = vi.fn(() => { document.pointerLockElement = null; });
+    down('touch', el('sound'));
+    expect(document.exitPointerLock).toHaveBeenCalledTimes(1);
+    listeners.document.fire('pointerlockchange');
+    expect(states.state).toBe('play');
+    expect(player.touch).toBe(true);
+  });
+
+  it('a mouse click on the canvas during touch play takes the lock', async () => {
+    const { canvas, player } = await playing({ touch: true });
+    down('mouse', canvas);
+    expect(player.touch).toBe(false);
+    expect(canvas.requestPointerLock).toHaveBeenCalledTimes(1);
+  });
+
+  it('a mouse click on a HUD button during touch play stays in touch mode', async () => {
+    const { canvas, player } = await playing({ touch: true });
+    down('mouse', el('sound'));
+    expect(player.touch).toBe(true);
+    expect(canvas.requestPointerLock).not.toHaveBeenCalled();
+  });
+
+  it('the mouse takes no lock in auto mode', async () => {
+    const { states, canvas } = await startStates({}, { auto: true });
+    states.ready();
+    down('mouse', canvas);
+    expect(canvas.requestPointerLock).not.toHaveBeenCalled();
+  });
+
+  it('a browser without pointer lock stays in touch mode', async () => {
+    const { states, player } = await startStates({ touch: true, lock: null });
+    states.ready();
+    down('mouse', el('enter'));
+    el('enter').fire('click');
+    expect(states.state).toBe('play');
+    expect(player.touch).toBe(true);
+  });
+
+  it('the prompt follows the mode while the action stays the same', async () => {
+    const { states, canvas } = await playing({ touch: true });
+    states.showPrompt('KNOCK');
+    expect(el('vend').textContent).toBe('TAP · KNOCK');
+    down('mouse', canvas);
+    states.showPrompt('KNOCK');
+    expect(el('vend').textContent).toBe('E · KNOCK');
+  });
+});
+
+describe('pause button (F6)', () => {
+  it('opens the pause menu and Resume plays again without the lock', async () => {
+    const { states, canvas, player, audio } = await playing({ touch: true });
+    el('pause-button').fire('click');
+    expect(states.state).toBe('paused');
+    expect(player.enabled).toBe(false);
+    expect(audio.suspend).toHaveBeenCalled();
+    expect(el('pause').classList.contains('hidden')).toBe(false);
+    el('resume').fire('click');
+    expect(states.state).toBe('play');
+    expect(el('pause').classList.contains('hidden')).toBe(true);
+    expect(canvas.requestPointerLock).not.toHaveBeenCalled();
+  });
+
+  it('does nothing before play has started', async () => {
+    const { states } = await startStates({ touch: true });
+    el('pause-button').fire('click');
+    expect(states.state).toBe('title');
+  });
+});
+
+describe('fullscreen button (A71)', () => {
+  it('is hidden where the browser has no fullscreen', async () => {
+    await startStates();
+    expect(el('fullscreen').classList.contains('hidden')).toBe(true);
+  });
+
+  async function withFullscreen() {
+    await loadUi();
+    document.fullscreenEnabled = true;
+    document.documentElement = { requestFullscreen: vi.fn(() => Promise.reject(new Error('Refused'))) };
+    document.exitFullscreen = vi.fn();
+    const f = fakes({ touch: true });
+    const { createStates } = await import('../src/ui.js');
+    return { ...f, states: createStates({ ...f, auto: false }) };
+  }
+
+  it('shows where it can work, and enters, even if refused without an error', async () => {
+    await withFullscreen();
+    expect(el('fullscreen').classList.contains('hidden')).toBe(false);
+    el('fullscreen').fire('click');
+    expect(document.documentElement.requestFullscreen).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves when already fullscreen, and the label follows without pausing', async () => {
+    const { states } = await withFullscreen();
+    states.ready();
+    el('enter').fire('click');
+    document.fullscreenElement = {};
+    listeners.document.fire('fullscreenchange');
+    expect(el('fullscreen').textContent).toBe('EXIT FULL');
+    el('fullscreen').fire('click');
+    expect(document.exitFullscreen).toHaveBeenCalledTimes(1);
+    document.fullscreenElement = null;
+    listeners.document.fire('fullscreenchange');
+    expect(el('fullscreen').textContent).toBe('FULLSCREEN');
+    expect(states.state).toBe('play');
+  });
+});
+
+describe('look speed (A72)', () => {
+  const pick = (label) => el('look-pills').children.find((b) => b.textContent === label);
+
+  it('starts at normal with one pill per speed', async () => {
+    const { player } = await startStates();
+    expect(player.lookSpeed).toBe(1);
+    expect(el('look-pills').children.map((b) => b.textContent)).toEqual(['Slow', 'Normal', 'Fast']);
+    expect(pick('Normal').className).toContain('on');
+  });
+
+  it('a pill sets the speed and moves the mark', async () => {
+    const { player } = await startStates();
+    pick('Fast').fire('click');
+    expect(player.lookSpeed).toBe(1.6);
+    expect(pick('Fast').className).toContain('on');
+    expect(pick('Normal').className).not.toContain('on');
+  });
+
+  it('starts from ?look, and ignores a value that is not a speed', async () => {
+    expect((await startStates({}, { search: '?look=slow' })).player.lookSpeed).toBe(0.6);
+    expect(pick('Slow').className).toContain('on');
+    expect((await startStates({}, { search: '?look=constructor' })).player.lookSpeed).toBe(1);
+  });
+
+  it('carries across a quality reload, and drops it back at normal', async () => {
+    const { ui } = await startStates();
+    ui.createQualityPills('high');
+    const quality = (label) => el('qpills').children.find((b) => b.textContent === label);
+    pick('Fast').fire('click');
+    quality('Low').fire('click');
+    expect(new URL(location.href).searchParams.get('look')).toBe('fast');
+    pick('Normal').fire('click');
+    quality('Medium').fire('click');
+    expect(new URL(location.href).searchParams.has('look')).toBe(false);
   });
 });
 
