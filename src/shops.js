@@ -166,6 +166,7 @@ function sushiShop(ctx) {
   box(mats.strip('#fff0d8', 1.6), at(SHELL + 0.08), 2.7, zc, 0.04, 0.04, w - 0.5);
 
   norenCurtain(ctx, at, side, zc, w, 1.66, mats.norenSushi);
+  priceBoard(ctx, at, side, zc, mats.priceSushi);
   lanterns(ctx, at, zc, w, mats.strip('#ffe2b8', 1.2));
 
   addLight(at(1.5), 1.5, zc, '#ffe6c0', 3, 8);

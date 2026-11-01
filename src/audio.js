@@ -188,6 +188,19 @@ export class AmbientAudio {
     }
   }
 
+  // A can lifted out of the bin: a light, tinny tick.
+  pickup() {
+    const ctx = this.ctx;
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    const o = ctx.createOscillator(); o.type = 'triangle';
+    o.frequency.setValueAtTime(1900, t); o.frequency.exponentialRampToValueAtTime(1300, t + 0.1);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    o.connect(g).connect(this.master);
+    o.start(t); o.stop(t + 0.12);
+  }
+
   // Three raps on a door: a dull thump with a short slap of noise on each.
   knock() {
     const ctx = this.ctx;

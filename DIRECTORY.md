@@ -5,6 +5,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 ## Root
 - .gitignore
 - CLAUDE.md
+- Completed-Tasks.txt
 - DIRECTORY.md
 - README.md
 - TESTING.md
@@ -79,6 +80,6 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 
 ## docs/ (deployed build output)
 - docs/.nojekyll
-- docs/assets/index-BqMh0Ya5.js
+- docs/assets/index-CS0ig-9h.js
 - docs/assets/index-DIPauJIT.css
 - docs/index.html

@@ -81,12 +81,12 @@ export class Vending {
       parent.add(group);
       return { group, body };
     };
-    // One can per bin slot. The newest replaces the oldest once the bin is full.
+    // One can per bin slot. The newest takes a free slot, or replaces the oldest once the bin is full.
     this.cans = BIN_SLOTS.map((dz) => {
       const can = makeCan();
       can.group.position.set(x, REST_Y, spot.z + dz);
       can.group.rotation.x = Math.PI / 2; // lying along the bin
-      return { ...can, delay: 0, fall: 0, speed: 0 };
+      return { ...can, held: false, order: 0, delay: 0, fall: 0, speed: 0 };
     });
     this.falling = makeCan();
     this.bodies = bodies;
@@ -130,6 +130,26 @@ export class Vending {
     return true;
   }
 
+  oldest(cans) {
+    return cans.reduce((a, b) => (b.order < a.order ? b : a));
+  }
+
+  // Cans that have come to rest in the bin.
+  landed() {
+    return this.cans.filter((c) => c.held && c.delay <= 0 && c.fall === 0);
+  }
+
+  // Lifts the oldest can out of the bin. Returns true if there was one to take.
+  take() {
+    const landed = this.landed();
+    if (!landed.length) return false;
+    const can = this.oldest(landed);
+    can.held = false;
+    can.group.visible = false;
+    this.flapOpen = this.cans.some((c) => c.held);
+    return true;
+  }
+
   // The front can leaves the coil as a separate object, and the stock steps back into place.
   release(job) {
     const { face, side } = this.spot;
@@ -154,7 +174,9 @@ export class Vending {
     group.visible = false;
     this.job = null;
     // Inside the base, then into the bin behind the flap
-    const can = this.cans[this.sold++ % this.cans.length];
+    const can = this.cans.find((c) => !c.held) || this.oldest(this.cans);
+    can.held = true;
+    can.order = this.sold++;
     can.body.geometry = this.bodies[job.slot.flavour];
     can.group.visible = false;
     can.delay = DROP_DELAY;

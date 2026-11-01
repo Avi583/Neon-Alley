@@ -30,7 +30,7 @@ const AUTO = params.has('autostart'); // used for automated screenshots
 const FREEZE = AUTO || params.has('freeze');
 const BENCH = params.has('bench'); // used for the performance baseline
 const num = (k, d) => (params.has(k) ? parseFloat(params.get(k)) : d);
-const BUY = 'BUY A DRINK ¥120', KNOCK = 'KNOCK', KNOCK_COOLDOWN = 1000; // ms, the length of three raps
+const BUY = 'BUY A DRINK ¥120', TAKE = 'TAKE THE DRINK', KNOCK = 'KNOCK', KNOCK_COOLDOWN = 1000; // ms, the length of three raps
 const FOOD_COOLDOWN = 400; // ms, so a held key can't clear a counter
 
 createQualityPills(qKey);
@@ -146,7 +146,7 @@ async function init() {
   const foodInReach = () => foodShop.target(player.pos.x, player.pos.y, player.yaw);
   const useAction = () => {
     if (!player.enabled) return null;
-    if (reaches(alley.vending)) return BUY;
+    if (reaches(alley.vending)) return vending.landed().length ? TAKE : BUY;
     const food = foodInReach();
     if (food) return foodLabel(food);
     return alley.doors.some(reaches) ? KNOCK : null;
@@ -157,11 +157,12 @@ async function init() {
     onUse: () => {
       const action = useAction();
       if (action === BUY && vending.buy()) audio.whirr(VEND_TURN);
+      if (action === TAKE && vending.take()) audio.pickup();
       if (action === KNOCK && performance.now() >= nextKnock) {
         nextKnock = performance.now() + KNOCK_COOLDOWN;
         audio.knock();
       }
-      const food = action && action !== BUY && action !== KNOCK ? foodInReach() : null;
+      const food = action && action !== BUY && action !== TAKE && action !== KNOCK ? foodInReach() : null;
       if (food && performance.now() >= nextFood) {
         nextFood = performance.now() + FOOD_COOLDOWN;
         foodShop.buy(food);

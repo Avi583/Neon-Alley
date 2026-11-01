@@ -6,7 +6,7 @@ Legend: ID [Model | Risk n/5]
   Model = which model should do the task (Sonnet = mechanical/contained, Opus = design judgement or cross-file reasoning).
   Risk  = chance a fix breaks something or causes errors (1 = trivial, 5 = very likely to need debugging).
 
-Measure before and after each performance item with npm run perf (see G10 in section H).
+Measure before and after each performance item with npm run perf (see G10 in Completed-Tasks.txt).
 Watch out: the world comes from one seeded rng, so adding, removing or reordering rng()/R()/pick()
 calls in alley.js, signs.js or batch.js changes the whole layout. Refactors there must keep the draw order.
 
@@ -16,31 +16,14 @@ A1 [Sonnet | Risk 1/5] Audit code (first pass done, see sections B-F)
 A8 [Opus   | Risk 2/5] Testing audit: review what the tests cover and where the gaps are (see section G).
 A17 [Sonnet | Risk 2/5] canvas-art.js drawFish/drawOnigiri: the shop back walls still paint realistic fish and rice balls behind the neon
     from A11. Repaint them plainer or as neon if the neon should be the only food shown. Changes the texture snapshot (G9).
-A23 [Sonnet | Risk 1/5] Run npm run perf on the real GPU to measure the frame time of A20, A21 and A22. Only software rendering has been used so far, which gives meaningless timings.
-A24 [Sonnet | Risk 1/5] Check the new litter from A20 up close in the browser, especially crushed cans and the teeth on broken bottles. So far only seen from about 2 m.
 A25 [Sonnet | Risk 1/5] alley.js doorFrame: door frames blend into the door under strong neon. Try a lighter material if they should stand out more.
 A29 [Sonnet | Risk 2/5] The ground vent at x = 0.9, z = -9.4 sometimes hides the left of the ramen shop behind steam. Moving the vent needs care, as vents feed the street prop placement in alley.js.
-A33 [Sonnet | Risk 1/5] Try the vending prompt on a real touch device. So far only E on desktop has been run in a browser; the tap path is untested.
-A34 [Sonnet | Risk 2/5] Let the player take cans from the vending bin. They stay until the fourth purchase replaces the oldest, so the flap stays open after the first purchase.
-A45 [Sonnet | Risk 1/5] Listen to the splash and purchase sounds on speakers. The browser check confirms which sound is chosen at each step, but not how they sound. The splash was rewritten as one slosh per step, as the old one sounded like bubble wrap; tune it in audio.js splash() if needed.
-A48 [Sonnet | Risk 1/5] Rounded snow (A36) adds about 83,000 triangles (+33%) on High. Frame time held on an RTX 5070 Ti, but low-end phones are untested. If they struggle, coarsen the drifts in driftGeometry, starting with the rooftops, which can't be seen from the street.
-A49 [Sonnet | Risk 1/5] Look at the A36 snow on awnings from above. Player height can't see their top surfaces, so how they sit there was only worked out from the numbers.
-A40 [Sonnet | Risk 1/5] Try the knock prompt on a real touch device and listen to the knock on speakers. It has only been run with E in a headless browser, which confirms the sound plays but not how it sounds.
-A41 [Sonnet | Risk 1/5] Run build.bat before committing A36, A37, A38 and A39, since docs/ does not include them yet.
 A42 Retool quality
-A46 [Sonnet | Risk 1/5] Sushi shop has no price board, so its ¥240 only shows in the prompt. Add one with genShopPrice if it should match ramen and onigiri. Changes the texture snapshot (G9).
 A47 [Sonnet | Risk 1/5] Puddles cover 24 of 37 steps on a walk down the middle from z = 6 to -39, so most of that stretch splashes. Raise the threshold in ground.js puddleLookup if the sound should be rarer.
-A48 [Sonnet | Risk 1/5] Run npm run perf on the real GPU to measure the bought food: up to 14 extra groups once everything is sold. Not measured yet.
-A49 [Sonnet | Risk 1/5] Run build.bat before committing A35, A43, A44 and A50, since docs/ does not include them yet.
-A52 [Sonnet | Risk 1/5] Watch the A51 corkscrew live at full speed and listen to the whirr on speakers. It was only checked in stepped screenshots on software rendering, and the sounds were never heard. Worth checking the can's tumble against the glass and the rail.
-A53 [Sonnet | Risk 1/5] Run build.bat before committing A51, since docs/ does not include it yet.
 A55 [Opus   | Risk 3/5] Add a money system: a wallet and a HUD balance, charged by the vending machine, food shops and bar. All prices are display only so far.
-A56 [Sonnet | Risk 1/5] Run npm run perf on the real GPU to measure the A54 bar. Only a short software-rendered run has been done, and it is now the stored last run, so its timings mean nothing.
-A57 [Sonnet | Risk 1/5] Run build.bat before committing A54, since docs/ does not include it yet.
 A58 High and Ultra only have splash animation when walking/running over puddles
 A59 Able to walk to end of alley
 A60 Arms / Legs
-A61 [Sonnet | Risk 1/5] Check the food lift (food-shop.js) on High and on a real GPU, with sound on. So far it has only been seen on Low with software rendering, where the hatch metal reads dull purple under the bar's neon. Run build.bat before committing, since docs/ does not include it yet.
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------
@@ -87,7 +70,7 @@ F6 [Opus   | Risk 2/5] Touch devices never see the pause menu (it only exists wi
 G. Testing recommendations
 --------------------------
 Vitest is set up (npm test) and Playwright for browser tests (npm run test:textures). All test files live in tests/.
-G1-G6, G9, G10, G13 are done (see H).
+G1-G6, G9, G10, G13 are done (see Completed-Tasks.txt).
 G7  [Opus   | Risk 3/5] Add a Playwright smoke test (Playwright is now set up) against vite preview: load each ?q= preset, fail on any console error or
     shader compile error, start the game, hold W and confirm the player moved, then pause and resume. Run the built
     output too, so a wrong asset base path is caught before it reaches Pages.
@@ -106,112 +89,16 @@ G12 [Sonnet | Risk 2/5] Add a GitHub Action that runs lint, tests and build on e
 G15 [Sonnet | Risk 1/5] tests/perf-baseline.js: fail fast. Page errors are only checked after the 10 minute wait for __bench, so a broken
     page or a stalled run looks like a long hang. One run timed out while another Playwright window was open; two later runs were fine.
 
-H. Completed
-------------
-A54 [Opus   | Risk 3/5] shops.js: bar on the right wall at z = -45, selling three each of neon beer ¥600, sake ¥800 and soju ¥500. E (or tapping the prompt) replaces a neon drink with a solid one, through the food shop system (food-shop.js). No kit rng draws.
-    Two new textures: priceBar and norenBar. Checked in headless Chromium on Low by buying all nine drinks; the sound was not heard.
-A51 [Opus   | Risk 3/5] vending.js: buying turns a random slot's corkscrew, its front can tips off the shelf, falls behind the glass through a hatch and lands in the bin, with a motor whirr and a clunk on landing. Shelves moved back for the drop channel. Stock never runs out.
-    Shelf cans moved from the batch to instanced meshes, with no rng change. npm run perf on High: draw calls 174 to 180, triangles 315,674 to 342,171. Frame time P50 2.7 to 4.0 ms on an RTX 5070 Ti, but P95 fell 9.4 to 4.4 ms, within the noise in G14.
-A35 [Sonnet | Risk 1/5] footprints.js: boot marks 50% bigger, 0.18 x 0.45 m. Foot spacing unchanged.
-A43 [Sonnet | Risk 1/5] canvas-art.js genGraffiti: the stencilled cat and WAKE UP are replaced by a second GitHub mark with avi583. The katana cats stay. Same rng draws and placements.
-A44 [Opus   | Risk 2/5] ground.js / audio.js: a step in a puddle splashes instead of the snowy footstep. A 128 x 1024 RGBA copy of the mask is read back once at load, as the GLSL noise cannot be matched in JS. The splash is one falling noise slosh over a low thump, with no rising tones or droplets.
-A50 [Opus   | Risk 3/5] food-shop.js: E (or tapping the prompt) buys the onigiri, sushi or ramen closest to the centre of the view, and a solid dish replaces its neon copy. Each spot sells once, with no money system. Sushi stands moved
-    from the batch to NeonFood so they hide with the neon: metalDark 41,354 to 41,114 vertices, no rng change. Food takes priority over knocking, as a door could otherwise block a sale.
-A37 [Sonnet | Risk 2/5] alley.js / audio.js / main.js: E (or tapping the prompt) within 1.6 m and facing a door plays three raps, with a 1 s cooldown. The vending machine takes priority where both are in reach.
-A38 [Sonnet | Risk 1/5] canvas-art.js genShopPrice / shops.js priceBoard: boards hung from the noren rod at eye level, ramen ¥980 and onigiri ¥180. Two new textures: priceRamen and priceOnigiri.
-A39 [Opus   | Risk 3/5] neon-food.js: the shops' neon fish, onigiri, sushi and bowls are now 3D wireframes turning at 0.35 rad/s, as instanced meshes outside the batch. No kit rng draws. Tube brightness lowered, since denser
-    wireframes bloomed to white. npm run perf on High: draw calls 148 to 173, triangles 217,684 to 251,570, against the last stored run. Frame time P50 2.2 ms on an RTX 5070 Ti.
-A3  [Opus   | Risk 3/5] vending.js: E (or tapping the prompt) within 1.6 m and facing the machine drops a random can into the pickup bin with a clunk. The flap swings in, the bin holds 3 cans
-    and the newest replaces the oldest. No money system. The bin recess is deeper, with the same footprint and collider. Random flavours use Math.random, so the layout is unchanged.
-A31 [Sonnet | Risk 1/5] canvas-art.js genVendingPrice: readable ¥120 tag on the rail under each can, replacing the blank white tags. Scene vertices drop by about 500.
-A32 [Opus   | Risk 1/5] canvas-art.js genGraffiti: K-9 crown replaced by a robot, 2087 removed from the heart, username now avi583. alley.js unitGraffiti shows the GitHub mark on the former K-9 wall
-    at z = -21.7 on the right, and robots at z = 18.7 and -35.4 on the left. Other walls keep their pieces.
-A9  [Opus   | Risk 3/5] shops.js: sushi shop on the left wall at z = -57.3, with a conveyor belt of neon nigiri and maki, an indigo awning and noren. No kit rng draws.
-A10 [Opus   | Risk 3/5] shops.js: ramen shop on the right wall at z = -8.3, with neon bowls, stools, a tiled eave, noren and lanterns. No kit rng draws. With A9: vertices 174,312 to 183,016,
-    merged meshes 74 to 86. Three new textures: shopSushi, norenSushi and norenRamen.
-A27 [Opus   | Risk 1/5] canvas-art.js genGraffiti: 9 pieces, atlas 3456 x 256. KAZE tag now reads NIGHT CITY, the ghost is replaced by two cats with headbands
-    crossing katanas, and a stencilled GitHub mark with Avi583 is added. fadeGraffiti washes and wears the whole atlas. Same placements and vertices, but pieces land on different walls.
-A20 [Sonnet | Risk 2/5] alley.js litter: crushed cans, broken bottles with shards, bottle caps and noodle cups. New draws follow the old ones in the litter
-    rng, so older litter stays put. With the door and graffiti work: vertices 165,836 to 174,312, merged meshes 71 to 74, graffiti atlas 3072 x 256.
-A21 [Opus   | Risk 2/5] alley.js: door frames (posts, head, threshold) and three hinges on the edge opposite the handle. No rng draws.
-A22 [Opus   | Risk 2/5] canvas-art.js genGraffiti / alley.js unitGraffiti: 8 pieces in an atlas, placed on shutters, blank walls, beside doors and under
-    window sills from their own rng. The older painted squiggles on the shutter texture are unchanged.
-A12 [Opus   | Risk 3/5] footprints.js: pool of 72 instanced boot marks left on each step, fading out over 20 s in the shader. Dark imprints in
-    snow and pale slush on asphalt, which is too dark to darken further, with almost nothing in puddles. Left out of the reflection pass.
-A18 [Sonnet | Risk 1/5] alley.js acDrip: transparent rust and dirt streaks below wall-mounted AC units, stopping above the ledge. Four patterns in an
-    atlas (batch.js atlasPlane), chosen from the unit's position with no rng draws. Ground units have too little wall below them.
-B1  [Opus   | Risk 3/5] ground.js: snow and puddle masks baked once on the GPU to an RG8 texture (quality.js groundMask: 256 x 2048 on Low and Medium,
-    512 x 4096 on High and Ultra, about 5.6 MB with mipmaps). Ground looks the same in before and after screenshots on High. No clear frame time gain on an
-    RTX 5070 Ti at 1280 x 720: P50 2.1 ms before, 2.1 and 4.0 ms in two runs after, within the noise in G14. Worth re-measuring on a slower GPU.
-A16 [Sonnet | Risk 2/5] build.bat: double click to rebuild docs/ and refresh the docs/ section of DIRECTORY.md (scripts/update-directory.js).
-    The only steps left to deploy are committing and pushing in GitHub Desktop.
-A19 [Opus   | Risk 3/5] alley.js vending machine: hollow cabinet with a glass front, 24 3D cans on shelves, price tags and buttons, a control panel
-    and a recessed pickup bin. No kit rng draws, and the same footprint and collider. Adds 4,408 vertices and 7 merged meshes.
-A11 [Opus   | Risk 3/5] shops.js: 3D neon tube fish and onigiri replace the food on the counters and the hanging fish. No kit rng draws.
-A13 [Sonnet | Risk 2/5] alley.js acUnit: casing, fan guard rim and hub, coolant lines, and feet on ground units. Guard spokes and louvres are
-    on ground units only, to limit vertices. Scene vertices with A11, A14 and A15: 117,952 to 161,228, merged meshes 61 to 63.
-A14 [Sonnet | Risk 2/5] alley.js: lumpy bags with tied necks, some blue, plus loose cans, paper and flattened boxes from their own rng. The dumpster
-    gained ribs, a rim, a lift bar and casters, and barrels gained hoops. Bag sizes draw from the kit in the same order.
-A15 [Sonnet | Risk 2/5] alley.js doorHandle: knob, lever or pull bar on either edge, chosen from the door's position with no rng draws.
-E8 [Sonnet | Risk 1/5] README.md: build path corrected to docs/, and src/shops.js added to the file table.
-A2  [Opus   | Risk 3/5] Blocky fog was the steam, not banding. pbr-textures.js genCloud squared (1 - r) unclamped, so alpha rose again
-    past the circle and each billboard's square corners showed. Now clamped, with a Playwright test on the alpha outside the circle.
-A4  [Sonnet | Risk 2/5] alley.js crate(): the plastic boxes are now slatted wooden crates with lid boards, corner posts and braces,
-    using a new wood texture. Same rng draws, so the layout doesn't move.
-A6  [Opus   | Risk 3/5] shops.js: fish market on the left wall at z = -44.7. No kit rng draws (its own seeded rng for variation).
-A7  [Opus   | Risk 3/5] shops.js: onigiri shop with a noren curtain on the right wall at z = -18.5. Signs for both shops use
-    shopfront: true, which keeps them out of nearSign and skips the rng snow and icicles.
-A5  [Sonnet | Risk 2/5] Sound and quality controls in the pause menu, which now resumes only from its Resume button. A quality change
-    still reloads the page, because presets set texture sizes, MSAA and counts at startup, but it keeps the player's position.
-B7  [Opus   | Risk 3/5] adaptive-scale.js: render scale drops when frames are slow and recovers slowly. The FPS counter shows the scale when below 100%.
-G10 [Opus   | Risk 2/5] npm run perf (tests/perf-baseline.js, src/bench.js): fixed preset, camera path and viewport, recording load
-    time, frame time, draw calls and triangles. Results go in perf-results/ (not committed) and print against the last run.
-    Adaptive scale is off during the run. Use the same machine, as the default visible window uses the real GPU.
-B5  [Sonnet | Risk 1/5] signs.js drawSign: cap canvas size. There is no upper limit, so on Ultra the 7 x 3.2 m sign is
-    2800 x 1280 (about 14 MB before mipmaps).
-B8  [Sonnet | Risk 1/5] main.js resize: debounce. Every resize event reallocates the HDR/MSAA, bloom and reflection targets.
-B10 [Sonnet | Risk 1/5] batch.js icicles: make the cones open-ended to drop the unseen cap triangles.
-B11 [Sonnet | Risk 1/5] atmosphere.js createSky: draw the sky last instead of first (renderOrder -10) so depth testing
-    skips covered pixels. The sky is opaque, so it still draws before transparent snow/steam.
-C3 [Sonnet | Risk 1/5] textures.js normalFromHeight: replace Math.hypot with Math.sqrt in this per-texel loop.
-C6 [Sonnet | Risk 1/5] main.js buildEnvironment: dispose the temporary room geometries and materials after the PMREM bake.
-D1 [Sonnet | Risk 2/5] textures.js split into texture-core.js, pbr-textures.js and canvas-art.js, with one function per shop.
-D2 [Opus   | Risk 3/5] alley.js: buildAlley split into buildings, overhead, street props, cross street and skyline.
-D3 [Sonnet | Risk 2/5] signs.js split into sign-specs.js, sign-canvas.js and holo-shader.js.
-D4 [Opus   | Risk 3/5] main.js split into environment.js and ui.js.
-E1 [Sonnet | Risk 2/5] Duplicate code removed: one roundRect (texture-core.js), one texture repeat helper in ground.js, one mute
-   toggle in ui.js. clamp01/sstep/frac moved to math.js.
-E2 [Sonnet | Risk 1/5] Dead code: m.glass (materials.js), specs in the buildSigns return, composer/bloom in the createPost
-   return, G/put/batch in the makeKit return, the export on vnoise, the "+ (spec.sub ? 0 : 0)" at signs.js line 171, and
-   the "kind: 'circle'" on that sign spec, which is never read.
-E3 [Sonnet | Risk 1/5] Move WALL into a shared config. alley.js imports it from signs.js only for that constant.
-E4 [Sonnet | Risk 2/5] signs.js: seed/factor no longer written onto SIGN_SPECS. Runtime state is a separate object, read through
-   light.state in lights.js and main.js.
-E5 [Sonnet | Risk 2/5] Japanese texture text moved to art-text.js, the one source for canvas-art.js, textures.js and SIGN_TEXT.
-E6 [Sonnet | Risk 1/5] Add ESLint (no-unused-vars would catch much of the dead code above).
-G1  [Sonnet | Risk 1/5] Add Vitest and an npm test script. It shares vite.config.js, and everything below can build on it.
-G2  [Sonnet | Risk 1/5] noise.js: pin exact outputs of mulberry32, hash2, fbm and noise1 for fixed inputs. Also check that
-    fbm tiles across u/v = 0 and 1 and that results stay in [0,1]. This is the safety net for C1 and C2, which must keep
-    output identical.
-G3  [Opus   | Risk 2/5] layout.test.js: snapshot the generated layout (hash of merged geometry per material, sign meshes, colliders,
-    vents, lights and the next rng value). B2 and A4 may change the geometry on purpose, so update the snapshot only after
-    checking the result.
-G5  [Sonnet | Risk 1/5] quality.js: table-test detectQuality with stubbed user agents, core counts and memory, including an
-    iPad reporting as Macintosh. Check that all PRESETS have the same keys and that values rise from low to ultra.
-G6  [Sonnet | Risk 1/5] signs.js: check every SIGN_SPECS entry for required fields and that all sign and texture text is in
-    SIGN_TEXT. The canvas size cap from B5 needs a canvas, so it is on the manual checklist in TESTING.md.
-G9  [Opus   | Risk 3/5] tests/textures.pw.js: hash the raw pixels of every generated texture in pinned Chromium at a small size.
-    Protects C1, C2 and C4. Canvas text and gradients can differ between machines, so the snapshot is per platform.
-G13 [Sonnet | Risk 1/5] Write a short manual checklist for what automation can't judge: a real phone (joystick and drag-look),
-    a touchscreen laptop, Chrome, Firefox and Safari, audio starting after the first click and muting, Esc and resume,
-    resizing, and how fog and reflections look.
-B6  [Sonnet | Risk 2/5] main.js: rendering stops while paused, with one redraw after a resize (which clears the canvas).
-B9  [Sonnet | Risk 2/5] main.js: the hum updates at about 30 Hz, and only while the audio context is running.
-B12 [Sonnet | Risk 2/5] main.js frame: the drawing buffer size comes from resize(), and timing uses the rAF timestamp.
-C2  [Sonnet | Risk 2/5] noise.js: lattice table per (period, seed), cleared after texture generation. Output is identical.
-    About 20% faster in a Node timing of four fbm layers at 1024 x 1024 (280 ms to 225 ms). The Map lookup limits the gain.
-F2  [Sonnet | Risk 2/5] ui.js: a refused pointer lock (rejected promise or pointerlockerror) opens the pause menu.
-F3  [Sonnet | Risk 1/5] main.js FPS counter: uses unclamped time, so it can show below 20 FPS.
-F5  [Sonnet | Risk 1/5] ui.js / audio.js: mute carries across a quality reload through ?mute=1.
-G4  [Sonnet | Risk 2/5] tests/player.test.js: collisions, walk bounds, speed, pitch clamp, disabled state, blur and footsteps.
-    Running at the largest dt doesn't pass through even a zero-thickness wall.
+H. Testing
+----------
+Tasks that need the user to run, watch or listen to something.
+A23 [Sonnet | Risk 1/5] Run npm run perf on the real GPU to measure the frame time of the A20 litter, A21 door frames, A22 graffiti, the bought food (up to 14 extra groups once everything is sold) and the A54 bar. These have only had software rendering, and the stored last run is a short software-rendered one, so its timings mean nothing.
+A24 [Sonnet | Risk 1/5] Check the new litter from A20 up close in the browser, especially crushed cans and the teeth on broken bottles. So far only seen from about 2 m.
+A33 [Sonnet | Risk 1/5] Try the vending prompt on a real touch device. So far only E on desktop has been run in a browser; the tap path is untested.
+A40 [Sonnet | Risk 1/5] Try the knock prompt on a real touch device and listen to the knock on speakers. It has only been run with E in a headless browser, which confirms the sound plays but not how it sounds.
+A45 [Sonnet | Risk 1/5] Listen to the splash and purchase sounds on speakers. The browser check confirms which sound is chosen at each step, but not how they sound. The splash was rewritten as one slosh per step, as the old one sounded like bubble wrap; tune it in audio.js splash() if needed.
+A48 [Sonnet | Risk 1/5] Rounded snow (A36) adds about 83,000 triangles (+33%) on High. Frame time held on an RTX 5070 Ti, but low-end phones are untested. If they struggle, coarsen the drifts in driftGeometry, starting with the rooftops, which can't be seen from the street.
+A49 [Sonnet | Risk 1/5] Look at the A36 snow on awnings from above. Player height can't see their top surfaces, so how they sit there was only worked out from the numbers.
+A52 [Sonnet | Risk 1/5] Watch the A51 corkscrew live at full speed and listen to the whirr on speakers. It was only checked in stepped screenshots on software rendering, and the sounds were never heard. Worth checking the can's tumble against the glass and the rail.
+A61 [Sonnet | Risk 1/5] Check the food lift (food-shop.js) on High and on a real GPU, with sound on. So far it has only been seen on Low with software rendering, where the hatch metal reads dull purple under the bar's neon.
+A62 [Sonnet | Risk 1/5] Listen to the A34 pickup tick on speakers and try taking a can on a real touch device. It has only been run with E on Low in a headless browser, where the sound was not heard.

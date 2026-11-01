@@ -95,6 +95,44 @@ describe('Vending', () => {
     expect(v.cans[1].body.geometry).toBe(v.bodies[1]);
   });
 
+  it('has nothing to take until a can has landed', () => {
+    const v = make(() => 0);
+    expect(v.take()).toBe(false);
+    v.buy();
+    run(v, VEND_TURN + 0.1);
+    expect(v.take()).toBe(false);
+    run(v, 3);
+    expect(v.take()).toBe(true);
+    expect(v.cans[0].group.visible).toBe(false);
+    expect(v.take()).toBe(false);
+  });
+
+  it('takes the oldest can first, and the next can fills the free slot', () => {
+    const picks = [0, 1, 2].map((s) => s / SLOTS.length);
+    const v = make(() => picks.shift());
+    for (let k = 0; k < 2; k++) { v.buy(); run(v, 3); }
+    v.take();
+    expect(v.cans[0].group.visible).toBe(false);
+    expect(v.cans[1].group.visible).toBe(true);
+    v.buy();
+    run(v, 3);
+    expect(v.cans[0].group.visible).toBe(true);
+    expect(v.cans[0].body.geometry).toBe(v.bodies[2]);
+    v.take();
+    expect(v.cans[1].group.visible).toBe(false);
+  });
+
+  it('closes the flap once the last can is taken', () => {
+    const v = make(() => 0), closed = v.flap.rotation.z;
+    for (let k = 0; k < 2; k++) { v.buy(); run(v, 3); }
+    v.take();
+    run(v, 2);
+    expect(v.flap.rotation.z).not.toBeCloseTo(closed);
+    v.take();
+    run(v, 2);
+    expect(v.flap.rotation.z).toBeCloseTo(closed);
+  });
+
   it('calls onLand once per can, and opens the flap', () => {
     const v = make(() => 0), closed = v.flap.rotation.z;
     let lands = 0;

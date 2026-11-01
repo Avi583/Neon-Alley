@@ -719,9 +719,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "a6945604bc02c48f",
+      "hash": "9a016517852c19f2",
       "material": "metalDark",
-      "vertices": 43570,
+      "vertices": 43594,
     },
     {
       "hash": "c9c833975b13f244",
@@ -749,9 +749,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 5200,
     },
     {
-      "hash": "56e4c04c3f740c68",
+      "hash": "5beed5ef2a42a2c5",
       "material": "cable",
-      "vertices": 16756,
+      "vertices": 16836,
     },
     {
       "hash": "24581ae6a66d49d0",
@@ -1071,6 +1071,11 @@ exports[`generated layout > matches the snapshot 1`] = `
     {
       "hash": "05b04f1b6f709c52",
       "material": "norenSushi",
+      "vertices": 4,
+    },
+    {
+      "hash": "32fe8bc630c0b1ff",
+      "material": "priceSushi",
       "vertices": 4,
     },
     {

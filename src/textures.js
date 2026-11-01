@@ -29,6 +29,7 @@ export async function generateTextures(Q, aniso, progress) {
     ['vendingPrice', () => genVendingPrice()],
     ['priceRamen', () => genShopPrice(ART_TEXT.ramen, '¥980')],
     ['priceOnigiri', () => genShopPrice(ART_TEXT.onigiri, '¥180')],
+    ['priceSushi', () => genShopPrice(ART_TEXT.sushi, '¥240')],
     ['priceBar', () => genBarMenu([['BEER', '¥600'], ['SAKE', '¥800'], ['SOJU', '¥500']])],
     ['canLabels', () => genCanLabels()],
     ['shopRamen', () => genShopInterior('ramen')],
