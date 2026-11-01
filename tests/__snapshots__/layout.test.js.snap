@@ -359,7 +359,7 @@ exports[`generated layout > matches the snapshot 1`] = `
       "pos": [
         -1.65,
         3,
-        -5.6,
+        -4.15,
       ],
       "range": 6,
     },
@@ -704,7 +704,7 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "5fdec77ec7cc57d1",
+      "hash": "c6f4688ed1c3f612",
       "material": "snow",
       "vertices": 32716,
     },
@@ -719,7 +719,7 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "f9d2b3c04e01369d",
+      "hash": "5fac21c6bb3d5ec7",
       "material": "metalDark",
       "vertices": 43866,
     },
@@ -729,9 +729,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 120,
     },
     {
-      "hash": "97d5728e200485f0",
+      "hash": "43ef99ed0e36bb23",
       "material": "metal",
-      "vertices": 16392,
+      "vertices": 16088,
     },
     {
       "hash": "4fb725fa26458b76",
@@ -749,7 +749,7 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 5200,
     },
     {
-      "hash": "5beed5ef2a42a2c5",
+      "hash": "2d81a727cf43e2fb",
       "material": "cable",
       "vertices": 16836,
     },
@@ -854,7 +854,7 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 1827,
     },
     {
-      "hash": "43fc67114224ec5c",
+      "hash": "3fe0392882128858",
       "material": "lantern",
       "vertices": 1320,
     },

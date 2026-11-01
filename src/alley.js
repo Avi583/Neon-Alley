@@ -284,8 +284,9 @@ function buildBuildings(ctx) {
       // vertical drain pipes
       const nP = rng() < 0.6 ? 1 : 2;
       for (let k = 0; k < nP; k++) {
-        const r = R(0.04, 0.09);
-        cyl(mats.metal, side * (up - r - 0.02), H / 2, R(z1 + 0.3, z0 - 0.3), r, H);
+        const r = R(0.04, 0.09), pz = R(z1 + 0.3, z0 - 0.3);
+        const blocksDoor = ctx.doors.some((d) => Math.sign(d.face) === side && Math.abs(d.z - pz) < 0.7 + r);
+        if (!blocksDoor) cyl(mats.metal, side * (up - r - 0.02), H / 2, pz, r, H);
       }
       // fire escapes
       if (rng() < 0.42 && H > 14 && !nearSign(side, zc, 3.4)) fireEscape(ctx, side, up, zc, H);
@@ -456,7 +457,7 @@ function buildOverhead(ctx) {
 function buildStreetProps(ctx) {
   const { mats, R, rng, pick, box, cyl, sph, plane, icicles, snow, tube, vents, addLight, addCollider } = ctx;
   // Paper lanterns at the izakaya
-  for (const lz of [-5.6, -8.0]) {
+  for (const lz of [-4.15, -8.0]) { // -4.15 is the gap between two door awnings
     const lx = -WALL + 0.45;
     tube([new THREE.Vector3(lx, 3.6, lz), new THREE.Vector3(lx, 3.35, lz)], 0.006, mats.cable, 2);
     sph(mats.lantern, lx, 3.05, lz, 0.2, 0.3, 0.2);

@@ -65,6 +65,7 @@ function generate(extraDraws = 0) {
   const batch = new Batch();
   const kit = makeKit(batch, mats, SEED);
   for (let i = 0; i < extraDraws; i++) kit.rng();
+  const parts = spyOnParts(kit, mats);
   const scene = new THREE.Scene();
   const alley = buildAlley(kit, mats, SIGN_SPECS);
   const signs = buildSigns(kit, mats, null, SIGN_PPM, scene);
@@ -86,7 +87,34 @@ function generate(extraDraws = 0) {
     alleyLights: alley.lights.map(light),
     signLights: signs.lights.map(light),
   };
-  return { alley, layout };
+  return { alley, layout, parts };
+}
+
+// Records ground-standing poles, paper lanterns and sloped roofs as the kit places them.
+function spyOnParts(kit, mats) {
+  const parts = { poles: [], lanterns: [], roofs: [] };
+  const { box, cyl, sph } = kit;
+  kit.cyl = (mat, x, y, z, r, h, rx = 0, ry = 0, rz = 0, lo = false) => {
+    if (!rx && !rz && Math.abs(y - h / 2) < 0.05 && h > 1.5) parts.poles.push({ x, z, r });
+    return cyl(mat, x, y, z, r, h, rx, ry, rz, lo);
+  };
+  kit.sph = (mat, x, y, z, sx, sy, sz, lo) => {
+    if (mat === mats.lantern || (sx === 0.13 && sy === 0.19)) parts.lanterns.push({ x, y, z, sx, sy });
+    return sph(mat, x, y, z, sx, sy, sz, lo);
+  };
+  kit.box = (...args) => {
+    const [, x, y, z, sx, sy, sz, , , , rz] = args;
+    if (rz) parts.roofs.push({ x, y, z, sx, sy, sz, rz });
+    return box(...args);
+  };
+  return parts;
+}
+
+// Does a lantern cut through this sloped roof?
+function lanternInRoof(l, roof) {
+  if (Math.abs(l.z - roof.z) > roof.sz / 2 + l.sx || Math.abs(l.x - roof.x) > roof.sx / 2 + l.sx) return false;
+  const surface = roof.y + (l.x - roof.x) * Math.tan(roof.rz);
+  return Math.abs(l.y - surface) < l.sy + roof.sy / 2;
 }
 
 // Every position on a grid the player can get to from the start on foot, using
@@ -202,6 +230,18 @@ describe('generated layout', () => {
     const pool = new LightPool(scene, 1, [src]);
     pool.update(new THREE.PerspectiveCamera());
     expect(pool.lights[0].intensity).toBeCloseTo(src.intensity * 0.5);
+  });
+
+  it('keeps poles out from in front of doors', () => {
+    const blocking = world.parts.poles.filter((p) => world.alley.doors.some((d) => (
+      Math.sign(d.face) === Math.sign(p.x) && Math.abs(d.z - p.z) < 0.7 + p.r
+    )));
+    expect(blocking).toEqual([]);
+  });
+
+  it('keeps lanterns out of roofs', () => {
+    const { lanterns, roofs } = world.parts;
+    expect(lanterns.filter((l) => roofs.some((r) => lanternInRoof(l, r)))).toEqual([]);
   });
 
   describe('makes sense to walk', () => {
