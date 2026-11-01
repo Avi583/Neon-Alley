@@ -2,6 +2,7 @@ Completed Tasks
 ===============
 Finished work moved from To-Do-List.txt, newest first.
 
+A8 [Opus   | Risk 2/5] Testing audit, no test code changed. All 138 unit tests (about 2 s) and 11 browser tests (115 s, one being the expected F1 failure) pass. Unit coverage 53% of lines; main.js, ui.js, audio.js, atmosphere.js, post.js, bench.js, environment.js, textures.js and pbr-textures.js at 0%, player.js 65% (touch code). Browser coverage was not measured. Findings are G16-G26 in To-Do-List.txt.
 A34 [Sonnet | Risk 2/5] vending.js / main.js / audio.js: E (or tapping the prompt) takes the oldest landed can from the bin, with a short tick. While a can is in the bin the prompt offers TAKE instead of BUY. The flap closes once the bin is empty, and new cans fill a free slot before replacing the oldest. Taken cans disappear, as there is no inventory. No rng change.
 A46 [Sonnet | Risk 1/5] shops.js: price board on the sushi shop, ¥240. One new texture: priceSushi. metalDark 43,570 to 43,594 vertices and cable 16,756 to 16,836. No kit rng draws.
 A54 [Opus   | Risk 3/5] shops.js: bar on the right wall at z = -45, selling three each of neon beer ¥600, sake ¥800 and soju ¥500. E (or tapping the prompt) replaces a neon drink with a solid one, through the food shop system (food-shop.js). No kit rng draws.
@@ -111,3 +112,21 @@ F3  [Sonnet | Risk 1/5] main.js FPS counter: uses unclamped time, so it can show
 F5  [Sonnet | Risk 1/5] ui.js / audio.js: mute carries across a quality reload through ?mute=1.
 G4  [Sonnet | Risk 2/5] tests/player.test.js: collisions, walk bounds, speed, pitch clamp, disabled state, blur and footsteps.
     Running at the largest dt doesn't pass through even a zero-thickness wall.
+G7  [Opus   | Risk 3/5] tests/smoke.pw.js: runs the production build under a /Neon-Alley/ subpath. Every ?q= preset loads and draws with no
+    console, shader or request errors, then the game starts, walks on W, pauses and resumes. Setting a wrong base path in vite.config.js fails it on the 404s.
+G8  [Opus   | Risk 3/5] tests/input.pw.js and tests/fps-counter.test.js: rejected pointer lock and pointerlockerror (F2), mouse look (F1), slow-frame FPS (F3,
+    now in src/fps-counter.js). F2 and F3 tests were confirmed to fail with each fix reverted. F1 is still open, so its touchscreen test is marked test.fail and will flag itself once fixed.
+G14 [Opus   | Risk 2/5] bench.js / perf-baseline.js: GPU timer query (gpuMs) alongside cpuMs and frameMs, 1920 x 1080, 300 warmup frames walking the whole path, no frame cap.
+    Low read slower than High because frameMs was mostly the pixel readback, about 4 ms on both. gpuMs gives High 1.9 ms and Low 0.9 ms, with repeat averages within about 5%. Runs only compare with the same GPU and buffer size.
+G15 [Sonnet | Risk 1/5] perf-baseline.js: stops at the first page error or crash, or after --stall seconds (default 180) with no progress. Background throttling is off, the likely cause of the earlier timeout.
+G16 [Sonnet | Risk 1/5] playwright.config.js: fullyParallel and 4 workers. The browser suite went from 2.4 min to about 1.3 min, with all 18 tests as expected in 5 runs out of 5.
+G17 [Sonnet | Risk 1/5] Removed redundant tests: smoke.pw.js Low (and desktop mouse look) now live in the play test, and quality.test.js "always returns a known preset" is gone.
+G18 [Sonnet | Risk 1/5] layout.test.js generates 3 times rather than 6. The neon drinks and NeonFood.hide tests moved to neon-food.test.js. TESTING.md lists what is covered.
+G19 [Opus   | Risk 2/5] tests/ui.test.js: 26 tests of createStates and the quality pills with stubbed DOM elements. Both F2 tests moved here and were confirmed to fail with each fix reverted.
+G20 [Opus   | Risk 2/5] tests/actions.pw.js: BUY then TAKE, KNOCK, selling a food spot out, nothing out of reach, and vending over food over door. Stands come from the layout, not fixed coordinates. Putting KNOCK first in useAction fails the priority tests.
+G21 [Sonnet | Risk 2/5] layout.test.js: flood fill from the start. The start is clear, the alley walks end to end, and the vending machine, every door and every food spot can be used. No problems found in the current layout.
+G22 [Sonnet | Risk 2/5] player.test.js: 15 touch tests covering the joystick, clamp, run at full tilt, drag look, two thumbs and release. Removing the clamp fails one.
+G23 [Sonnet | Risk 1/5] smoke.pw.js: each preset must show a brightness range above 32. A black picture with grain reads 4. Reads the canvas in an animation frame, as a screenshot took about 7 s per page.
+G24 [Sonnet | Risk 1/5] game-page.js: answers Google Fonts locally. Confirmed by blocking outside DNS: passes with the stub and fails on the fonts request without it. The tests no longer notice if the real fonts stop working.
+G25 [Sonnet | Risk 2/5] textures-page.js: hashes 28 sign canvases, with system fonts rather than web fonts. The 52 existing hashes were unchanged, and changing one sign colour fails the test.
+G26 [Sonnet | Risk 1/5] tests/audio.pw.js: every sound in a real AudioContext when fresh, muted, unmuted and resumed, and with no audio started. A bad start offset is reported by sound name. Says nothing about how they sound.

@@ -31,6 +31,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/environment.js
 - src/food-shop.js
 - src/footprints.js
+- src/fps-counter.js
 - src/ground.js
 - src/holo-shader.js
 - src/lights.js
@@ -58,9 +59,14 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 
 ## tests/
 - tests/__snapshots__/layout.test.js.snap
+- tests/actions.pw.js
 - tests/adaptive-scale.test.js
+- tests/audio.pw.js
 - tests/food-shop.test.js
 - tests/footprints.test.js
+- tests/fps-counter.test.js
+- tests/game-page.js
+- tests/input.pw.js
 - tests/layout.test.js
 - tests/neon-food.test.js
 - tests/noise.test.js
@@ -69,10 +75,12 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - tests/puddles.test.js
 - tests/quality.test.js
 - tests/signs.test.js
+- tests/smoke.pw.js
 - tests/textures-page.js
 - tests/textures.html
 - tests/textures.pw.js
 - tests/textures.pw.js-snapshots/textures-chromium-win32.json
+- tests/ui.test.js
 - tests/vending.test.js
 
 ## public/
@@ -80,6 +88,6 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 
 ## docs/ (deployed build output)
 - docs/.nojekyll
-- docs/assets/index-CS0ig-9h.js
+- docs/assets/index-CilFRDmS.js
 - docs/assets/index-DIPauJIT.css
 - docs/index.html

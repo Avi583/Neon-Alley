@@ -7,13 +7,17 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import * as THREE from 'three';
 import { Batch, makeKit, driftGeometry } from '../src/batch.js';
 import { createMaterials } from '../src/materials.js';
-import { buildAlley } from '../src/alley.js';
+import { ALLEY, buildAlley } from '../src/alley.js';
 import { buildSigns } from '../src/signs.js';
 import { LightPool } from '../src/lights.js';
 import { SIGN_SPECS } from '../src/sign-specs.js';
+import { inReach } from '../src/vending.js';
 
 const SEED = 20261028; // same seed as main.js
 const SIGN_PPM = 64;
+const START = { x: 0.35, z: 6 }; // same start as main.js
+const PLAYER_RADIUS = 0.3; // same as player.js
+const GRID = 0.1;
 
 // Rounded so tiny floating point differences between machines don't fail the test.
 const round = (v) => Math.round(v * 1e4) / 1e4 + 0;
@@ -69,7 +73,7 @@ function generate(extraDraws = 0) {
 
   const point = (p) => [round(p.x), round(p.y), round(p.z)];
   const light = (l) => ({ pos: point(l.pos), color: l.color.getHexString(), intensity: l.intensity, range: l.range });
-  return {
+  const layout = {
     nextRng: kit.rng(), // catches any change in the number of draws
     geometry: batched.map((mesh) => ({
       material: mesh.material.name,
@@ -82,6 +86,31 @@ function generate(extraDraws = 0) {
     alleyLights: alley.lights.map(light),
     signLights: signs.lights.map(light),
   };
+  return { alley, layout };
+}
+
+// Every position on a grid the player can get to from the start on foot, using
+// the same test as Player.collide. Keyed by grid cell, as `${column},${row}`.
+function reachableCells(colliders) {
+  const clear = (x, z) => colliders.every((c) => !(
+    x > c.minX - PLAYER_RADIUS && x < c.maxX + PLAYER_RADIUS && z > c.minZ - PLAYER_RADIUS && z < c.maxZ + PLAYER_RADIUS
+  ));
+  const columns = Math.round(ALLEY.walkX * 2 / GRID), rows = Math.round((ALLEY.walkZMax - ALLEY.walkZMin) / GRID);
+  const toX = (i) => -ALLEY.walkX + i * GRID, toZ = (j) => ALLEY.walkZMin + j * GRID;
+  const stack = [[Math.round((START.x + ALLEY.walkX) / GRID), Math.round((START.z - ALLEY.walkZMin) / GRID)]];
+  const cells = new Map();
+  while (stack.length) {
+    const [i, j] = stack.pop(), id = `${i},${j}`;
+    if (i < 0 || j < 0 || i > columns || j > rows || cells.has(id) || !clear(toX(i), toZ(j))) continue;
+    cells.set(id, { x: toX(i), z: toZ(j) });
+    stack.push([i + 1, j], [i - 1, j], [i, j + 1], [i, j - 1]);
+  }
+  return [...cells.values()];
+}
+
+// Can any of these positions use the spot, turned to face it?
+function usableFrom(cells, spot) {
+  return cells.some(({ x, z }) => inReach(spot, x, z, Math.atan2(x - spot.face, z - spot.z)));
 }
 
 describe('snow drifts', () => {
@@ -131,29 +160,30 @@ describe('snow drifts', () => {
 });
 
 describe('generated layout', () => {
+  let world;
   beforeAll(() => {
     vi.stubGlobal('document', { createElement: fakeCanvas });
+    world = generate();
   });
   afterAll(() => {
     vi.unstubAllGlobals();
   });
 
   it('matches the snapshot', () => {
-    expect(generate()).toMatchSnapshot();
+    expect(world.layout).toMatchSnapshot();
   });
 
   it('is deterministic', () => {
-    expect(generate()).toEqual(generate());
+    expect(generate().layout).toEqual(world.layout);
   });
 
   it('changes when the rng draw order shifts', () => {
-    const a = generate(), b = generate(1);
-    expect(b.nextRng).not.toBe(a.nextRng);
-    expect(b.geometry).not.toEqual(a.geometry);
+    const shifted = generate(1).layout;
+    expect(shifted.nextRng).not.toBe(world.layout.nextRng);
+    expect(shifted.geometry).not.toEqual(world.layout.geometry);
   });
 
   it('keeps sign runtime state out of SIGN_SPECS', () => {
-    generate();
     for (const spec of SIGN_SPECS) {
       expect(spec).not.toHaveProperty('seed');
       expect(spec).not.toHaveProperty('factor');
@@ -172,5 +202,39 @@ describe('generated layout', () => {
     const pool = new LightPool(scene, 1, [src]);
     pool.update(new THREE.PerspectiveCamera());
     expect(pool.lights[0].intensity).toBeCloseTo(src.intensity * 0.5);
+  });
+
+  describe('makes sense to walk', () => {
+    let cells;
+    beforeAll(() => {
+      cells = reachableCells(world.alley.colliders);
+    });
+
+    it('starts the player clear of every collider', () => {
+      expect(cells.length).toBeGreaterThan(0);
+    });
+
+    it('can be walked from end to end', () => {
+      const zs = cells.map((c) => c.z);
+      expect(Math.max(...zs)).toBeCloseTo(ALLEY.walkZMax);
+      expect(Math.min(...zs)).toBeCloseTo(ALLEY.walkZMin);
+    });
+
+    it('can use the vending machine', () => {
+      expect(usableFrom(cells, world.alley.vending)).toBe(true);
+    });
+
+    it('can use every door and food spot', () => {
+      const stuck = [...world.alley.doors, ...world.alley.foodSpots].filter((spot) => !usableFrom(cells, spot));
+      expect(stuck).toEqual([]);
+    });
+
+    it('notices a wall across the alley, and a spot only reachable beyond it', () => {
+      const wall = { minX: -ALLEY.walkX - 1, maxX: ALLEY.walkX + 1, minZ: -10, maxZ: -9 };
+      const blocked = reachableCells([wall]);
+      expect(Math.min(...blocked.map((c) => c.z))).toBeGreaterThan(-9);
+      expect(usableFrom(blocked, { face: 2, z: -30 })).toBe(false);
+      expect(usableFrom(blocked, { face: 2, z: 0 })).toBe(true);
+    });
   });
 });

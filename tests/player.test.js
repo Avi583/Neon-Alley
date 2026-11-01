@@ -155,3 +155,154 @@ describe('footsteps', () => {
     expect(onStep).not.toHaveBeenCalled();
   });
 });
+
+describe('touch', () => {
+  const WIDTH = 1000;
+  let joy, knob;
+
+  const fakePart = () => {
+    const classes = new Set();
+    return { style: {}, classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c), contains: (c) => classes.has(c) } };
+  };
+  const touches = (...list) => ({ changedTouches: list.map(([identifier, clientX, clientY]) => ({ identifier, clientX, clientY })) });
+
+  function touchPlayer(enabled = true) {
+    navigator.maxTouchPoints = 1;
+    window.innerWidth = WIDTH;
+    joy = fakePart();
+    knob = fakePart();
+    document.getElementById = (id) => (id === 'joy' ? joy : knob);
+    const camera = { position: { set() {} }, rotation: { set() {} } };
+    const player = new Player(camera, target(), { bounds: BOUNDS, colliders: [], start: { x: 0, z: 0 } });
+    player.enabled = enabled;
+    return player;
+  }
+
+  it('sets up no touch controls without a touchscreen', () => {
+    makePlayer();
+    expect(listeners.touchstart).toBeUndefined();
+  });
+
+  it('shows the joystick where a left-side touch lands', () => {
+    touchPlayer();
+    fire('touchstart', touches([1, 100, 300]));
+    expect(joy.style).toEqual({ left: '100px', top: '300px' });
+    expect(joy.classList.contains('on')).toBe(true);
+  });
+
+  it('walks in the direction the joystick is pushed', () => {
+    const player = touchPlayer();
+    fire('touchstart', touches([1, 100, 300]));
+    fire('touchmove', touches([1, 100, 300 - 27.5]));
+    expect(player.joy.y).toBeCloseTo(-0.5);
+    walk(player, 1 / 60, 60);
+    expect(player.pos.y).toBeLessThan(-0.5); // forward is -z
+    expect(player.pos.x).toBeCloseTo(0);
+  });
+
+  it('turns a sideways push into a sideways walk', () => {
+    const player = touchPlayer();
+    fire('touchstart', touches([1, 100, 300]));
+    fire('touchmove', touches([1, 100 + 27.5, 300]));
+    walk(player, 1 / 60, 60);
+    expect(player.pos.x).toBeGreaterThan(0.5);
+    expect(player.pos.y).toBeCloseTo(0);
+  });
+
+  it('clamps the joystick to its rim, in any direction', () => {
+    const player = touchPlayer();
+    fire('touchstart', touches([1, 100, 300]));
+    fire('touchmove', touches([1, 100 + 300, 300 + 400]));
+    expect(player.joy.x).toBeCloseTo(0.6);
+    expect(player.joy.y).toBeCloseTo(0.8);
+    expect(knob.style.transform).toBe(`translate(${player.joy.x * 40}px, ${player.joy.y * 40}px)`);
+  });
+
+  it('runs only at full tilt', () => {
+    const speedAt = (pixels) => {
+      const player = touchPlayer();
+      fire('touchstart', touches([1, 100, 300]));
+      fire('touchmove', touches([1, 100, 300 - pixels]));
+      walk(player, 1 / 60, 120);
+      listeners = {};
+      return player.vel.length();
+    };
+    expect(speedAt(500)).toBeCloseTo(4.2, 1);
+    expect(speedAt(0.9 * 55)).toBeCloseTo(1.8, 1);
+  });
+
+  it('looks by dragging on the right side, without moving', () => {
+    const player = touchPlayer();
+    fire('touchstart', touches([1, 800, 300]));
+    fire('touchmove', touches([1, 840, 280]));
+    expect(player.yaw).toBeCloseTo(-40 * 0.005);
+    expect(player.pitch).toBeCloseTo(20 * 0.005);
+    expect(player.joy).toEqual({ x: 0, y: 0 });
+    expect(joy.classList.contains('on')).toBe(false);
+  });
+
+  it('measures each drag step from the last, not from where the touch began', () => {
+    const player = touchPlayer();
+    fire('touchstart', touches([1, 800, 300]));
+    fire('touchmove', touches([1, 810, 300]));
+    fire('touchmove', touches([1, 820, 300]));
+    expect(player.yaw).toBeCloseTo(-20 * 0.005);
+  });
+
+  it('walks and looks with two thumbs at once', () => {
+    const player = touchPlayer();
+    fire('touchstart', touches([1, 100, 300], [2, 800, 300]));
+    fire('touchmove', touches([1, 100, 250], [2, 820, 300]));
+    expect(player.joy.y).toBeLessThan(0);
+    expect(player.yaw).toBeCloseTo(-20 * 0.005);
+  });
+
+  it('gives a second left-side touch to looking', () => {
+    const player = touchPlayer();
+    fire('touchstart', touches([1, 100, 300]));
+    fire('touchstart', touches([2, 200, 300]));
+    fire('touchmove', touches([2, 220, 300]));
+    expect(player.joy).toEqual({ x: 0, y: 0 });
+    expect(player.yaw).toBeCloseTo(-20 * 0.005);
+  });
+
+  it.each(['touchend', 'touchcancel'])('%s lets go of the joystick and the player stops', (type) => {
+    const player = touchPlayer();
+    fire('touchstart', touches([1, 100, 300]));
+    fire('touchmove', touches([1, 100, 200]));
+    walk(player, 1 / 60, 30);
+    fire(type, touches([1, 100, 200]));
+    expect(player.joy).toEqual({ x: 0, y: 0 });
+    expect(knob.style.transform).toBe('');
+    expect(joy.classList.contains('on')).toBe(false);
+    walk(player, 1 / 60, 120);
+    expect(player.vel.length()).toBeLessThan(0.01);
+  });
+
+  it('stops looking on release, and the next touch can take the joystick', () => {
+    const player = touchPlayer();
+    fire('touchstart', touches([1, 800, 300]));
+    fire('touchend', touches([1, 800, 300]));
+    fire('touchmove', touches([1, 900, 300]));
+    expect(player.yaw).toBe(0);
+    fire('touchstart', touches([2, 100, 300]));
+    expect(joy.classList.contains('on')).toBe(true);
+  });
+
+  it('ignores new touches while disabled', () => {
+    const player = touchPlayer(false);
+    fire('touchstart', touches([1, 100, 300]));
+    fire('touchmove', touches([1, 100, 200]));
+    expect(joy.classList.contains('on')).toBe(false);
+    expect(player.joy).toEqual({ x: 0, y: 0 });
+  });
+
+  it('stops the page scrolling or zooming', () => {
+    touchPlayer();
+    for (const type of ['touchstart', 'touchmove']) {
+      const preventDefault = vi.fn();
+      fire(type, { ...touches([1, 100, 300]), preventDefault });
+      expect(preventDefault).toHaveBeenCalled();
+    }
+  });
+});

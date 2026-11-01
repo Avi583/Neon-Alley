@@ -6,14 +6,13 @@ Legend: ID [Model | Risk n/5]
   Model = which model should do the task (Sonnet = mechanical/contained, Opus = design judgement or cross-file reasoning).
   Risk  = chance a fix breaks something or causes errors (1 = trivial, 5 = very likely to need debugging).
 
-Measure before and after each performance item with npm run perf (see G10 in Completed-Tasks.txt).
+Measure before and after each performance item with npm run perf, comparing gpuMs (see G10 and G14 in Completed-Tasks.txt).
 Watch out: the world comes from one seeded rng, so adding, removing or reordering rng()/R()/pick()
 calls in alley.js, signs.js or batch.js changes the whole layout. Refactors there must keep the draw order.
 
 A. Ideas
 --------
 A1 [Sonnet | Risk 1/5] Audit code (first pass done, see sections B-F)
-A8 [Opus   | Risk 2/5] Testing audit: review what the tests cover and where the gaps are (see section G).
 A17 [Sonnet | Risk 2/5] canvas-art.js drawFish/drawOnigiri: the shop back walls still paint realistic fish and rice balls behind the neon
     from A11. Repaint them plainer or as neon if the neon should be the only food shown. Changes the texture snapshot (G9).
 A25 [Sonnet | Risk 1/5] alley.js doorFrame: door frames blend into the door under strong neon. Try a lighter material if they should stand out more.
@@ -24,6 +23,7 @@ A55 [Opus   | Risk 3/5] Add a money system: a wallet and a HUD balance, charged 
 A58 High and Ultra only have splash animation when walking/running over puddles
 A59 Able to walk to end of alley
 A60 Arms / Legs
+A61 Barrier at end more detailed - say no entry
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------
@@ -63,36 +63,25 @@ F1 [Opus   | Risk 3/5] player.js / ui.js: touch detection is true on any touchsc
 F4 [Sonnet | Risk 2/5] style.css title screen: on short viewports the ENTER button is off screen and can't be reached, since the
    page has overflow: hidden. At 640 x 360 (a landscape phone) its top is at y = 416. Touch devices have no Enter key to fall back on.
 F7 [Opus   | Risk 2/5] adaptive-scale.js: it can't tell a slow GPU from a capped display. A browser held to 30 FPS (battery saver) drops to
-   60% and stays there, even if the GPU has room to spare. Consider detecting a steady cap, or measuring GPU time (see G14).
+   60% and stays there, even if the GPU has room to spare. Consider detecting a steady cap, or measuring GPU time (bench.js has a timer query, see G14).
 F6 [Opus   | Risk 2/5] Touch devices never see the pause menu (it only exists with pointer lock), so they can't change quality or mute
    from it. Touch users have the HUD sound button but can only change quality on the title screen.
 
 G. Testing recommendations
 --------------------------
-Vitest is set up (npm test) and Playwright for browser tests (npm run test:textures). All test files live in tests/.
-G1-G6, G9, G10, G13 are done (see Completed-Tasks.txt).
-G7  [Opus   | Risk 3/5] Add a Playwright smoke test (Playwright is now set up) against vite preview: load each ?q= preset, fail on any console error or
-    shader compile error, start the game, hold W and confirm the player moved, then pause and resume. Run the built
-    output too, so a wrong asset base path is caught before it reaches Pages.
-G8  [Opus   | Risk 3/5] Add browser regression tests for the input bugs: rejected pointer lock (F2), mouse look on a touchscreen
-    laptop (F1), and the FPS counter on slow frames (F3). F2 and F3 are already fixed, so confirm those tests fail with
-    the fix temporarily reverted. F3 needs the FPS calculation moved into a small testable function.
-G14 [Opus   | Risk 2/5] bench.js: make frame timing trustworthy. Two runs of the same build on High gave a P50 of 2.5 and 3.8 ms, and Low
-    (4.0 ms) read slower than High (3.0 ms), so small timing differences mean nothing yet. Draw calls, triangles and memory
-    counts were identical between runs and can be trusted. Try EXT_disjoint_timer_query_webgl2, a larger fixed viewport, and
-    keeping GPU clocks steady on a laptop (plugged in, longer warmup). Find out why Low reads slower than High.
+Vitest is set up (npm test) and Playwright for browser tests (npm run test:browser). All test files live in tests/.
+G1-G10, G13-G26 are done (see Completed-Tasks.txt). Baseline at the A8 audit: 138 unit tests in about 2 s, 11 browser tests in about 115 s.
 G11 [Opus   | Risk 4/5] Add screenshot comparison from fixed camera spots with time, flicker, snow and steam frozen. Useful for A2,
     B3 and post changes, but it needs a time-freeze hook and tolerances, and GPU differences make it prone to false
     failures. Do this last, and run it only on one known machine rather than in CI.
 G12 [Sonnet | Risk 2/5] Add a GitHub Action that runs lint, tests and build on every push and PR. Keep this separate from the
-    deploy change in E7. Add the G7 smoke test once it is stable.
-G15 [Sonnet | Risk 1/5] tests/perf-baseline.js: fail fast. Page errors are only checked after the 10 minute wait for __bench, so a broken
-    page or a stalled run looks like a long hang. One run timed out while another Playwright window was open; two later runs were fine.
+    deploy change in E7. Add the G7 smoke test once it is stable. Leave out the texture snapshot, which only exists for win32 on one machine.
+From the A8 audit (see Completed-Tasks.txt). Efficiency first, then gaps by value:
 
 H. Testing
 ----------
 Tasks that need the user to run, watch or listen to something.
-A23 [Sonnet | Risk 1/5] Run npm run perf on the real GPU to measure the frame time of the A20 litter, A21 door frames, A22 graffiti, the bought food (up to 14 extra groups once everything is sold) and the A54 bar. These have only had software rendering, and the stored last run is a short software-rendered one, so its timings mean nothing.
+A23 [Sonnet | Risk 1/5] Run npm run perf on the real GPU to measure the frame time of the A20 litter, A21 door frames, A22 graffiti, the bought food (up to 14 extra groups once everything is sold) and the A54 bar. The G14 runs put the whole scene at about 1.9 ms GPU time on High and 0.9 ms on Low on an RTX 5070 Ti, but nothing yet separates these items out.
 A24 [Sonnet | Risk 1/5] Check the new litter from A20 up close in the browser, especially crushed cans and the teeth on broken bottles. So far only seen from about 2 m.
 A33 [Sonnet | Risk 1/5] Try the vending prompt on a real touch device. So far only E on desktop has been run in a browser; the tap path is untested.
 A40 [Sonnet | Risk 1/5] Try the knock prompt on a real touch device and listen to the knock on speakers. It has only been run with E in a headless browser, which confirms the sound plays but not how it sounds.

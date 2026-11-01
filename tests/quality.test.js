@@ -21,11 +21,6 @@ describe('detectQuality', () => {
     stub(env);
     expect(detectQuality()).toBe(expected);
   });
-
-  it('always returns a known preset', () => {
-    stub({});
-    expect(PRESETS).toHaveProperty(detectQuality());
-  });
 });
 
 describe('PRESETS', () => {

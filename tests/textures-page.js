@@ -2,12 +2,15 @@
 // out on purpose: text falls back to system fonts, so no network is involved.
 import { generateTextures } from '../src/textures.js';
 import { genCloud } from '../src/pbr-textures.js';
+import { drawSign } from '../src/sign-canvas.js';
+import { SIGN_SPECS } from '../src/sign-specs.js';
 
 const SIZES = { groundTex: 64, wallTex: 64, facadeTex: 64 };
+const SIGN_PPM = 64;
 
-async function hashTexture(tex) {
-  const { width, height } = tex.image;
-  const { data } = tex.image.getContext('2d').getImageData(0, 0, width, height);
+async function hashCanvas(canvas) {
+  const { width, height } = canvas;
+  const { data } = canvas.getContext('2d').getImageData(0, 0, width, height);
   const digest = await crypto.subtle.digest('SHA-256', data);
   const hex = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
   return `${width}x${height} ${hex.slice(0, 16)}`;
@@ -15,7 +18,7 @@ async function hashTexture(tex) {
 
 // An entry is one texture, a list of them (ads) or a set of PBR maps.
 async function collect(out, name, entry) {
-  if (entry.isTexture) out[name] = await hashTexture(entry);
+  if (entry.isTexture) out[name] = await hashCanvas(entry.image);
   else for (const [k, v] of Object.entries(entry)) await collect(out, `${name}.${k}`, v);
 }
 
@@ -36,5 +39,9 @@ window.hashTextures = async () => {
   const tx = await generateTextures(SIZES, 1, () => {});
   const out = {};
   for (const [name, entry] of Object.entries(tx)) await collect(out, name, entry);
+  // The hologram draws in a shader, so it has no canvas of its own.
+  for (const [i, spec] of SIGN_SPECS.entries()) {
+    if (spec.kind !== 'holo') out[`sign${i}`] = await hashCanvas(drawSign(spec, SIGN_PPM));
+  }
   return out;
 };

@@ -21,6 +21,7 @@ import { Player } from './player.js';
 import { AmbientAudio } from './audio.js';
 import { AdaptiveScale } from './adaptive-scale.js';
 import { createBench } from './bench.js';
+import { FpsCounter } from './fps-counter.js';
 import { createQualityPills, createStates, progress, setFps, showError } from './ui.js';
 
 const params = new URLSearchParams(location.search);
@@ -137,6 +138,8 @@ async function init() {
     },
   });
 
+  if (params.has('test')) Object.assign(window, { __player: player, __alley: alley }); // for the browser tests
+
   progress(0.9, 'Compiling shaders');
   await nextFrame();
   pool.update(camera);
@@ -177,7 +180,8 @@ async function init() {
   // -------------------------------------------------------------- loop
   const adaptive = new AdaptiveScale();
   let last = performance.now(), lastHum = 0;
-  let t = num('t', 0), frames = 0, fpsFrames = 0, fpsTime = 0;
+  const fpsCounter = new FpsCounter();
+  let t = num('t', 0), frames = 0;
   function frame(now) {
     if (FREEZE && frames >= 12) { window.__ready = true; return; } // freeze for screenshots
     if (bench?.done) return;
@@ -230,11 +234,10 @@ async function init() {
       }
       audio.setHum(hum);
     }
-    fpsFrames++; fpsTime += elapsed / 1000;
-    if (fpsTime > 0.5) {
+    const fps = fpsCounter.sample(elapsed);
+    if (fps !== null) {
       const res = adaptive.scale < 1 ? ` · ${Math.round(adaptive.scale * 100)}%` : '';
-      setFps(`${Math.round(fpsFrames / fpsTime)} FPS · ${Q.label}${res}`);
-      fpsFrames = 0; fpsTime = 0;
+      setFps(`${Math.round(fps)} FPS · ${Q.label}${res}`);
     }
     frames++;
   }
