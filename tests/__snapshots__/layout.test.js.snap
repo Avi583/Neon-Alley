@@ -719,9 +719,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "5fac21c6bb3d5ec7",
+      "hash": "bb0fa4531ad828b7",
       "material": "metalDark",
-      "vertices": 43866,
+      "vertices": 43706,
     },
     {
       "hash": "c9c833975b13f244",

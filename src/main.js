@@ -138,7 +138,7 @@ async function init() {
       const foot = footprints.add(player.pos, player.yaw);
       if (ground.inWater(player.pos.x, player.pos.y)) {
         audio.splash(v);
-        splashes?.add(foot, v);
+        splashes?.add(foot, v, player.yaw, footprints.left ? -1 : 1);
       } else audio.step(v);
     },
   });

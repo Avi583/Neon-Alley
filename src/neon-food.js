@@ -1,11 +1,12 @@
-// The shopfronts' neon goods: 3D wireframes that turn slowly on the spot. They
-// move, so they stay out of the static batch. Each form is one instanced mesh per
-// material, and nothing here draws from the kit's rng.
+// The shopfronts' neon goods: 3D wireframes that hover and turn slowly on the spot.
+// They move, so they stay out of the static batch. Each form is one instanced mesh
+// per material, and nothing here draws from the kit's rng.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const TUBE = 0.007;
 const SPEED = 0.35; // radians per second
+const BOB = 0.015, BOB_SPEED = 1.1; // metres either way, radians per second
 const PHASE_STEP = 2.4; // so neighbours are never lined up
 const BOUNDS_MARGIN = 0.3; // the bounding sphere is measured once, but the forms keep turning
 
@@ -141,15 +142,10 @@ export function sojuParts(bottle, cup, s) {
   ];
 }
 
-// A thin post from the plate up to a form held drop metres above it. It turns with
-// the form and goes when the form is hidden.
-export function standPart(mat, drop, height) {
-  return [mat, [new THREE.CylinderGeometry(0.005, 0.005, height, 6).translate(0, -drop, 0)]];
-}
-
-// Adds a form to the alley's list. Push [x, y, z] onto spots to place a copy.
-export function neonForm(forms, parts) {
-  const form = { parts, spots: [] };
+// Adds a form to the alley's list. Push [x, y, z] onto spots to place a copy. A form
+// on a wire passes bob = false, so that it stays attached.
+export function neonForm(forms, parts, bob = true) {
+  const form = { parts, spots: [], bob };
   forms.push(form);
   return form;
 }
@@ -158,7 +154,7 @@ export class NeonFood {
   constructor(forms, parent) {
     this.forms = [];
     let phase = 0;
-    for (const { parts, spots } of forms) {
+    for (const { parts, spots, bob } of forms) {
       const meshes = parts.map(([mat, geos]) => {
         const geo = mergeGeometries(geos, false);
         geos.forEach((g) => g.dispose());
@@ -167,7 +163,7 @@ export class NeonFood {
         parent.add(mesh);
         return mesh;
       });
-      const form = { meshes, spots, phases: spots.map(() => (phase += PHASE_STEP)), hidden: spots.map(() => false) };
+      const form = { meshes, spots, bob: bob ? BOB : 0, phases: spots.map(() => (phase += PHASE_STEP)), hidden: spots.map(() => false) };
       this.forms.push(form);
       this.pose(form, 0);
       for (const mesh of meshes) {
@@ -177,12 +173,12 @@ export class NeonFood {
     }
   }
 
-  pose({ meshes, spots, phases, hidden }, t) {
+  pose({ meshes, spots, bob, phases, hidden }, t) {
     const m = new THREE.Matrix4();
     spots.forEach(([x, y, z], i) => {
       if (hidden[i]) m.makeScale(0, 0, 0);
       else m.makeRotationY(t * SPEED + phases[i]);
-      m.setPosition(x, y, z);
+      m.setPosition(x, y + Math.sin(t * BOB_SPEED + phases[i]) * bob, z);
       for (const mesh of meshes) mesh.setMatrixAt(i, m);
     });
     for (const mesh of meshes) mesh.instanceMatrix.needsUpdate = true;

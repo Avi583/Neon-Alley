@@ -49,6 +49,25 @@ describe('Splashes', () => {
     expect(ring(s, 1).width).toBeGreaterThan(ring(s, 0).width);
   });
 
+  it('points the ring the way the boot does and mirrors a left boot', () => {
+    const s = make();
+    s.add(at(0, 0), 2, Math.PI / 2, 1);
+    s.add(at(0, 0), 2, Math.PI / 2, -1);
+    const toe = (i) => {
+      const m = new THREE.Matrix4();
+      s.rings.getMatrixAt(i, m);
+      return new THREE.Vector3(0, 0, -1).transformDirection(m);
+    };
+    const det = (i) => {
+      const m = new THREE.Matrix4();
+      s.rings.getMatrixAt(i, m);
+      return m.determinant();
+    };
+    expect(toe(0).x).toBeCloseTo(-1);
+    expect(det(0)).toBeGreaterThan(0);
+    expect(det(1)).toBeLessThan(0);
+  });
+
   it('reuses the oldest splash once the pool is full', () => {
     const s = make();
     for (let k = 0; k < SPLASH_COUNT; k++) s.add(at(0, -k), 2);

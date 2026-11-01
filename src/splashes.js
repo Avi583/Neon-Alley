@@ -1,5 +1,5 @@
-// Water kicked up by a step in a puddle: a spreading ring on the surface and a few
-// droplets thrown clear of it. Fixed pools, reused oldest first, with the motion in
+// Water kicked up by a step in a puddle: a spreading boot-shaped ring on the surface
+// and a few droplets thrown clear of it. Fixed pools, reused oldest first, with the motion in
 // the shaders, so the only per-frame cost is a couple of uniforms. Built only on the
 // presets that ask for it.
 import * as THREE from 'three';
@@ -9,7 +9,7 @@ export const SPLASH_COUNT = 4; // running takes about 3.5 steps a second
 export const DROPS_PER_SPLASH = 12;
 const RUN_SPEED = 4.2; // same as player.js
 const RING_Y = 0.006; // above the footprints
-const RING_MIN = 0.45, RING_RUN = 0.45; // width of the ring's quad: standing still, plus at a run
+const RING_MIN = 0.6, RING_RUN = 0.5; // width of the ring's quad: standing still, plus at a run
 const DROP_SIZE = 0.022;
 const GRAVITY = 6;
 
@@ -26,6 +26,7 @@ export class Splashes {
     this._m = new THREE.Matrix4();
     this._q = new THREE.Quaternion();
     this._s = new THREE.Vector3();
+    this._up = new THREE.Vector3(0, 1, 0);
   }
 
   makeRings(fogDensity) {
@@ -54,16 +55,33 @@ export class Splashes {
         varying vec2 vUv;
         varying vec3 vWPos;
         varying float vAge;
-        float ring(float d, float r, float w) { return 1.0 - smoothstep(0.0, w, abs(d - r)); }
+        float box(vec2 p, vec2 b, float r) {
+          vec2 q = abs(p) - b + r;
+          return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+        }
+        // Distance to a sole one unit long with the toe up, in the proportions of genBootPrint.
+        float sole(vec2 p) {
+          vec2 r = vec2(0.152, 0.27), f = p - vec2(0.016, 0.2);
+          float k = length(f / r);
+          float fore = k * (k - 1.0) / max(length(f / (r * r)), 0.001);
+          float waist = box(p - vec2(0.004, -0.08), vec2(0.1, 0.2), 0.02);
+          float heel = box(p - vec2(-0.008, -0.31), vec2(0.112, 0.15), 0.08);
+          return min(min(fore, waist), heel);
+        }
+        float ring(vec2 p, float s, float w) {
+          s = max(s, 0.001);
+          return 1.0 - smoothstep(0.0, w, abs(sole(p / s) * s));
+        }
         void main() {
-          float d = length(vUv - 0.5) * 2.0;
+          vec2 p = vUv - 0.5;
           float grow = 1.0 - (1.0 - vAge) * (1.0 - vAge);
-          float a = ring(d, grow * 0.9, 0.09) + 0.5 * ring(d, grow * 0.5, 0.07);
+          float a = ring(p, grow * 0.9, 0.045) + 0.5 * ring(p, grow * 0.5, 0.035);
           float f = distance(vWPos, cameraPosition) * uFog;
           gl_FragColor = vec4(vec3(0.62, 0.68, 0.8), a * 0.55 * (1.0 - vAge) * exp(-f * f));
         }`,
       transparent: true,
       depthWrite: false,
+      side: THREE.DoubleSide, // left boots are mirrored
       polygonOffset: true,
       polygonOffsetFactor: -3,
       polygonOffsetUnits: -3,
@@ -127,11 +145,13 @@ export class Splashes {
     this.scale.value = heightPx / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
   }
 
-  // foot is the point on the ground that the step landed on.
-  add(foot, speed) {
+  // foot is the point on the ground that the step landed on, yaw the way the boot
+  // points, and side -1 for a left boot, which is mirrored.
+  add(foot, speed, yaw = 0, side = 1) {
     const k = strength(speed);
     const width = RING_MIN + RING_RUN * k;
-    this._s.set(width, 1, width);
+    this._s.set(width * side, 1, width);
+    this._q.setFromAxisAngle(this._up, yaw);
     this._m.compose(new THREE.Vector3(foot.x, RING_Y, foot.z), this._q, this._s);
     this.rings.setMatrixAt(this.next, this._m);
     this.rings.instanceMatrix.needsUpdate = true;

@@ -3,7 +3,7 @@
 // kit's rng (that includes kit.snow and kit.icicles) or the layout shifts, so
 // any variation comes from a separate seeded rng.
 import { WALL } from './config.js';
-import { neonForm, standPart, fishParts, onigiriParts, nigiriParts, makiParts, bowlParts, beerParts, sakeParts, sojuParts } from './neon-food.js';
+import { neonForm, fishParts, onigiriParts, nigiriParts, makiParts, bowlParts, beerParts, sakeParts, sojuParts } from './neon-food.js';
 
 const SHELL = 0.4; // far enough out to cover a shutter's housing and icicles
 const COUNTER = 0.46;
@@ -75,19 +75,18 @@ function fishMarket(ctx) {
   box(mats.metalLight, at(cd), 0.4, zc, COUNTER, 0.8, w - 0.1);
   box(cyan, at(SHELL + COUNTER + 0.005), 0.78, zc, 0.01, 0.03, w - 0.1);
 
-  // neon fish on stands along the counter, far enough out to clear the back wall as they turn
+  // neon fish hovering over plinths along the counter, far enough out to clear the back wall as they turn
   const fx = cd + 0.02;
   const standing = [cyan, coral].map((mat) => neonForm(ctx.neonForms, fishParts(mat, 0.24)));
   for (let k = 0; k < 4; k++) {
     const bz = zc + (k - 1.5) * 0.61;
     box(mats.metalDark, at(fx), 0.82, bz, 0.2, 0.04, 0.3);
-    cyl(mats.metalDark, at(fx), 0.91, bz, 0.006, 0.14, 0, 0, 0, true);
     standing[k % 2].spots.push([at(fx), 1.07, bz]);
   }
 
   // neon fish hanging from a rail under the awning
   cyl(mats.metalDark, at(0.8), 2.4, zc, 0.012, w - 0.3, Math.PI / 2);
-  const hanging = [cyan, coral].map((mat) => neonForm(ctx.neonForms, fishParts(mat, 0.15, true)));
+  const hanging = [cyan, coral].map((mat) => neonForm(ctx.neonForms, fishParts(mat, 0.15, true), false));
   for (let k = 0; k < 6; k++) {
     const hz = zc + (k - 2.5) * 0.4;
     cyl(mats.metalDark, at(0.8), 2.34, hz, 0.004, 0.12, 0, 0, 0, true);
@@ -119,11 +118,11 @@ function onigiriShop(ctx) {
   box(mats.woodDark, at(cd), 0.4, zc, COUNTER, 0.8, w - 0.1, wood);
   box(mats.wood, at(cd + 0.01), 0.82, zc, COUNTER + 0.06, 0.04, w, wood);
 
-  // a row of neon onigiri on a riser, each with a strip of nori
+  // a row of neon onigiri over a riser, each with a strip of nori
   const rice = mats.strip('#fff1d6', 1.5), nori = mats.strip('#5dffb4', 2);
   box(mats.woodDark, at(cd + 0.08), 0.92, zc, 0.12, 0.16, w - 0.3, wood);
   const onigiri = neonForm(ctx.neonForms, onigiriParts(rice, nori, 0.17));
-  for (let k = 0; k < 5; k++) sell(ctx, onigiri, [at(cd + 0.08), 1.13, zc + (k - 2) * 0.46], side, 'onigiri', 1);
+  for (let k = 0; k < 5; k++) sell(ctx, onigiri, [at(cd + 0.08), 1.19, zc + (k - 2) * 0.46], side, 'onigiri', 1);
 
   tiledEave(ctx, at, side, zc, w);
   box(mats.strip('#ffd9a0', 2.5), at(SHELL + 0.08), 2.7, zc, 0.04, 0.04, w - 0.5);
@@ -151,8 +150,8 @@ function sushiShop(ctx) {
   const salmon = mats.strip('#ff7a5a', 2.2), rice = mats.strip('#fff1d6', 1.5), nori = mats.strip('#5dffb4', 2);
   box(mats.metalDark, at(cd), 0.85, zc, 0.2, 0.02, w - 0.2);
   for (const d of [-1, 1]) box(mats.metalLight, at(cd + d * 0.11), 0.86, zc, 0.02, 0.04, w - 0.2);
-  const maki = neonForm(ctx.neonForms, [...makiParts(nori, rice, salmon, 0.12), standPart(mats.metalDark, 0.16, 0.08)]);
-  const nigiri = neonForm(ctx.neonForms, [...nigiriParts(rice, salmon, 0.15), standPart(mats.metalDark, 0.12, 0.08)]);
+  const maki = neonForm(ctx.neonForms, makiParts(nori, rice, salmon, 0.12));
+  const nigiri = neonForm(ctx.neonForms, nigiriParts(rice, salmon, 0.15));
   for (let k = 0; k < 6; k++) {
     const pz = zc + (k - 2.5) * 0.52;
     cyl(k % 2 ? mats.metalRed : mats.foam, at(cd), 0.87, pz, 0.085, 0.012);
@@ -185,11 +184,11 @@ function ramenShop(ctx) {
   box(mats.woodDark, at(cd + 0.01), 0.82, zc, COUNTER + 0.06, 0.04, w, wood);
   box(mats.strip('#ff6a3a', 3), at(SHELL + COUNTER + 0.045), 0.78, zc, 0.01, 0.03, w);
 
-  // neon bowls on a riser, each with noodles, chopsticks and steam
+  // neon bowls over a riser, each with noodles, chopsticks and steam
   const bowl = mats.strip('#ff4a3a', 2.6), noodle = mats.strip('#ffd166', 2.2), pale = mats.strip('#f4f8ff', 1.6);
   box(mats.woodDark, at(cd + 0.06), 0.9, zc, 0.14, 0.12, w - 0.3, wood);
   const bowls = neonForm(ctx.neonForms, bowlParts(bowl, noodle, pale, 0.19));
-  for (let k = 0; k < 3; k++) sell(ctx, bowls, [at(cd + 0.06), 1.14, zc + (k - 1) * 0.98], side, 'ramen', 0.96);
+  for (let k = 0; k < 3; k++) sell(ctx, bowls, [at(cd + 0.06), 1.17, zc + (k - 1) * 0.98], side, 'ramen', 0.96);
 
   // stools in front of the counter
   const sd = SHELL + COUNTER + 0.22;
@@ -222,15 +221,15 @@ function barShop(ctx) {
   box(mats.woodDark, at(cd + 0.01), 0.82, zc, COUNTER + 0.06, 0.04, w, wood);
   box(mats.strip('#ff6ad5', 3), at(SHELL + COUNTER + 0.045), 0.78, zc, 0.01, 0.03, w);
 
-  // three of each neon drink on a riser, far enough out to clear the back wall as they turn
+  // three of each neon drink over a riser, far enough out to clear the back wall as they turn
   box(mats.woodDark, at(cd + 0.02), 0.89, zc, 0.2, 0.1, w - 0.3, wood);
   const amber = mats.strip('#ffb020', 2.4), froth = mats.strip('#fff6e0', 1.6);
   const pale = mats.strip('#a8d0ff', 1), pink = mats.strip('#ff6a9a', 2.2);
   const green = mats.strip('#3dff9a', 1.3), mint = mats.strip('#e0fff0', 1.2);
   const range = [
-    ['beer', neonForm(ctx.neonForms, beerParts(amber, froth, 0.15)), 1.07],
-    ['sake', neonForm(ctx.neonForms, sakeParts(pale, pink, 0.15)), 1.1],
-    ['soju', neonForm(ctx.neonForms, sojuParts(green, mint, 0.16)), 1.11],
+    ['beer', neonForm(ctx.neonForms, beerParts(amber, froth, 0.15)), 1.135],
+    ['sake', neonForm(ctx.neonForms, sakeParts(pale, pink, 0.15)), 1.165],
+    ['soju', neonForm(ctx.neonForms, sojuParts(green, mint, 0.16)), 1.175],
   ];
   for (let k = 0; k < 9; k++) {
     const [kind, form, y] = range[Math.floor(k / 3)];
