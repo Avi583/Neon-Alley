@@ -18,6 +18,28 @@ for (const q of ['medium', 'high', 'ultra']) {
   });
 }
 
+// A step taken straight at a puddle found from the mask, so no walking is needed.
+const stepInPuddle = (page) => page.evaluate(() => {
+  for (let z = 6; z > -90; z -= 0.25) {
+    if (window.__ground.inWater(0, z)) {
+      window.__player.pos.set(0, z);
+      window.__player.onStep(2);
+      return window.__splashes ? window.__splashes.rings.count : null;
+    }
+  }
+  throw new Error('no puddle on the centre line');
+});
+
+for (const [q, expected] of [['medium', null], ['high', 1]]) {
+  test(`a step in a puddle on ${q} ${expected ? 'splashes' : 'has no splash'}`, async ({ page }) => {
+    const errors = watchErrors(page);
+    await openGame(page, q, errors);
+    expect(await stepInPuddle(page)).toBe(expected);
+    await nextFrames(page);
+    expect(errors).toEqual([]);
+  });
+}
+
 test('the game starts, walks, looks, pauses and resumes', async ({ page }) => {
   const errors = watchErrors(page);
   await openGame(page, 'low', errors);

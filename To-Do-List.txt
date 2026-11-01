@@ -20,10 +20,7 @@ A29 [Sonnet | Risk 2/5] The ground vent at x = 0.9, z = -9.4 sometimes hides the
 A42 Retool quality
 A47 [Sonnet | Risk 1/5] Puddles cover 24 of 37 steps on a walk down the middle from z = 6 to -39, so most of that stretch splashes. Raise the threshold in ground.js puddleLookup if the sound should be rarer.
 A55 [Opus   | Risk 3/5] Add a money system: a wallet and a HUD balance, charged by the vending machine, food shops and bar. All prices are display only so far.
-A58 High and Ultra only have splash animation when walking/running over puddles
-A59 Able to walk to end of alley
 A60 Arms / Legs
-A61 Barrier at end more detailed - say no entry
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------
@@ -91,3 +88,4 @@ A49 [Sonnet | Risk 1/5] Look at the A36 snow on awnings from above. Player heigh
 A52 [Sonnet | Risk 1/5] Watch the A51 corkscrew live at full speed and listen to the whirr on speakers. It was only checked in stepped screenshots on software rendering, and the sounds were never heard. Worth checking the can's tumble against the glass and the rail.
 A61 [Sonnet | Risk 1/5] Check the food lift (food-shop.js) on High and on a real GPU, with sound on. So far it has only been seen on Low with software rendering, where the hatch metal reads dull purple under the bar's neon.
 A62 [Sonnet | Risk 1/5] Listen to the A34 pickup tick on speakers and try taking a can on a real touch device. It has only been run with E on Low in a headless browser, where the sound was not heard.
+A63 [Sonnet | Risk 1/5] Watch the A58 splash in motion on a real GPU on High and Ultra. It was only seen in one frozen frame on software rendering, where the ring reads fairly bold on the dark water; tune the 0.55 alpha in splashes.js if needed. The A61 barrier's rails also read dim from a distance, as nothing lights them; a small light in buildCrossStreet would lift them.

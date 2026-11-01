@@ -694,9 +694,9 @@ exports[`generated layout > matches the snapshot 1`] = `
   ],
   "geometry": [
     {
-      "hash": "02f11c6360fc3626",
+      "hash": "06bda6aaef9a5c5d",
       "material": "concrete",
-      "vertices": 2064,
+      "vertices": 2112,
     },
     {
       "hash": "fc9f50e8669e7d34",
@@ -704,9 +704,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "300074282d433549",
+      "hash": "5fdec77ec7cc57d1",
       "material": "snow",
-      "vertices": 32702,
+      "vertices": 32716,
     },
     {
       "hash": "1077ed4a95b95df2",
@@ -719,9 +719,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 576,
     },
     {
-      "hash": "9a016517852c19f2",
+      "hash": "f9d2b3c04e01369d",
       "material": "metalDark",
-      "vertices": 43594,
+      "vertices": 43866,
     },
     {
       "hash": "c9c833975b13f244",
@@ -904,9 +904,9 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 4,
     },
     {
-      "hash": "949e1acef3976815",
+      "hash": "3cdcf6de66e0036e",
       "material": "plasticRed",
-      "vertices": 460,
+      "vertices": 652,
     },
     {
       "hash": "42207ca24d9233e9",
@@ -959,14 +959,19 @@ exports[`generated layout > matches the snapshot 1`] = `
       "vertices": 1096,
     },
     {
-      "hash": "8c87747cc709a9b2",
+      "hash": "33412969de3812d6",
       "material": "plasticYellow",
-      "vertices": 304,
+      "vertices": 216,
     },
     {
-      "hash": "8927a3e9db82936f",
+      "hash": "e0a88d8eb8203a99",
       "material": "blink",
-      "vertices": 495,
+      "vertices": 330,
+    },
+    {
+      "hash": "1a6769f834befc74",
+      "material": "noEntry",
+      "vertices": 4,
     },
     {
       "hash": "f3422f5d3f8d9a80",

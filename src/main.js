@@ -10,6 +10,7 @@ import { buildSigns } from './signs.js';
 import { SIGN_SPECS, SIGN_TEXT } from './sign-specs.js';
 import { PlanarReflection, createGround } from './ground.js';
 import { Footprints } from './footprints.js';
+import { Splashes } from './splashes.js';
 import { Vending, VEND_TURN, inReach } from './vending.js';
 import { NeonFood } from './neon-food.js';
 import { FoodShop, FOOD_LIFT, foodLabel } from './food-shop.js';
@@ -89,6 +90,8 @@ async function init() {
   scene.add(ground.mesh, ground.street);
   const footprints = new Footprints(tx.bootPrint, ground.uniforms, scene.fog);
   scene.add(footprints.mesh);
+  const splashes = Q.splash ? new Splashes(scene.fog) : null;
+  if (splashes) scene.add(splashes.rings, splashes.drops);
 
   const sky = createSky(fogColor);
   scene.add(sky);
@@ -132,13 +135,15 @@ async function init() {
   const player = new Player(camera, renderer.domElement, {
     bounds: ALLEY, colliders: alley.colliders, start,
     onStep: (v) => {
-      if (ground.inWater(player.pos.x, player.pos.y)) audio.splash(v);
-      else audio.step(v);
-      footprints.add(player.pos, player.yaw);
+      const foot = footprints.add(player.pos, player.yaw);
+      if (ground.inWater(player.pos.x, player.pos.y)) {
+        audio.splash(v);
+        splashes?.add(foot, v);
+      } else audio.step(v);
     },
   });
 
-  if (params.has('test')) Object.assign(window, { __player: player, __alley: alley }); // for the browser tests
+  if (params.has('test')) Object.assign(window, { __player: player, __alley: alley, __ground: ground, __splashes: splashes }); // for the browser tests
 
   progress(0.9, 'Compiling shaders');
   await nextFrame();
@@ -208,6 +213,7 @@ async function init() {
       player.pitch = start.pitch + 0.04 + Math.sin(t * 0.11) * 0.03;
     }
     footprints.update(t);
+    splashes?.update(t, camera, size.y);
     player.update(dt);
     vending.update(dt);
     neonFood.update(t);
@@ -220,7 +226,9 @@ async function init() {
     snow.update(t, camera, size.y);
     steam.update(t);
     ground.uniforms.uTime.value = t;
-    refl.update(renderer, scene, camera, [ground.mesh, ground.street, footprints.mesh]);
+    refl.update(renderer, scene, camera, splashes
+      ? [ground.mesh, ground.street, footprints.mesh, splashes.rings]
+      : [ground.mesh, ground.street, footprints.mesh]);
     post.render(t);
     bench?.end();
 

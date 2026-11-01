@@ -53,6 +53,13 @@ describe('Footprints', () => {
     expect(Math.abs(position(f, 2).z)).toBeGreaterThan(0.01);
   });
 
+  it('returns where the foot landed', () => {
+    const f = make();
+    const foot = f.add(at(1, 2), 0);
+    expect(foot.x).toBeCloseTo(position(f, 0).x);
+    expect(foot.z).toBeCloseTo(position(f, 0).z);
+  });
+
   it('sits just above the ground', () => {
     const f = make();
     f.add(at(0, 0), 0);

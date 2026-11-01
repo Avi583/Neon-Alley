@@ -78,7 +78,7 @@ export class Footprints {
     this.time.value = t;
   }
 
-  // pos is the walker's position on the ground: x, and z as pos.y.
+  // pos is the walker's position on the ground: x, and z as pos.y. Returns where the foot landed.
   add(pos, yaw) {
     this.left = !this.left;
     const foot = this.left ? -1 : 1;
@@ -91,5 +91,6 @@ export class Footprints {
     this.born.needsUpdate = true;
     this.next = (this.next + 1) % MARK_COUNT;
     this.mesh.count = Math.min(this.mesh.count + 1, MARK_COUNT);
+    return this._p;
   }
 }

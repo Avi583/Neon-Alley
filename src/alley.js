@@ -12,7 +12,7 @@ export const ALLEY = {
   zStart: 16,
   zEnd: -92,
   walkX: 1.75,
-  walkZMin: -88,
+  walkZMin: -91,
   walkZMax: 8,
 };
 
@@ -603,12 +603,29 @@ function buildStreetProps(ctx) {
 // ------------------------------------------------ end of the alley
 function buildCrossStreet(ctx) {
   const { mats, box, cyl, sph, plane, snow, addLight } = ctx;
-  for (const bx of [-1.6, -0.55, 0.55, 1.6]) {
-    cyl(mats.plasticYellow, bx, 0.45, -89.5, 0.09, 0.9);
-    snow(bx, 0.9, -89.5, 0.16, 0.16, 0.05);
+  // The barrier across the mouth of the alley, just past where the walker stops.
+  const bz = -91.6, RAIL_SEGMENTS = 9, RAIL_SPAN = 4.3;
+  for (const px of [-2.15, 2.15]) {
+    box(mats.concrete, px, 0.07, bz, 0.45, 0.14, 0.45, [2, 2]);
+    box(mats.metalDark, px, 0.65, bz, 0.1, 1.3, 0.1);
+    snow(px, 1.3, bz, 0.16, 0.16, 0.05);
   }
-  box(mats.plasticRed, 0, 0.7, -89.5, 3.6, 0.18, 0.06);
-  for (const bx of [-1.2, 0, 1.2]) sph(mats.blink, bx, 0.86, -89.5, 0.06);
+  for (const [row, y] of [0.5, 1].entries()) {
+    for (let i = 0; i < RAIL_SEGMENTS; i++) {
+      const w = RAIL_SPAN / RAIL_SEGMENTS, x = -RAIL_SPAN / 2 + (i + 0.5) * w;
+      box((i + row) % 2 ? mats.plasticYellow : mats.plasticRed, x, y, bz, w, 0.16, 0.04);
+    }
+  }
+  for (const lx of [-1.55, 1.55]) {
+    cyl(mats.metalDark, lx, 1.11, bz, 0.05, 0.06);
+    sph(mats.blink, lx, 1.18, bz, 0.07);
+  }
+  snow(-1, 1.08, bz, 0.7, 0.07, 0.03);
+  // The sign, on its own pair of posts in front of the rails.
+  for (const px of [-0.3, 0.3]) box(mats.metalDark, px, 0.675, bz + 0.03, 0.05, 1.35, 0.02);
+  box(mats.metalDark, 0, 1.35, bz + 0.05, 0.84, 1.04, 0.02);
+  plane(mats.noEntry, 0, 1.35, bz + 0.065, 0.8, 1);
+  snow(0, 1.87, bz + 0.05, 0.84, 0.06, 0.04);
 
   // cross street
   addLight(0, 4, -99, '#ff4fd8', 28, 22);

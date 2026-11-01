@@ -397,6 +397,20 @@ export function genVendingPrice() {
   return canvasTexture(c, { repeat: false });
 }
 
+// The barrier's sign: a no-entry disc over the words.
+export function genNoEntry(aniso) {
+  const W = 512, H = 640;
+  const c = makeCanvas(W, H), ctx = c.getContext('2d');
+  ctx.fillStyle = '#e8ebf0'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#c81e32'; ctx.lineWidth = 14; ctx.strokeRect(14, 14, W - 28, H - 28);
+  ctx.fillStyle = '#c81e32';
+  ctx.beginPath(); ctx.arc(W / 2, 250, 180, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(W / 2 - 130, 250 - 36, 260, 72);
+  ctx.fillStyle = '#14141c'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `900 72px ${FONT_LAT}`; ctx.fillText('NO ENTRY', W / 2, 530, W - 70);
+  return canvasTexture(c, { repeat: false, aniso });
+}
+
 // A shop's menu board: the dish in Japanese over its price.
 export function genShopPrice(name, price) {
   const W = 420, H = 180;

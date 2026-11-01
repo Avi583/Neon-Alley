@@ -32,6 +32,10 @@ describe('PRESETS', () => {
     for (const k of order) expect(keys(PRESETS[k])).toEqual(keys(PRESETS.low));
   });
 
+  it('only animates splashes on high and ultra', () => {
+    expect(order.filter((k) => PRESETS[k].splash)).toEqual(['high', 'ultra']);
+  });
+
   it('values never decrease from low to ultra', () => {
     for (const key of ['renderScale', 'maxDPR', 'reflScale', 'reflLod', 'lights', 'snow', 'steamPer',
       'wallTex', 'groundTex', 'facadeTex', 'msaa', 'signPPM', 'bloomStrength']) {

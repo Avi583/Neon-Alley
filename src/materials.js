@@ -87,6 +87,7 @@ export function createMaterials(tx) {
   m.vendingHeader = basicMap(tx.vendingHeader, 0.8);
   m.vendingPanel = basicMap(tx.vendingPanel, 0.8);
   m.vendingPrice = basicMap(tx.vendingPrice, 0.9);
+  m.noEntry = basicMap(tx.noEntry, 0.9);
   m.priceRamen = basicMap(tx.priceRamen, 1.2);
   m.priceOnigiri = basicMap(tx.priceOnigiri, 1.2);
   m.priceSushi = basicMap(tx.priceSushi, 1.2);

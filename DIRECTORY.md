@@ -48,6 +48,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/sign-canvas.js
 - src/sign-specs.js
 - src/signs.js
+- src/splashes.js
 - src/style.css
 - src/texture-core.js
 - src/textures.js
@@ -76,6 +77,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - tests/quality.test.js
 - tests/signs.test.js
 - tests/smoke.pw.js
+- tests/splashes.test.js
 - tests/textures-page.js
 - tests/textures.html
 - tests/textures.pw.js
@@ -88,6 +90,6 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 
 ## docs/ (deployed build output)
 - docs/.nojekyll
-- docs/assets/index-CilFRDmS.js
 - docs/assets/index-DIPauJIT.css
+- docs/assets/index-fC6H2FZo.js
 - docs/index.html
