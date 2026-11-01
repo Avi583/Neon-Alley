@@ -19,10 +19,7 @@ A17 [Sonnet | Risk 2/5] canvas-art.js drawFish/drawOnigiri: the shop back walls 
 A23 [Sonnet | Risk 1/5] Run npm run perf on the real GPU to measure the frame time of A20, A21 and A22. Only software rendering has been used so far, which gives meaningless timings.
 A24 [Sonnet | Risk 1/5] Check the new litter from A20 up close in the browser, especially crushed cans and the teeth on broken bottles. So far only seen from about 2 m.
 A25 [Sonnet | Risk 1/5] alley.js doorFrame: door frames blend into the door under strong neon. Try a lighter material if they should stand out more.
-
-
 A29 [Sonnet | Risk 2/5] The ground vent at x = 0.9, z = -9.4 sometimes hides the left of the ramen shop behind steam. Moving the vent needs care, as vents feed the street prop placement in alley.js.
-
 A33 [Sonnet | Risk 1/5] Try the vending prompt on a real touch device. So far only E on desktop has been run in a browser; the tap path is untested.
 A34 [Sonnet | Risk 2/5] Let the player take cans from the vending bin. They stay until the fourth purchase replaces the oldest, so the flap stays open after the first purchase.
 A45 [Sonnet | Risk 1/5] Listen to the splash and purchase sounds on speakers. The browser check confirms which sound is chosen at each step, but not how they sound. The splash was rewritten as one slosh per step, as the old one sounded like bubble wrap; tune it in audio.js splash() if needed.
@@ -40,7 +37,10 @@ A53 [Sonnet | Risk 1/5] Run build.bat before committing A51, since docs/ does no
 A55 [Opus   | Risk 3/5] Add a money system: a wallet and a HUD balance, charged by the vending machine, food shops and bar. All prices are display only so far.
 A56 [Sonnet | Risk 1/5] Run npm run perf on the real GPU to measure the A54 bar. Only a short software-rendered run has been done, and it is now the stored last run, so its timings mean nothing.
 A57 [Sonnet | Risk 1/5] Run build.bat before committing A54, since docs/ does not include it yet.
-
+A58 High and Ultra only have splash animation when walking/running over puddles
+A59 Able to walk to end of alley
+A60 Arms / Legs
+A61 [Sonnet | Risk 1/5] Check the food lift (food-shop.js) on High and on a real GPU, with sound on. So far it has only been seen on Low with software rendering, where the hatch metal reads dull purple under the bar's neon. Run build.bat before committing, since docs/ does not include it yet.
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------

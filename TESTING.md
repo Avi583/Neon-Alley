@@ -15,6 +15,7 @@ Automated tests cover noise, quality presets, sign data and the generated layout
 - [ ] Changing graphics from the pause menu reloads with the player in the same spot
 - [ ] Tab away and back: no stuck keys
 - [ ] Walls and props block the player; no walking out of the alley
+- [ ] Buying food: the neon goes, the hatch slides open, the base lifts the dish through it with a whirr and clunk, and no dish shows through the side of a riser
 
 ## Audio
 - [ ] Audio starts only after the first click

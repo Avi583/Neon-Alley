@@ -1,11 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
-import { FOOD, FoodShop, foodLabel } from '../src/food-shop.js';
+import { FOOD, FOOD_LIFT, FoodShop as Shop, foodLabel } from '../src/food-shop.js';
 import { NeonFood, neonForm, standPart, onigiriParts, beerParts, sakeParts, sojuParts } from '../src/neon-food.js';
 
 const LOOK_POS_X = -Math.PI / 2; // yaw looking down +x, towards the counter
 const spot = (kind, z, index = 0) => ({ face: 2, z, side: 1, kind, rest: 1, form: null, index });
 const KINDS = Object.keys(FOOD);
+const metal = new THREE.MeshStandardMaterial();
+const FoodShop = class extends Shop {
+  constructor(spots, parent) { super(spots, { metal, metalDark: metal, metalLight: metal }, parent); }
+};
 
 describe('FoodShop', () => {
   it('builds a hidden dish for every kind on sale', () => {
@@ -16,12 +20,48 @@ describe('FoodShop', () => {
     }
   });
 
-  it('shows the dish where the neon stood, at the height of the surface below', () => {
+  it('lifts the dish to where the neon stood, at the height of the surface below', () => {
     const shop = new FoodShop([spot('ramen', -8)], new THREE.Group());
     shop.buy(shop.spots[0]);
     const { group } = shop.items[0];
+    expect(group.visible).toBe(false);
+    shop.update(FOOD_LIFT);
     expect(group.visible).toBe(true);
     expect(group.position.toArray()).toEqual([2, 1, -8]);
+  });
+
+  it('opens the hatch before the base rises, then clunks once at the top', () => {
+    const shop = new FoodShop([spot('beer', 0)], new THREE.Group());
+    let landed = 0;
+    shop.onLand = () => landed++;
+    const { group } = shop.items[0];
+    const leafZ = () => {
+      const m = new THREE.Matrix4();
+      shop.leaves.getMatrixAt(0, m);
+      return m.elements[14];
+    };
+    const start = group.position.y;
+    expect(leafZ()).toBeCloseTo(0);
+    shop.buy(shop.spots[0]);
+    shop.update(0.1);
+    expect(leafZ()).toBeLessThan(0);
+    expect(group.position.y).toBe(start);
+    shop.update(FOOD_LIFT / 2);
+    expect(group.position.y).toBeGreaterThan(start);
+    expect(group.position.y).toBeLessThan(1);
+    expect(landed).toBe(0);
+    shop.update(FOOD_LIFT);
+    shop.update(1);
+    expect(leafZ()).toBeCloseTo(-FOOD.beer.radius);
+    expect(landed).toBe(1);
+  });
+
+  it('starts every dish fully below the surface and clipped at it', () => {
+    const shop = new FoodShop(KINDS.map((kind, k) => spot(kind, k * 3)), new THREE.Group());
+    for (const { group } of shop.items) {
+      expect(new THREE.Box3().setFromObject(group).max.y).toBeLessThanOrEqual(1);
+      for (const mesh of group.children) expect(mesh.material.clippingPlanes[0].distanceToPoint(new THREE.Vector3(0, 1, 0))).toBeCloseTo(0);
+    }
   });
 
   it('offers the spot closest to the centre of the view, even when another is nearer', () => {

@@ -12,7 +12,7 @@ import { PlanarReflection, createGround } from './ground.js';
 import { Footprints } from './footprints.js';
 import { Vending, VEND_TURN, inReach } from './vending.js';
 import { NeonFood } from './neon-food.js';
-import { FoodShop, foodLabel } from './food-shop.js';
+import { FoodShop, FOOD_LIFT, foodLabel } from './food-shop.js';
 import { createSky, Snow, Steam } from './atmosphere.js';
 import { buildEnvironment } from './environment.js';
 import { LightPool } from './lights.js';
@@ -80,7 +80,8 @@ async function init() {
   batch.build(scene);
   const vending = new Vending(alley.vending, mats, scene);
   const neonFood = new NeonFood(alley.neonForms, scene);
-  const foodShop = new FoodShop(alley.foodSpots, scene);
+  renderer.localClippingEnabled = true; // the dishes rise through the counters
+  const foodShop = new FoodShop(alley.foodSpots, mats, scene);
 
   const refl = new PlanarReflection(Q.reflScale);
   const ground = createGround(tx, Q, refl, renderer);
@@ -126,6 +127,7 @@ async function init() {
   const audio = new AmbientAudio();
   const start = { x: num('x', 0.35), z: num('z', 6), yaw: num('yaw', 0), pitch: num('pitch', 0.04) };
   vending.onLand = () => audio.clunk();
+  foodShop.onLand = () => audio.clunk();
   const player = new Player(camera, renderer.domElement, {
     bounds: ALLEY, colliders: alley.colliders, start,
     onStep: (v) => {
@@ -165,6 +167,7 @@ async function init() {
         foodShop.buy(food);
         neonFood.hide(food.form, food.index);
         audio.purchase();
+        audio.whirr(FOOD_LIFT);
       }
     },
   });
@@ -203,6 +206,7 @@ async function init() {
     player.update(dt);
     vending.update(dt);
     neonFood.update(t);
+    foodShop.update(dt);
     states.showPrompt(useAction());
     sky.position.copy(camera.position);
     signs.update(t);
