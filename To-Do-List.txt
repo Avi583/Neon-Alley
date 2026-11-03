@@ -22,6 +22,7 @@ A47 [Sonnet | Risk 1/5] Puddles cover 24 of 37 steps on a walk down the middle f
 A55 [Opus   | Risk 3/5] Add a money system: a wallet and a HUD balance, charged by the vending machine, food shops and bar. All prices are display only so far.
 A60 Arms / Legs
 A65 [Sonnet | Risk 1/5] alley.js buildStreetProps: the izakaya lantern cables stop at y = 3.6 at x = -1.95, with nothing there to hang from (the ledge only reaches out to about |x| = 2.2). Add a bracket from the wall or run the cables back to it.
+A74 [Sonnet | Risk 1/5] ui.js / main.js: the WebGL error now asks the player to refresh, since failures are often temporary (GPU process restart, driver reset, context limit, GPU switching). Further ideas: a Retry button, one automatic retry before showing the error, and help for lasting failures (turn on hardware acceleration, update GPU drivers, try another browser, test at get.webgl.org/webgl2). Optionally check for WebGL 2 before generating textures so the failure shows at once.
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------

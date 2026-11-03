@@ -49,7 +49,7 @@ export function progress(f, msg) {
 }
 
 export function showError(err) {
-  ui.status.textContent = 'Something went wrong: ' + err.message + ' (WebGL 2 is required)';
+  ui.status.textContent = 'Something went wrong: ' + err.message + ' (WebGL 2 is required). Try refreshing the page, as this is often a temporary graphics hiccup.';
   ui.bar.style.background = '#ff3355';
 }
 
