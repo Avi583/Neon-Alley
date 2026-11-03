@@ -19,7 +19,7 @@ import { buildEnvironment } from './environment.js';
 import { LightPool } from './lights.js';
 import { createPost } from './post.js';
 import { Player, CLOSE_UP } from './player.js';
-import { Character, HEAD_LAYER } from './character.js';
+import { Character, HEAD_LAYER, KNOCK_LEAD } from './character.js';
 import { AmbientAudio } from './audio.js';
 import { AdaptiveScale } from './adaptive-scale.js';
 import { createBench } from './bench.js';
@@ -33,7 +33,7 @@ const AUTO = params.has('autostart'); // used for automated screenshots
 const FREEZE = AUTO || params.has('freeze');
 const BENCH = params.has('bench'); // used for the performance baseline
 const num = (k, d) => (params.has(k) ? parseFloat(params.get(k)) : d);
-const BUY = 'BUY A DRINK ¥120', TAKE = 'TAKE THE DRINK', KNOCK = 'KNOCK', KNOCK_COOLDOWN = 1000; // ms, the length of three raps
+const BUY = 'BUY A DRINK ¥120', TAKE = 'TAKE THE DRINK', KNOCK = 'KNOCK', KNOCK_COOLDOWN = 1000; // ms, no shorter than a knock (KNOCK_TIME in character.js)
 const FOOD_COOLDOWN = 400; // ms, so a held key can't clear a counter
 
 createQualityPills(qKey);
@@ -176,7 +176,8 @@ async function init() {
       if (action === TAKE && vending.take()) audio.pickup();
       if (action === KNOCK && performance.now() >= nextKnock) {
         nextKnock = performance.now() + KNOCK_COOLDOWN;
-        audio.knock();
+        character.knock(alley.doors.find(reaches));
+        audio.knock(KNOCK_LEAD);
       }
       const food = action && action !== BUY && action !== TAKE && action !== KNOCK ? foodInReach() : null;
       if (food && performance.now() >= nextFood) {

@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { hdr } from './materials.js';
 import { sstep } from './math.js';
+import { KNOCK_RAPS } from './audio.js';
 import { createCharacterTextures } from './character-textures.js';
 
 export const HEAD_LAYER = 1; // the helmet and neck, left out of the main view in first person
@@ -17,6 +18,12 @@ const FIRST_BACK = 0.12; // in first person the body sits this far behind the ey
 const UPPER_ARM = 0.3, THIGH = 0.44; // bone lengths
 const SHOULDER = [0.185, 0.475], LEG_X = 0.09; // where the limbs hang from, in the torso and hips
 const N_BODY = 2.6, N_LIMB = 2.2; // superellipse exponents: higher is boxier
+// Knocking: the right arm comes up over KNOCK_LEAD, raps on each of KNOCK_RAPS after it, and is
+// back at rest by KNOCK_TIME, inside the 1 s knock cooldown in main.js.
+export const KNOCK_LEAD = 0.3, KNOCK_TIME = 0.95;
+const KNOCK_OUT = 0.75; // when the arm starts down again, after the last rap
+const KNOCK_SHOULDER = [1.15, -0.2], KNOCK_ELBOW = [1.75, 1.05]; // shoulder [forward, out]; elbow [cocked, on the door]
+const KNOCK_TWIST = -Math.PI / 2; // the glove turns palm to the biker, so the knuckles meet the door
 
 // Cross-sections, keyed by distance down: [d, half width, front depth, back depth, fold].
 // The torso and seat are keyed by -y in the hips' space, the limbs from their pivot.
@@ -290,7 +297,7 @@ function buildArm(chest, m, side) {
   part(gauntlet, loft({ sample: cuff, from: 0.045, to: 0.062, rows: 2, seg: 20, n: N_LIMB, grow: 0.005 }), m.pad);
   part(gauntlet, new THREE.CylinderGeometry(0.007, 0.007, 0.005, 10), m.chrome, side * (cuff(0.054)[0] + 0.008), -0.054).rotation.z = Math.PI / 2;
   const fingers = buildHand(elbow, m, side);
-  return { mesh, shoulder, elbow, side, fingers };
+  return { mesh, shoulder, elbow, side, fingers, hand: fingers[0].parent };
 }
 
 const path = (...pts) => new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p)), false, 'centripetal');
@@ -484,15 +491,33 @@ export class Character {
     this.head = buildHelmet(this.neck, m);
     this.neck.traverse((o) => o.layers.set(HEAD_LAYER));
 
-    // Bind every limb in the rest pose, then hang the arms a little out from the body.
+    // Bind every limb in the rest pose; update hangs the arms a little out from the body.
     this.root.updateMatrixWorld(true);
     for (const { mesh } of [...this.arms, ...this.legs]) mesh.bind(new THREE.Skeleton(mesh.userData.bones));
-    for (const arm of this.arms) arm.shoulder.rotation.z = arm.side * 0.08;
 
     this.facing = 0;
     this.headYaw = 0;
     this.time = 0;
+    this.knocking = null; // { t, x, z }: time into the knock and where the door is
     scene.add(this.root);
+  }
+
+  // Starts a knock on a door ({ face, z }, as alley.js lists them).
+  knock(door) {
+    this.knocking = { t: 0, x: door.face, z: door.z };
+  }
+
+  // How far the knock pose is blended in, and how far the forearm is driven onto the door (1 at each rap).
+  knockPose() {
+    const k = this.knocking;
+    if (!k) return [0, 0];
+    const blend = sstep(0, 0.2, k.t) * (1 - sstep(KNOCK_OUT, KNOCK_TIME, k.t));
+    let rap = 0;
+    for (const at of KNOCK_RAPS) {
+      const x = k.t - KNOCK_LEAD - at; // quick in, a little slower back off the door
+      rap = Math.max(rap, x < 0 ? sstep(-0.09, 0, x) : 1 - sstep(0, 0.08, x));
+    }
+    return [blend, rap];
   }
 
   // Which foot lands on the step player.js has just counted: the left on even steps.
@@ -504,9 +529,17 @@ export class Character {
     this.time += dt;
     const v = player.vel.length();
     const first = player.view === 'first';
+    const k = this.knocking;
+    if (k) {
+      k.t += dt;
+      if (v > 0.5) k.t = Math.max(k.t, KNOCK_OUT); // walking off puts the arm down
+      if (k.t >= KNOCK_TIME) this.knocking = null;
+    }
     if (first) this.facing = player.yaw;
-    else if (v > 0.3) {
-      const want = Math.atan2(-player.vel.x, -player.vel.y);
+    else if (v > 0.3 || this.knocking) {
+      const want = this.knocking && v <= 0.5
+        ? Math.atan2(-(k.x - player.pos.x), -(k.z - player.pos.y)) // turn to the door
+        : Math.atan2(-player.vel.x, -player.vel.y);
       const d = Math.atan2(Math.sin(want - this.facing), Math.cos(want - this.facing));
       this.facing += d * (1 - Math.exp(-dt * TURN));
     }
@@ -531,6 +564,17 @@ export class Character {
       leg.knee.rotation.x = -Math.max(0, i === 0 ? -s : s) * (legAmp * 1.6) - 0.05 * walk;
       arm.shoulder.rotation.x = -swing[i] * armAmp;
       arm.elbow.rotation.x = 0.2 + 0.25 * walk + 0.5 * run + Math.max(0, -swing[i]) * armAmp * 0.4;
+      arm.shoulder.rotation.z = arm.side * 0.08;
+      arm.hand.rotation.y = 0;
+    }
+    // Knocking: the right shoulder up, the elbow bent, and the forearm swinging from it onto the door.
+    const [blend, rap] = this.knockPose();
+    if (blend > 0) {
+      const { shoulder, elbow, hand } = this.arms[1], lerp = THREE.MathUtils.lerp;
+      shoulder.rotation.x = lerp(shoulder.rotation.x, KNOCK_SHOULDER[0] + 0.08 * rap, blend);
+      shoulder.rotation.z = lerp(shoulder.rotation.z, KNOCK_SHOULDER[1], blend);
+      elbow.rotation.x = lerp(elbow.rotation.x, lerp(KNOCK_ELBOW[0], KNOCK_ELBOW[1], rap), blend);
+      hand.rotation.y = KNOCK_TWIST * blend;
     }
     this.hips.position.y = HIP - 0.02 * walk + Math.abs(s) * (0.025 * walk + 0.02 * run);
     this.torso.rotation.set(-lean, c * 0.07 * walk, 0);

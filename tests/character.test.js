@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
-import { Character, HEAD_LAYER } from '../src/character.js';
+import { Character, HEAD_LAYER, KNOCK_LEAD, KNOCK_TIME } from '../src/character.js';
+import { KNOCK_RAPS } from '../src/audio.js';
 
 function makeWalker(over = {}) {
   return { pos: new THREE.Vector2(), vel: new THREE.Vector2(), yaw: 0, pitch: 0, bob: 0, lastStep: 0, view: 'third', ...over };
@@ -175,5 +176,86 @@ describe('motion', () => {
     expect(Character.leftFootDown({ lastStep: 0 })).toBe(true);
     expect(Character.leftFootDown({ lastStep: 3 })).toBe(false);
     expect(Character.leftFootDown({ lastStep: 4 })).toBe(true);
+  });
+});
+
+describe('knocking', () => {
+  const ahead = { face: 0, z: -1.2 }; // a door straight in front of a walker at the origin facing 0
+  const glove = (c) => {
+    c.root.updateMatrixWorld(true);
+    return c.arms[1].fingers[0].parent.getWorldPosition(new THREE.Vector3());
+  };
+  // Runs the character on to time t into the knock, in 1/100 s steps.
+  const runTo = (c, walker, t) => {
+    while ((c.knocking?.t ?? Infinity) < t - 1e-6) c.update(0.01, walker);
+  };
+
+  it('turns to face the door in third person by the first rap', () => {
+    const { character } = make();
+    const walker = makeWalker();
+    character.update(0, walker);
+    character.knock({ face: 1.2, z: 0 }); // off to the right (+x)
+    runTo(character, walker, KNOCK_LEAD);
+    expect(Math.abs(character.facing + Math.PI / 2)).toBeLessThan(0.1);
+  });
+
+  it('raises the right glove and drives it onto the door on each rap', () => {
+    const { character } = make();
+    const walker = makeWalker();
+    character.update(0, walker);
+    const rest = glove(character);
+    character.knock(ahead);
+    for (const at of KNOCK_RAPS) {
+      runTo(character, walker, KNOCK_LEAD + at);
+      const hit = glove(character);
+      expect(hit.y).toBeGreaterThan(rest.y + 0.3); // the shoulder up
+      runTo(character, walker, KNOCK_LEAD + at + 0.1);
+      expect(-hit.z).toBeGreaterThan(-glove(character).z + 0.05); // furthest forward on the rap
+    }
+  });
+
+  it('meets the door with the front of the knuckles, not the back of the hand', () => {
+    const { character } = make();
+    const walker = makeWalker();
+    character.update(0, walker);
+    character.knock(ahead);
+    const hand = character.arms[1].hand;
+    for (const at of KNOCK_RAPS) {
+      runTo(character, walker, KNOCK_LEAD + at);
+      character.root.updateMatrixWorld(true);
+      const q = hand.getWorldQuaternion(new THREE.Quaternion());
+      // The knuckle row is where the back of the hand (+x on the right glove) meets the fingers (-y).
+      const knuckles = new THREE.Vector3(1, -1, 0).normalize().applyQuaternion(q);
+      const back = new THREE.Vector3(1, 0, 0).applyQuaternion(q);
+      expect(-knuckles.z).toBeGreaterThan(0.9); // facing the door, straight ahead
+      expect(-back.z).toBeLessThan(0.7);
+    }
+  });
+
+  it('is over and back at rest within the 1 s cooldown', () => {
+    const { character } = make();
+    const idle = make().character;
+    const walker = makeWalker();
+    character.update(0, walker);
+    character.knock(ahead);
+    expect(KNOCK_TIME).toBeLessThanOrEqual(1);
+    expect(KNOCK_LEAD + KNOCK_RAPS[KNOCK_RAPS.length - 1]).toBeLessThan(KNOCK_TIME);
+    runTo(character, walker, KNOCK_TIME);
+    character.update(0.01, walker);
+    expect(character.knocking).toBeNull();
+    idle.update(0, walker);
+    const pose = (c) => [c.arms[1].shoulder.rotation.x, c.arms[1].shoulder.rotation.z, c.arms[1].elbow.rotation.x, c.arms[1].hand.rotation.y];
+    expect(pose(character)).toEqual(pose(idle));
+  });
+
+  it('puts the arm down when the walker moves off', () => {
+    const { character } = make();
+    const walker = makeWalker();
+    character.update(0, walker);
+    character.knock(ahead);
+    runTo(character, walker, KNOCK_LEAD);
+    walker.vel.set(1.5, 0);
+    for (let i = 0; i < 25; i++) character.update(0.01, walker);
+    expect(character.knocking).toBeNull();
   });
 });

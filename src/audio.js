@@ -2,6 +2,8 @@
 // City rumble, gusting wind, neon hum that swells near signs (and stutters
 // with their flicker), snowy footsteps and the odd distant siren.
 
+export const KNOCK_RAPS = [0, 0.2, 0.4]; // s, when each rap of a knock lands
+
 function noiseBuffer(ctx, seconds, brown = false) {
   const len = Math.floor(ctx.sampleRate * seconds);
   const buf = ctx.createBuffer(2, len, ctx.sampleRate);
@@ -201,12 +203,12 @@ export class AmbientAudio {
     o.start(t); o.stop(t + 0.12);
   }
 
-  // Three raps on a door: a dull thump with a short slap of noise on each.
-  knock() {
+  // Three raps on a door, the first after delay seconds: a dull thump with a short slap of noise on each.
+  knock(delay = 0) {
     const ctx = this.ctx;
     if (!ctx || this.muted) return;
-    for (const at of [0, 0.2, 0.4]) {
-      const t = ctx.currentTime + at;
+    for (const at of KNOCK_RAPS) {
+      const t = ctx.currentTime + delay + at;
       const o = ctx.createOscillator(); o.type = 'sine';
       o.frequency.setValueAtTime(190, t); o.frequency.exponentialRampToValueAtTime(85, t + 0.09);
       const og = ctx.createGain();
