@@ -18,7 +18,8 @@ import { createSky, Snow, Steam } from './atmosphere.js';
 import { buildEnvironment } from './environment.js';
 import { LightPool } from './lights.js';
 import { createPost } from './post.js';
-import { Player } from './player.js';
+import { Player, CLOSE_UP } from './player.js';
+import { Character, HEAD_LAYER } from './character.js';
 import { AmbientAudio } from './audio.js';
 import { AdaptiveScale } from './adaptive-scale.js';
 import { createBench } from './bench.js';
@@ -129,25 +130,32 @@ async function init() {
   });
 
   const audio = new AmbientAudio();
-  const start = { x: num('x', 0.35), z: num('z', 6), yaw: num('yaw', 0), pitch: num('pitch', 0.04) };
+  const start = { x: num('x', 0.35), z: num('z', 6), yaw: num('yaw', 0), pitch: num('pitch', 0.04), view: params.get('view') };
   vending.onLand = () => audio.clunk();
   foodShop.onLand = () => audio.clunk();
   const player = new Player(camera, renderer.domElement, {
     bounds: ALLEY, colliders: alley.colliders, start,
     onStep: (v) => {
-      const foot = footprints.add(player.pos, player.yaw);
+      footprints.left = !Character.leftFootDown(player); // add() flips it to the foot that lands
+      const foot = footprints.add(player.pos, character.facing);
       if (ground.inWater(player.pos.x, player.pos.y)) {
         audio.splash(v);
-        splashes?.add(foot, v, player.yaw, footprints.left ? -1 : 1);
+        splashes?.add(foot, v, character.facing, footprints.left ? -1 : 1);
       } else audio.step(v);
     },
   });
+  const character = new Character(scene);
+  refl.cam.layers.enable(HEAD_LAYER); // the helmet always shows in puddles
+  const showHead = () => {
+    if (player.camDist > CLOSE_UP) camera.layers.enable(HEAD_LAYER); else camera.layers.disable(HEAD_LAYER);
+  };
 
-  if (params.has('test')) Object.assign(window, { __player: player, __alley: alley, __ground: ground, __splashes: splashes }); // for the browser tests
+  if (params.has('test')) Object.assign(window, { __player: player, __character: character, __alley: alley, __ground: ground, __splashes: splashes }); // for the browser tests
 
   progress(0.9, 'Compiling shaders');
   await nextFrame();
   pool.update(camera);
+  camera.layers.enable(HEAD_LAYER); // so the helmet's shaders compile too
   try { await renderer.compileAsync(scene, camera); } catch { renderer.compile(scene, camera); }
 
   const reaches = (spot) => inReach(spot, player.pos.x, player.pos.y, player.yaw);
@@ -215,6 +223,8 @@ async function init() {
     footprints.update(t);
     splashes?.update(t, camera, size.y);
     player.update(dt);
+    character.update(dt, player);
+    showHead();
     vending.update(dt);
     neonFood.update(t);
     foodShop.update(dt);

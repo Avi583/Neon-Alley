@@ -6,7 +6,7 @@ const ui = {
   title: $('title'), bar: $('bar'), status: $('status'), enter: $('enter'),
   hud: $('hud'), pause: $('pause'), fps: $('fps'), sound: $('sound'), pauseButton: $('pause-button'), pills: $('qpills'),
   resume: $('resume'), pauseSound: $('pause-sound'), pausePills: $('pause-qpills'), vend: $('vend'),
-  fullscreen: $('fullscreen'), lookPills: $('look-pills'),
+  fullscreen: $('fullscreen'), lookPills: $('look-pills'), view: $('view-button'),
 };
 
 const LOOK_SPEEDS = {
@@ -21,6 +21,8 @@ let currentView = () => ({});
 const params = new URLSearchParams(location.search);
 const startMuted = params.has('mute');
 let isMuted = () => startMuted;
+// First or third person, kept the same way.
+let viewMode = () => params.get('view');
 let lookKey = Object.hasOwn(LOOK_SPEEDS, params.get('look')) ? params.get('look') : 'normal';
 
 export function createQualityPills(qKey) {
@@ -35,6 +37,7 @@ export function createQualityPills(qKey) {
         u.searchParams.set('q', k);
         for (const [key, v] of Object.entries(currentView())) u.searchParams.set(key, v.toFixed(3));
         if (isMuted()) u.searchParams.set('mute', '1'); else u.searchParams.delete('mute');
+        if (viewMode() === 'first') u.searchParams.set('view', 'first'); else u.searchParams.delete('view');
         if (lookKey !== 'normal') u.searchParams.set('look', lookKey); else u.searchParams.delete('look');
         location.href = u.toString();
       });
@@ -121,12 +124,23 @@ export function createStates({ player, audio, canvas, auto, onUse }) {
     audio.toggleMute();
     showSound();
   };
+  const showView = () => {
+    ui.view.textContent = player.view === 'first' ? '1ST PERSON' : '3RD PERSON';
+  };
+  const toggleView = () => {
+    player.toggleView();
+    showView();
+  };
+  viewMode = () => player.view;
+  showView();
+  ui.view.addEventListener('click', toggleView);
   audio.muted = startMuted;
   isMuted = () => audio.muted;
   showSound();
   let showFps = false;
   window.addEventListener('keydown', (e) => {
     if (e.code === 'KeyM') toggleSound();
+    if (e.code === 'KeyV' && !e.repeat && state === 'play') toggleView();
     if (e.code === 'KeyF') { showFps = !showFps; ui.fps.classList.toggle('hidden', !showFps); }
     if (e.code === 'Enter' && state === 'title' && !ui.enter.disabled) {
       setTouch(!hasLock);

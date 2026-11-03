@@ -1,7 +1,43 @@
-// First-person walker: WASD/arrows + mouse look (pointer lock) on desktop,
-// virtual joystick + drag-to-look on touch screens. Head bob, footsteps and
-// simple circle-vs-box collision keep it grounded in the alley.
+// The walker: WASD/arrows + mouse look (pointer lock) on desktop, virtual
+// joystick + drag-to-look on touch screens. Head bob, footsteps and simple
+// circle-vs-box collision keep it grounded in the alley. The camera either sits
+// at eye height (first person) or over the shoulder (third person), pulled in
+// when a wall or shopfront would come between it and the player.
 import * as THREE from 'three';
+
+const CAM_BACK = 2.4, CAM_SIDE = 0.45, CAM_HEIGHT = 1.62; // third-person camera, from the player
+const CAM_PAD = 0.18; // the camera keeps this far from walls
+const CAM_OUT = 3; // how fast the camera eases back out once clear
+export const CLOSE_UP = 0.6; // nearer than this the helmet would fill the view
+
+// How far along the ground segment (x0, z0) -> (x1, z1) is clear, from 0 to 1,
+// against the collider boxes and the alley's walls and ends grown by pad.
+export function clearFraction(x0, z0, x1, z1, colliders, bounds, pad) {
+  const dx = x1 - x0, dz = z1 - z0;
+  let t = 1;
+  // Stops a segment heading past min or max along one axis.
+  const keepWithin = (o, d, min, max) => {
+    const limit = d > 0 ? max : min;
+    if ((o + d - limit) * d > 0) t = Math.min(t, Math.max(0, (limit - o) / d));
+  };
+  if (bounds.half !== undefined) keepWithin(x0, dx, -bounds.half + pad, bounds.half - pad);
+  if (bounds.zStart !== undefined) keepWithin(z0, dz, bounds.zEnd + pad, bounds.zStart - pad);
+  for (const c of colliders) {
+    let lo = -Infinity, hi = Infinity;
+    for (const [o, d, min, max] of [[x0, dx, c.minX - pad, c.maxX + pad], [z0, dz, c.minZ - pad, c.maxZ + pad]]) {
+      if (Math.abs(d) < 1e-9) {
+        if (o < min || o > max) { lo = Infinity; break; }
+        continue;
+      }
+      const a = (min - o) / d, b = (max - o) / d;
+      lo = Math.max(lo, Math.min(a, b));
+      hi = Math.min(hi, Math.max(a, b));
+    }
+    // Only boxes the segment runs into: one it starts inside can't be helped.
+    if (lo <= hi && lo > 0 && lo < t) t = lo;
+  }
+  return t;
+}
 
 export class Player {
   constructor(camera, dom, { bounds, colliders, start, onStep }) {
@@ -22,6 +58,9 @@ export class Player {
     this.enabled = false;
     this.radius = 0.3;
     this.eye = 1.68;
+    this.view = start.view === 'first' ? 'first' : 'third';
+    this.camReach = 1; // the clear share of the third-person camera's distance
+    this.camDist = CAM_BACK; // how far the camera is from the player's head
     // A touchscreen laptop has both, so touch is only the mode until ui.js sees which input is used.
     const touchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     this.touch = touchScreen && !window.matchMedia?.('(pointer: fine)').matches;
@@ -123,17 +162,41 @@ export class Player {
       this.lastStep = stepIdx;
       if (v > 0.6 && this.onStep) this.onStep(v);
     }
-    this.apply(v);
+    this.apply(v, dt);
   }
 
-  apply(v) {
+  toggleView() {
+    this.view = this.view === 'first' ? 'third' : 'first';
+    this.camReach = 0; // ease out from the head rather than jump
+    this.apply(this.vel.length());
+  }
+
+  apply(v, dt = 0) {
     const amp = Math.min(v / 2, 1.5);
-    this.cam.position.set(
-      this.pos.x + Math.cos(this.bob) * 0.025 * amp,
-      this.eye + Math.abs(Math.sin(this.bob)) * 0.05 * amp,
-      this.pos.y,
-    );
-    this.cam.rotation.set(this.pitch, this.yaw, Math.sin(this.bob) * 0.004 * amp, 'YXZ');
+    if (this.view === 'first') {
+      this.camDist = 0;
+      this.cam.position.set(
+        this.pos.x + Math.cos(this.bob) * 0.025 * amp,
+        this.eye + Math.abs(Math.sin(this.bob)) * 0.05 * amp,
+        this.pos.y,
+      );
+      this.cam.rotation.set(this.pitch, this.yaw, Math.sin(this.bob) * 0.004 * amp, 'YXZ');
+      return;
+    }
+    // Over the right shoulder, swung round the head by the look.
+    const cp = Math.cos(this.pitch);
+    const fx = -Math.sin(this.yaw) * cp, fy = Math.sin(this.pitch), fz = -Math.cos(this.yaw) * cp;
+    const rx = Math.cos(this.yaw), rz = -Math.sin(this.yaw);
+    const hx = this.pos.x, hy = CAM_HEIGHT + Math.abs(Math.sin(this.bob)) * 0.02 * amp, hz = this.pos.y;
+    const wx = -fx * CAM_BACK + rx * CAM_SIDE, wz = -fz * CAM_BACK + rz * CAM_SIDE;
+    const clear = clearFraction(hx, hz, hx + wx, hz + wz, this.colliders, this.bounds, CAM_PAD);
+    // In at once so walls never show through, back out gently.
+    this.camReach = clear < this.camReach ? clear : this.camReach + (clear - this.camReach) * (1 - Math.exp(-dt * CAM_OUT));
+    const k = this.camReach;
+    const y = Math.max(0.25, hy - fy * CAM_BACK * k);
+    this.cam.position.set(hx + wx * k, y, hz + wz * k);
+    this.camDist = Math.hypot(wx * k, y - hy, wz * k);
+    this.cam.rotation.set(this.pitch, this.yaw, 0, 'YXZ');
   }
 
   collide() {

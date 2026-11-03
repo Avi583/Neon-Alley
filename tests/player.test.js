@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { Player } from '../src/player.js';
+import { Player, clearFraction } from '../src/player.js';
 
 const BOUNDS = { walkX: 10, walkZMin: -10, walkZMax: 10 };
 const BOX = { minX: -1, maxX: 1, minZ: -1, maxZ: 1 };
@@ -328,5 +328,73 @@ describe('touch', () => {
       fire(type, { ...touches([1, 100, 300]), preventDefault });
       expect(preventDefault).toHaveBeenCalled();
     }
+  });
+});
+
+describe('clearFraction', () => {
+  const NONE = {};
+
+  it('is 1 for a clear segment', () => {
+    expect(clearFraction(0, 0, 0, 3, [], NONE, 0.2)).toBe(1);
+  });
+
+  it('stops short of a collider in the way, by the pad', () => {
+    expect(clearFraction(0, 3, 0, -3, [BOX], NONE, 0.2)).toBeCloseTo((3 - 1.2) / 6, 10);
+  });
+
+  it('ignores a collider beside the segment', () => {
+    expect(clearFraction(2, 3, 2, -3, [BOX], NONE, 0.2)).toBe(1);
+  });
+
+  it('ignores a collider the segment starts inside', () => {
+    expect(clearFraction(0, 0, 0, 3, [BOX], NONE, 0.2)).toBe(1);
+  });
+
+  it('stops at the alley walls and ends', () => {
+    const bounds = { half: 2, zStart: 10, zEnd: -10 };
+    expect(clearFraction(0, 0, 4, 0, [], bounds, 0.2)).toBeCloseTo(1.8 / 4, 10);
+    expect(clearFraction(0, 0, -4, 0, [], bounds, 0.2)).toBeCloseTo(1.8 / 4, 10);
+    expect(clearFraction(0, 8, 0, 12, [], bounds, 0.2)).toBeCloseTo(1.8 / 4, 10);
+  });
+});
+
+describe('view', () => {
+  function withCamera(opts) {
+    const camera = { pos: {}, position: { set(x, y, z) { camera.pos = { x, y, z }; } }, rotation: { set() {} } };
+    const player = new Player(camera, {}, { bounds: BOUNDS, colliders: [], start: { x: 0, z: 0 }, ...opts });
+    return { camera, player };
+  }
+
+  it('starts in third person, behind and above the player', () => {
+    const { camera, player } = withCamera();
+    expect(player.view).toBe('third');
+    expect(camera.pos.z).toBeGreaterThan(2); // yaw 0 looks down -z, so behind is +z
+    expect(camera.pos.x).toBeGreaterThan(0.3); // over the right shoulder
+    expect(player.camDist).toBeGreaterThan(2);
+  });
+
+  it('can start in first person', () => {
+    const { camera, player } = withCamera({ start: { x: 0, z: 0, view: 'first' } });
+    expect(player.view).toBe('first');
+    expect(camera.pos).toEqual({ x: 0, y: player.eye, z: 0 });
+  });
+
+  it('toggles to first person at the eye and back out', () => {
+    const { camera, player } = withCamera();
+    player.toggleView();
+    expect(player.view).toBe('first');
+    expect(camera.pos.y).toBe(player.eye);
+    expect(player.camDist).toBe(0);
+    player.toggleView();
+    expect(player.view).toBe('third');
+    walk(player, MAX_DT, 60);
+    expect(camera.pos.z).toBeGreaterThan(2);
+  });
+
+  it('pulls in when a collider is behind the player', () => {
+    const wall = { minX: -5, maxX: 5, minZ: 1, maxZ: 2 };
+    const { camera, player } = withCamera({ colliders: [wall] });
+    expect(camera.pos.z).toBeLessThan(1);
+    expect(player.camDist).toBeLessThan(1.2);
   });
 });

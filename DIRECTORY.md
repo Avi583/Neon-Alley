@@ -27,6 +27,8 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/batch.js
 - src/bench.js
 - src/canvas-art.js
+- src/character-textures.js
+- src/character.js
 - src/config.js
 - src/environment.js
 - src/food-shop.js
@@ -62,6 +64,8 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - tests/__snapshots__/layout.test.js.snap
 - tests/actions.pw.js
 - tests/adaptive-scale.test.js
+- tests/character-textures.test.js
+- tests/character.test.js
 - tests/audio.pw.js
 - tests/food-shop.test.js
 - tests/footprints.test.js
@@ -90,6 +94,6 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 
 ## docs/ (deployed build output)
 - docs/.nojekyll
-- docs/assets/index-BAwbLmu_.css
-- docs/assets/index-CLXhbyQh.js
+- docs/assets/index-BPR46RcG.js
+- docs/assets/index-DsfeK6UR.css
 - docs/index.html

@@ -181,8 +181,8 @@ html, body {
   border-radius: 4px;
   cursor: pointer;
 }
-#pause-button, #fullscreen { display: none; }
-body.touch #pause-button, body.touch #fullscreen { display: block; }
+#pause-button, #view-button, #fullscreen { display: none; }
+body.touch #pause-button, body.touch #view-button, body.touch #fullscreen { display: block; }
 body.touch #hud-buttons button { min-height: 44px; min-width: 96px; }
 #vend {
   position: absolute; left: 50%; bottom: calc(58px + env(safe-area-inset-bottom)); transform: translateX(-50%);

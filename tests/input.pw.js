@@ -36,6 +36,20 @@ test.describe('touchscreen laptop (F1)', () => {
   });
 });
 
+test.describe('view (character)', () => {
+  test('V switches between third and first person, and the button follows', async ({ page }) => {
+    await openGame(page);
+    await page.locator('#enter').click();
+    await expect.poll(() => page.evaluate(() => window.__player.view)).toBe('third');
+    expect(await page.evaluate(() => window.__character.root.parent !== null)).toBe(true);
+    await page.keyboard.press('KeyV');
+    await expect.poll(() => page.evaluate(() => window.__player.view)).toBe('first');
+    await expect(page.locator('#view-button')).toHaveText('1ST PERSON');
+    await page.keyboard.press('KeyV');
+    await expect.poll(() => page.evaluate(() => window.__player.view)).toBe('third');
+  });
+});
+
 test.describe('landscape phone', () => {
   test.use({ hasTouch: true, viewport: { width: 640, height: 360 } });
 
@@ -53,7 +67,7 @@ test.describe('landscape phone', () => {
     await openGame(page);
     await page.locator('#enter').tap();
     const boxes = [];
-    for (const id of ['#sound', '#pause-button', '#fullscreen']) {
+    for (const id of ['#sound', '#pause-button', '#view-button', '#fullscreen']) {
       await expect(page.locator(id)).toBeVisible();
       boxes.push(await page.locator(id).boundingBox());
     }
