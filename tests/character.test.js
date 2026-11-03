@@ -91,12 +91,12 @@ describe('model', () => {
     });
   });
 
-  it('puts only the helmet on the head layer', () => {
+  it('puts only the helmet and neck on the head layer', () => {
     const { character } = make();
     const meshes = [];
     character.root.traverse((o) => { if (o.isMesh) meshes.push(o); });
     const head = new Set();
-    character.head.traverse((o) => head.add(o));
+    character.neck.traverse((o) => head.add(o));
     for (const m of meshes) expect(m.layers.isEnabled(HEAD_LAYER)).toBe(head.has(m));
     expect(head.size).toBeGreaterThan(1);
   });
@@ -131,6 +131,28 @@ describe('motion', () => {
     const p = character.root.position;
     expect(Math.hypot(p.x, p.z)).toBeGreaterThan(0.05);
     expect(p.x * -Math.sin(0.5) + p.z * -Math.cos(0.5)).toBeLessThan(0); // behind, not in front
+  });
+
+  it('keeps the collar behind the eye while sprinting in first person', () => {
+    const { character } = make();
+    character.update(1 / 60, makeWalker({ view: 'first', vel: new THREE.Vector2(0, -4.2) }));
+    character.root.updateMatrixWorld(true);
+    const collar = character.neck.getWorldPosition(new THREE.Vector3());
+    expect(collar.z).toBeGreaterThan(0.05); // facing -z from the eye at the origin
+  });
+
+  it('keeps the head still when looked at from the front', () => {
+    const { character } = make();
+    for (const yaw of [Math.PI - 0.05, -Math.PI + 0.05, Math.PI - 0.05, -Math.PI + 0.05]) {
+      character.update(1 / 60, makeWalker({ yaw }));
+      expect(Math.abs(character.head.rotation.y)).toBeLessThan(0.01);
+    }
+  });
+
+  it('turns the head towards a look over the shoulder', () => {
+    const { character } = make();
+    for (let i = 0; i < 60; i++) character.update(1 / 60, makeWalker({ yaw: 0.9 }));
+    expect(character.head.rotation.y).toBeGreaterThan(0.5);
   });
 
   it('swings the legs and arms in opposition while walking', () => {

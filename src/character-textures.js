@@ -145,7 +145,7 @@ export function createCharacterTextures() {
     ...line('seam', [0, 0.46], [0.22, 0.32]), ...mirror(line('seam', [0, 0.46], [0.22, 0.32])),
     ...backPocket, ...mirror(backPocket), ...frontPocket, ...mirror(frontPocket),
     ...line('stitch', [0.535, 0.2], [0.535, 0.55], [0.52, 0.65], [0.5, 0.68]),
-  ], 41, (u, v) => near(u, 0.5, 0.06) * sstep(0.6, 0.9, v) * 0.3, () => 0);
+  ], 41, (u, v) => near(u, 0.5, 0.16) * sstep(0.45, 0.85, v) * 0.55, () => 0); // the crotch fades as the thigh fronts do
   // Gloves: seams down both sides of every finger and the palm, and a stitched band near the end.
   const glove = leather(128, 128, [
     ...line('seam', [0.25, 0], [0.25, 1]), ...line('seam', [0.75, 0], [0.75, 1]),

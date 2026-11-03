@@ -8,9 +8,11 @@ import { hdr } from './materials.js';
 import { sstep } from './math.js';
 import { createCharacterTextures } from './character-textures.js';
 
-export const HEAD_LAYER = 1; // the helmet, left out of the main view in first person
+export const HEAD_LAYER = 1; // the helmet and neck, left out of the main view in first person
 const HIP = 0.955; // hip height, so the boot soles sit on the ground
 const TURN = 10; // how fast the body turns to face where it walks
+const HEAD_TURN = 8; // how fast the head eases round to the look
+const NECK_UP = 0.6; // from the hips to the base of the neck
 const FIRST_BACK = 0.12; // in first person the body sits this far behind the eye, so looking down shows the chest and boots
 const UPPER_ARM = 0.3, THIGH = 0.44; // bone lengths
 const SHOULDER = [0.185, 0.475], LEG_X = 0.09; // where the limbs hang from, in the torso and hips
@@ -480,6 +482,7 @@ export class Character {
     this.chest.add(this.neck);
     part(this.neck, new THREE.CylinderGeometry(0.05, 0.056, 0.12, 14), m.knit, 0, 0.03);
     this.head = buildHelmet(this.neck, m);
+    this.neck.traverse((o) => o.layers.set(HEAD_LAYER));
 
     // Bind every limb in the rest pose, then hang the arms a little out from the body.
     this.root.updateMatrixWorld(true);
@@ -487,6 +490,7 @@ export class Character {
     for (const arm of this.arms) arm.shoulder.rotation.z = arm.side * 0.08;
 
     this.facing = 0;
+    this.headYaw = 0;
     this.time = 0;
     scene.add(this.root);
   }
@@ -506,13 +510,14 @@ export class Character {
       const d = Math.atan2(Math.sin(want - this.facing), Math.cos(want - this.facing));
       this.facing += d * (1 - Math.exp(-dt * TURN));
     }
-    const back = first ? FIRST_BACK : 0;
-    this.root.position.set(player.pos.x + Math.sin(this.facing) * back, 0, player.pos.y + Math.cos(this.facing) * back);
-    this.root.rotation.y = this.facing;
-
     // walk: 0 standing to 1 at walking pace; run: 0 walking to 1 at full run.
     const walk = Math.min(v / 2, 1);
     const run = THREE.MathUtils.clamp((v - 2) / 2.2, 0, 1);
+    const lean = 0.06 * walk + 0.14 * run;
+    // In first person the lean would carry the collar up under the eye, so the body steps back by as much.
+    const back = first ? FIRST_BACK + Math.sin(lean) * NECK_UP : 0;
+    this.root.position.set(player.pos.x + Math.sin(this.facing) * back, 0, player.pos.y + Math.cos(this.facing) * back);
+    this.root.rotation.y = this.facing;
     const b = player.bob;
     const c = Math.cos(b), s = Math.sin(b);
     const legAmp = 0.42 * walk + 0.28 * run;
@@ -528,17 +533,17 @@ export class Character {
       arm.elbow.rotation.x = 0.2 + 0.25 * walk + 0.5 * run + Math.max(0, -swing[i]) * armAmp * 0.4;
     }
     this.hips.position.y = HIP - 0.02 * walk + Math.abs(s) * (0.025 * walk + 0.02 * run);
-    this.torso.rotation.set(-0.06 * walk - 0.14 * run, c * 0.07 * walk, 0);
+    this.torso.rotation.set(-lean, c * 0.07 * walk, 0);
     const breath = Math.sin(this.time * 1.7) * (1 - walk);
     this.chest.scale.set(1 + breath * 0.012, 1 + breath * 0.008, 1 + breath * 0.02);
     this.chest.position.y = breath * 0.004;
 
     // The head follows the look a little: up and down, and side to side while walking another way.
+    // Looked at from the front the look is near half a turn away, where it flips side, so the head
+    // eases back to face ahead there rather than snapping from shoulder to shoulder.
     const turn = Math.atan2(Math.sin(player.yaw - this.facing), Math.cos(player.yaw - this.facing));
-    this.head.rotation.set(
-      THREE.MathUtils.clamp(player.pitch * 0.5, -0.35, 0.45) - this.torso.rotation.x,
-      THREE.MathUtils.clamp(turn, -1.1, 1.1) * 0.7,
-      0,
-    );
+    const wantYaw = THREE.MathUtils.clamp(turn, -1.1, 1.1) * 0.7 * (1 - sstep(1.5, 2.4, Math.abs(turn)));
+    this.headYaw += (wantYaw - this.headYaw) * (1 - Math.exp(-dt * HEAD_TURN));
+    this.head.rotation.set(THREE.MathUtils.clamp(player.pitch * 0.5, -0.35, 0.45) - this.torso.rotation.x, this.headYaw, 0);
   }
 }
