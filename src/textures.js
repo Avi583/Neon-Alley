@@ -1,9 +1,11 @@
 // Generates every texture at load time. The generators live in pbr-textures.js
-// and canvas-art.js; shared helpers are in texture-core.js.
+// canvas-art.js, graffiti-art.js and shop-art.js; shared helpers are in texture-core.js.
 import { nextFrame } from './texture-core.js';
 import { clearNoiseCache } from './noise.js';
 import { genConcrete, genBrick, genShutter, genAsphalt, genMetal, genFacade, genGrate, genWood, genCloud } from './pbr-textures.js';
-import { genACFront, genACDrip, genGraffiti, genBootPrint, genVendingHeader, genVendingPanel, genVendingPrice, genNoEntry, genShopPrice, genBarMenu, genCanLabels, genShopInterior, genNoren, genAd, genHoloText } from './canvas-art.js';
+import { genACFront, genACDrip, genBootPrint, genVendingHeader, genVendingPanel, genVendingPrice, genNoEntry, genCanLabels, genAd, genHoloText } from './canvas-art.js';
+import { genGraffiti } from './graffiti-art.js';
+import { genShopPrice, genBarMenu, genShopInterior, genNoren } from './shop-art.js';
 import { ART_TEXT } from './art-text.js';
 
 // Generate everything with progress callbacks, yielding to the browser

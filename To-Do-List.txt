@@ -59,6 +59,8 @@ E. Cleanup
 ----------
 E7 [Sonnet | Risk 3/5] Deploy with a GitHub Action rather than committing docs/. Each build changes the hashed filenames, which
    also forces a DIRECTORY.md update. Needs the repo's Pages source switched, so the live site can break if done wrong.
+E8 [Sonnet | Risk 1/5] tests/player.test.js: the touch describe block is almost half the file (about 175 of 400 lines). Move it to
+   player-touch.test.js, sharing the target/fire/makePlayer helpers.
 
 G. Testing recommendations
 --------------------------

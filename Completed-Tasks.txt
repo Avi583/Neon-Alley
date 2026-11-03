@@ -87,6 +87,11 @@ D1 [Sonnet | Risk 2/5] textures.js split into texture-core.js, pbr-textures.js a
 D2 [Opus   | Risk 3/5] alley.js: buildAlley split into buildings, overhead, street props, cross street and skyline.
 D3 [Sonnet | Risk 2/5] signs.js split into sign-specs.js, sign-canvas.js and holo-shader.js.
 D4 [Opus   | Risk 3/5] main.js split into environment.js and ui.js.
+D5 [Sonnet | Risk 1/5] canvas-art.js split into graffiti-art.js (the graffiti atlas) and shop-art.js (menu boards, interiors, noren). Texture snapshot unchanged.
+D6 [Sonnet | Risk 2/5] character.js split into character-geometry.js (samplers, lofts, sweeps) and character-build.js (cross-sections, materials,
+   part builders, HEAD_LAYER, re-exported from character.js). character.js keeps the Character class and its animation.
+D7 [Opus   | Risk 2/5] alley.js split into alley-units.js (shopfronts, doors, unit graffiti, AC units, fire escapes) and alley-litter.js
+   (crates, trash bags, litter). NEON moved to config.js. Draw order kept; layout snapshot unchanged.
 E1 [Sonnet | Risk 2/5] Duplicate code removed: one roundRect (texture-core.js), one texture repeat helper in ground.js, one mute
    toggle in ui.js. clamp01/sstep/frac moved to math.js.
 E2 [Sonnet | Risk 1/5] Dead code: m.glass (materials.js), specs in the buildSigns return, composer/bloom in the createPost

@@ -20,6 +20,8 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 
 ## src/
 - src/adaptive-scale.js
+- src/alley-litter.js
+- src/alley-units.js
 - src/alley.js
 - src/art-text.js
 - src/atmosphere.js
@@ -27,6 +29,8 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/batch.js
 - src/bench.js
 - src/canvas-art.js
+- src/character-build.js
+- src/character-geometry.js
 - src/character-textures.js
 - src/character.js
 - src/config.js
@@ -34,6 +38,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/food-shop.js
 - src/footprints.js
 - src/fps-counter.js
+- src/graffiti-art.js
 - src/ground.js
 - src/holo-shader.js
 - src/lights.js
@@ -46,6 +51,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/player.js
 - src/post.js
 - src/quality.js
+- src/shop-art.js
 - src/shops.js
 - src/sign-canvas.js
 - src/sign-specs.js
@@ -94,6 +100,6 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 
 ## docs/ (deployed build output)
 - docs/.nojekyll
+- docs/assets/index-Bzv7xwKa.js
 - docs/assets/index-DsfeK6UR.css
-- docs/assets/index-W3QBKXhX.js
 - docs/index.html

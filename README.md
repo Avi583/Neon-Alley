@@ -60,11 +60,15 @@ Low). The choice is stored in the URL as `?q=low|medium|high|ultra`.
 | `src/textures.js` | Generates every texture at load time, with progress |
 | `src/texture-core.js` | Shared texture helpers: pixel maps, normal generation, canvas helpers, fonts |
 | `src/pbr-textures.js` | Procedural PBR textures (concrete, brick, shutters, asphalt, window facades, metal, grate, steam) |
-| `src/canvas-art.js` | Canvas art for AC units, shop interiors, vending machine, billboards and holographic text |
+| `src/canvas-art.js` | Canvas art for AC units, the boot print, vending machine, billboards and holographic text |
+| `src/graffiti-art.js` | The wall graffiti atlas |
+| `src/shop-art.js` | Shop menu boards, interiors and noren curtains |
 | `src/art-text.js` | Japanese text drawn on textures, collected for font loading |
 | `src/math.js` | Small shared math helpers |
 | `src/batch.js` | Merges thousands of props into one mesh per material; placement helpers |
-| `src/alley.js` | Buildings, shopfronts, fire escapes, AC units, pipes, cables, icicles, props, cross street, skyline |
+| `src/alley.js` | Buildings, pipes, cables, icicles, props, cross street, skyline |
+| `src/alley-units.js` | Ground-floor shopfronts, doors, graffiti placement, AC units, fire escapes |
+| `src/alley-litter.js` | Crates, trash bags and litter |
 | `src/shops.js` | Hand-placed fish market, onigiri, sushi and ramen shopfronts |
 | `src/signs.js` | Neon sign mounting, lights and flicker |
 | `src/sign-specs.js` | The list of signs and all the text they use |
