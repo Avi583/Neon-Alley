@@ -240,6 +240,7 @@ function footprint(ball, heel, toe, back) {
 // toe, a welted sole and heel, a buckled strap at the ankle and another over the instep.
 export function buildLeg(hips, m, side) {
   const { mesh, top: hip, lower: knee } = limb(hips, side * LEG_X, -0.02, LEG, m.jeans, 48, THIGH, [-0.04, 0.1]);
+  hip.rotation.order = 'ZXY'; // the walk swings the leg forward, then out to the side
   const boot = new THREE.Group();
   boot.position.y = -0.27;
   knee.add(boot);

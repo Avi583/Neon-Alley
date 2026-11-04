@@ -9,7 +9,17 @@ const CAM_BACK = 2.4, CAM_SIDE = 0.45, CAM_HEIGHT = 1.62; // third-person camera
 const CAM_PAD = 0.18; // the camera keeps this far from walls
 const CAM_OUT = 3; // how fast the camera eases back out once clear
 export const CLOSE_UP = 0.6; // nearer than this the helmet would fill the view
+const RUN = 4.2; // a full run, where stepLength stops growing
 const ARRIVE = 0.05, WALK_GIVE_UP = 2; // walkTo: m from the spot that counts as there; s before it stops trying
+
+// How far each step carries the walker at speed v: short quick steps at a walk, lengthening into a
+// run's stride, and shorter again stepping sideways (side, from 0 going ahead or back to 1 straight
+// sideways), as far as a leg reaches out. bob turns half a turn a step, and the biker's boots plant
+// in time with it.
+export function stepLength(v, side = 0) {
+  const walk = Math.min(v / 2, 1), run = THREE.MathUtils.clamp((v - 2) / (RUN - 2), 0, 1);
+  return (0.45 + 0.23 * walk + 0.52 * run) * (1 - 0.4 * side);
+}
 
 // How far along the ground segment (x0, z0) -> (x1, z1) is clear, from 0 to 1,
 // against the collider boxes and the alley's walls and ends grown by pad.
@@ -173,7 +183,9 @@ export class Player {
     this.collide();
 
     const v = this.vel.length();
-    this.bob += dt * v * 2.6;
+    // Only first person walks other than the way the biker faces (the third-person body turns to it).
+    const side = this.view === 'first' && v > 1e-3 ? Math.abs(this.vel.x * Math.cos(this.yaw) - this.vel.y * Math.sin(this.yaw)) / v : 0;
+    this.bob += (dt * v * Math.PI) / stepLength(v, side);
     const stepIdx = Math.floor(this.bob / Math.PI);
     if (stepIdx !== this.lastStep) {
       this.lastStep = stepIdx;
@@ -195,7 +207,8 @@ export class Player {
   }
 
   apply(v, dt = 0) {
-    const amp = Math.min(v / 2, 1.5);
+    // The bob grows with the pace, and with the step: a walk's shorter steps bob less than a run's.
+    const amp = Math.min(v / 2, 1.5) * (stepLength(v) / stepLength(RUN));
     if (this.view === 'first') {
       this.camDist = 0;
       this.cam.position.set(

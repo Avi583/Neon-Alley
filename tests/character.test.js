@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Character, HEAD_LAYER, KNOCK_LEAD, KNOCK_TIME } from '../src/character.js';
 import { KNOCK_RAPS } from '../src/audio.js';
 import { grip } from '../src/character-build.js';
+import { stepLength } from '../src/player.js';
 
 function makeWalker(over = {}) {
   return { pos: new THREE.Vector2(), vel: new THREE.Vector2(), yaw: 0, pitch: 0, bob: 0, lastStep: 0, view: 'third', ...over };
@@ -201,43 +202,71 @@ describe('motion', () => {
     for (const leg of character.legs) expect(leg.hip.rotation.x).toBeCloseTo(0, 10);
   });
 
+  // The height of the lowest of a boot's heel, middle and ball, under its tread.
+  const soleLow = (character, left) => {
+    const { boot } = character.legs[left ? 0 : 1];
+    boot.updateWorldMatrix(true, false);
+    return Math.min(...[0.06, -0.06, -0.15].map((z) => boot.localToWorld(new THREE.Vector3(0, -0.225, z)).y));
+  };
+
   // Walks towards -z at speed v for the given time, as player.js and main.js do, noting each
-  // landing: where the boot was, how far ahead of the body, and how far it moves in the next 0.1 s.
-  const walk = (character, v, time) => {
-    const walker = makeWalker({ vel: new THREE.Vector2(0, -v) });
+  // landing: where the boot was, how far ahead of the body, how high its sole was, and how far it
+  // moves in the next 0.1 s; and the lowest the left boot got midway through each of its swings.
+  // dir is the way the walker goes; in first person (view) it keeps facing -z whichever way that is.
+  const walk = (character, v, time, dir = new THREE.Vector2(0, -1), view = 'third') => {
+    const walker = makeWalker({ vel: dir.clone().multiplyScalar(v), view });
     const landings = [];
+    let swingLow = Infinity, swing = [];
     for (let f = 0; f < time * 60; f++) {
-      walker.bob += (1 / 60) * v * 2.6;
-      walker.pos.y -= v / 60;
+      walker.bob += ((1 / 60) * v * Math.PI) / stepLength(v, view === 'first' ? Math.abs(dir.x) : 0);
+      walker.pos.addScaledVector(dir, v / 60);
       character.update(1 / 60, walker);
       for (const l of landings) if (f - l.f === 6) l.moved = character.soleAt(l.left).distanceTo(l.at);
+      if (!character.feet[0].stance) swing.push(soleLow(character, true));
+      else if (swing.length) {
+        if (f > 30) swingLow = Math.min(swingLow, swing[swing.length >> 1]);
+        swing = [];
+      }
       for (const left of character.landed) {
         const at = character.soleAt(left);
-        landings.push({ left, f, at, ahead: walker.pos.y - at.z, hip: character.legs[left ? 0 : 1].hip.rotation.x });
+        landings.push({ left, f, at, ahead: walker.pos.y - at.z, low: soleLow(character, left), hip: character.legs[left ? 0 : 1].hip.rotation.x });
       }
     }
-    return landings;
+    return { landings, swingLow };
   };
 
   it.each([['walk', 2], ['run', 4.2]])('lands each boot once a stride at a %s, alternately', (_name, v) => {
-    const landings = walk(make().character, v, 4);
-    const steps = (4 * v * 2.6) / Math.PI;
+    const { landings } = walk(make().character, v, 4);
+    const steps = (4 * v) / stepLength(v);
     expect(landings.length).toBeGreaterThanOrEqual(Math.floor(steps) - 2);
     expect(landings.length).toBeLessThanOrEqual(Math.ceil(steps));
     for (let k = 1; k < landings.length; k++) expect(landings[k].left).toBe(!landings[k - 1].left);
   });
 
-  // At a run the planted boot still skates back by about half the body's speed (A90).
-  it.each([['walk', 2, 0.3], ['run', 4.2, 0.6]])('lands each %s step ahead of the body, where the boot then stays', (_name, v, skate) => {
-    const landings = walk(make().character, v, 3).filter((l) => l.moved !== undefined);
+  it.each([['walk', 2], ['run', 4.2]])('lands each %s step heel down ahead of the body, where the boot then stays', (_name, v) => {
+    const landings = walk(make().character, v, 3).landings.filter((l) => l.moved !== undefined);
     expect(landings.length).toBeGreaterThan(2);
     for (const l of landings) {
       expect(l.at.y).toBe(0);
       expect(Math.sign(l.at.x)).toBe(l.left ? -1 : 1);
       expect(l.ahead).toBeGreaterThan(0.2);
       expect(l.hip).toBeGreaterThan(0.2); // the leg still out in front
-      expect(l.moved).toBeLessThan(skate * v * 0.1); // while the body walks on
+      expect(Math.abs(l.low)).toBeLessThan(0.01); // the heel on the ground
+      expect(l.moved).toBeLessThan(0.015); // while the body walks on
     }
+  });
+
+  it.each([['right', 1, 0], ['left', -1, 0], ['backward', 0, 1]])('keeps the planted boot put walking %s in first person', (_name, x, z) => {
+    const landings = walk(make().character, 2, 3, new THREE.Vector2(x, z), 'first').landings.filter((l) => l.moved !== undefined);
+    expect(landings.length).toBeGreaterThan(2);
+    for (const l of landings) {
+      expect(Math.abs(l.low)).toBeLessThan(0.01);
+      expect(l.moved).toBeLessThan(0.03);
+    }
+  });
+
+  it.each([['walk', 2], ['run', 4.2]])('lifts the swinging boot clear of the ground at a %s', (_name, v) => {
+    expect(walk(make().character, v, 3).swingLow).toBeGreaterThan(0.02);
   });
 
   it('lands no step when standing still', () => {
