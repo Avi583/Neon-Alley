@@ -253,11 +253,13 @@ function buildStreetProps(ctx) {
   }
 
   // trash bags, crates and barrels along the walls
-  const busy = (z) => Math.abs(z + 26.5) < 1.5 || Math.abs(z + 41) < 2 || vents.some((v) => Math.abs(v.pos.z - z) < 1.2);
+  // Nothing goes in front of a door on its own side: the door's half width plus the widest pile's (the bags at 0.6).
+  const blocksDoor = (side, z) => ctx.doors.some((d) => Math.sign(d.face) === side && Math.abs(d.z - z) < 0.7 + 0.6);
+  const busy = (side, z) => Math.abs(z + 26.5) < 1.5 || Math.abs(z + 41) < 2 || vents.some((v) => Math.abs(v.pos.z - z) < 1.2) || blocksDoor(side, z);
   for (let i = 0; i < 22; i++) {
     const side = rng() < 0.5 ? -1 : 1;
     const zz = R(ALLEY.zEnd + 4, 6);
-    if (busy(zz)) continue;
+    if (busy(side, zz)) continue;
     const kind = rng();
     if (kind < 0.5) {
       const n = 2 + Math.floor(rng() * 3);

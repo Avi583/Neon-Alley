@@ -100,6 +100,6 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 
 ## docs/ (deployed build output)
 - docs/.nojekyll
-- docs/assets/index-CLsZTE3i.js
 - docs/assets/index-DsfeK6UR.css
+- docs/assets/index-mQIuVeBz.js
 - docs/index.html

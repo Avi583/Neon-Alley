@@ -140,7 +140,8 @@ export class Character {
     // walk: 0 standing to 1 at walking pace; run: 0 walking to 1 at full run.
     const walk = Math.min(v / 2, 1);
     const run = THREE.MathUtils.clamp((v - 2) / 2.2, 0, 1);
-    const lean = 0.06 * walk + 0.14 * run;
+    // The lean, plus a rock forward as each boot lands (cos(2 bob) = 1) and back up over the planted one.
+    const lean = 0.06 * walk + 0.14 * run + Math.cos(2 * player.bob) * (0.02 * walk + 0.02 * run);
     // In first person the lean would carry the collar up under the eye, so the body steps back by as much.
     const back = first ? FIRST_BACK + Math.sin(lean) * NECK_UP : 0;
     this.root.position.set(player.pos.x + Math.sin(this.facing) * back, 0, player.pos.y + Math.cos(this.facing) * back);
@@ -172,8 +173,17 @@ export class Character {
       hand.rotation.y = KNOCK_TWIST * blend;
       grip(this.arms[1], blend); // knocks with a fist
     }
-    this.hips.position.y = HIP - 0.02 * walk + Math.abs(s) * (0.025 * walk + 0.02 * run);
-    this.torso.rotation.set(-lean, c * 0.07 * walk, 0);
+    // The hips turn with the leg coming forward, drop on the side swinging through, and shift over the
+    // planted boot (less at a run, where the boots land closer under the body). The torso undoes the
+    // hips, so the shoulders turn and tilt against them, in step with the arms, and the chest turns on
+    // further, spreading the twist up the spine.
+    const hipYaw = 0.08 * walk + 0.06 * run, hipRoll = 0.04 * walk + 0.02 * run;
+    const shoulderYaw = 0.07 * walk + 0.08 * run, shoulderRoll = 0.025 * walk + 0.015 * run;
+    const chestYaw = 0.05 * walk + 0.03 * run;
+    this.hips.position.set(-s * (0.015 * walk - 0.008 * run), HIP - 0.02 * walk + Math.abs(s) * (0.025 * walk + 0.02 * run), 0);
+    this.hips.rotation.set(0, -c * hipYaw, -s * hipRoll);
+    this.torso.rotation.set(-lean, c * (hipYaw + shoulderYaw), s * (hipRoll + shoulderRoll));
+    this.chest.rotation.y = c * chestYaw;
     const breath = Math.sin(this.time * 1.7) * (1 - walk);
     this.chest.scale.set(1 + breath * 0.012, 1 + breath * 0.008, 1 + breath * 0.02);
     this.chest.position.y = breath * 0.004;
@@ -184,7 +194,12 @@ export class Character {
     const turn = Math.atan2(Math.sin(player.yaw - this.facing), Math.cos(player.yaw - this.facing));
     const wantYaw = THREE.MathUtils.clamp(turn, -1.1, 1.1) * 0.7 * (1 - sstep(1.5, 2.4, Math.abs(turn)));
     this.headYaw += (wantYaw - this.headYaw) * (1 - Math.exp(-dt * HEAD_TURN));
-    this.head.rotation.set(THREE.MathUtils.clamp(player.pitch * 0.5, -0.35, 0.45) - this.torso.rotation.x, this.headYaw, 0);
+    // The head takes out the body's lean, rock, twist and tilt, so the helmet stays on the look.
+    this.head.rotation.set(
+      THREE.MathUtils.clamp(player.pitch * 0.5, -0.35, 0.45) - this.torso.rotation.x,
+      this.headYaw - c * (shoulderYaw + chestYaw),
+      -s * shoulderRoll,
+    );
     this.findLandings(dt, player, v);
   }
 }

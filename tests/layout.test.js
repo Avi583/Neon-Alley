@@ -239,6 +239,16 @@ describe('generated layout', () => {
     expect(blocking).toEqual([]);
   });
 
+  it('keeps street clutter out from in front of doors', () => {
+    // A door's opening is 1.4 wide and the clutter stands within 0.7 of the wall.
+    const blocking = world.alley.colliders.filter((c) => world.alley.doors.some((d) => {
+      const side = Math.sign(d.face);
+      const nearWall = side > 0 ? c.maxX > d.face - 0.7 && c.minX < d.face : c.minX < d.face + 0.7 && c.maxX > d.face;
+      return nearWall && c.maxZ > d.z - 0.7 && c.minZ < d.z + 0.7;
+    }));
+    expect(blocking).toEqual([]);
+  });
+
   it('keeps lanterns out of roofs', () => {
     const { lanterns, roofs } = world.parts;
     expect(lanterns.filter((l) => roofs.some((r) => lanternInRoof(l, r)))).toEqual([]);
