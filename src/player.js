@@ -57,6 +57,7 @@ export class Player {
     this.bob = 0;
     this.lastStep = 0;
     this.walking = null; // { x, z, onArrive, t } while walkTo has the player walking somewhere
+    this.moving = false; // whether the player's own input is moving them this frame
     this.enabled = false;
     this.radius = 0.3;
     this.eye = 1.68;
@@ -145,8 +146,9 @@ export class Player {
     const sx = -Math.sin(this.yaw), sz = -Math.cos(this.yaw); // forward
     const rx = Math.cos(this.yaw), rz = -Math.sin(this.yaw); // right
     let tx = 0, tz = 0;
-    if (len > 0.01 || !this.enabled) this.walking = null; // any move of their own, or a pause, calls off a walkTo
-    if (len > 0.01) {
+    this.moving = len > 0.01; // steered by the player's own input, not just still coasting
+    if (this.moving || !this.enabled) this.walking = null; // any move of their own, or a pause, calls off a walkTo
+    if (this.moving) {
       const n = Math.min(len, 1) / len;
       tx = (sx * f + rx * r) * n * speed;
       tz = (sz * f + rz * r) * n * speed;
@@ -155,6 +157,7 @@ export class Player {
       w.t += dt;
       if (d < ARRIVE || w.t > WALK_GIVE_UP) {
         this.walking = null;
+        this.vel.set(0, 0); // stands where it got to, rather than coasting (or still pushing at a collider)
         w.onArrive();
       } else {
         const s = Math.min(2.0, d * 4) / d; // walking pace, easing in over the last half metre

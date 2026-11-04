@@ -124,12 +124,14 @@ export class Character {
     const k = this.knocking;
     if (k) {
       k.t += dt;
-      if (v > 0.5) k.t = Math.max(k.t, KNOCK_OUT); // walking off puts the arm down
+      // Walking off puts the arm down; only the player's own input counts, as the biker can still be
+      // coasting to a stop when the knock starts.
+      if (player.moving) k.t = Math.max(k.t, KNOCK_OUT);
       if (k.t >= KNOCK_TIME) this.knocking = null;
     }
     if (first) this.facing = player.yaw;
     else if (v > 0.3 || this.knocking) {
-      const want = this.knocking && v <= 0.5
+      const want = this.knocking && !player.moving
         ? Math.atan2(-(k.x - player.pos.x), -(k.z - player.pos.y)) // turn to the door
         : Math.atan2(-player.vel.x, -player.vel.y);
       const d = Math.atan2(Math.sin(want - this.facing), Math.cos(want - this.facing));

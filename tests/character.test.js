@@ -329,7 +329,21 @@ describe('knocking', () => {
     character.knock(ahead);
     runTo(character, walker, KNOCK_LEAD);
     walker.vel.set(1.5, 0);
+    walker.moving = true;
     for (let i = 0; i < 25; i++) character.update(0.01, walker);
     expect(character.knocking).toBeNull();
+  });
+
+  it('still raises the arm when the knock starts while the walker coasts to a stop', () => {
+    const { character } = make();
+    const walker = makeWalker({ vel: new THREE.Vector2(0, -1.5) });
+    character.update(0, walker);
+    const rest = glove(character);
+    character.knock(ahead);
+    while (character.knocking.t < KNOCK_LEAD - 1e-6) {
+      walker.vel.multiplyScalar(Math.exp(-0.09)); // easing off as player.js does with no input
+      character.update(0.01, walker);
+    }
+    expect(glove(character).y).toBeGreaterThan(rest.y + 0.3);
   });
 });
