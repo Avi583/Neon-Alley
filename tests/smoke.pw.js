@@ -6,6 +6,7 @@ import { LOAD_TIMEOUT, nextFrames, openGame, pictureContrast, playerState, watch
 
 // A black picture with film grain reads about 4, a real view of the alley far more.
 const MIN_CONTRAST = 32;
+const WALK = 2.0; // m/s, same as player.js; a run is 4.2
 
 test.setTimeout(LOAD_TIMEOUT + 60_000);
 
@@ -44,7 +45,7 @@ for (const [q, expected] of [['medium', null], ['high', 1]]) {
   });
 }
 
-test('the game starts, walks, looks, pauses and resumes', async ({ page }) => {
+test('the game starts, walks, runs, looks, pauses and resumes', async ({ page }) => {
   const errors = watchErrors(page);
   await openGame(page, 'low', errors);
   expect(await pictureContrast(page)).toBeGreaterThan(MIN_CONTRAST);
@@ -55,6 +56,11 @@ test('the game starts, walks, looks, pauses and resumes', async ({ page }) => {
   const before = await playerState(page);
   await page.keyboard.down('KeyW');
   await expect.poll(() => playerState(page).then((p) => before.z - p.z), { timeout: 30_000 }).toBeGreaterThan(0.2);
+  const speed = () => page.evaluate(() => window.__player.vel.length());
+  expect(await speed()).toBeLessThanOrEqual(WALK + 1e-6);
+  await page.keyboard.down('ShiftLeft');
+  await expect.poll(speed, { timeout: 30_000 }).toBeGreaterThan(WALK * 1.5);
+  await page.keyboard.up('ShiftLeft');
   await page.keyboard.up('KeyW');
 
   await expect.poll(() => page.evaluate(() => document.pointerLockElement?.tagName)).toBe('CANVAS');

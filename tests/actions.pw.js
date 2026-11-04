@@ -7,6 +7,7 @@ import { inReach } from '../src/vending.js';
 import { LOAD_TIMEOUT, nextFrames, openGame, watchErrors } from './game-page.js';
 
 const PLAYER_RADIUS = 0.3; // same as player.js
+const KNOCK_REACH = 0.8; // same as character.js
 const FOOD_COOLDOWN = 450; // ms, just over the one in main.js
 const REACH = 1.6, YAW_STEPS = 48;
 
@@ -27,8 +28,8 @@ async function enterGame(page, errors) {
 const reaches = (spot, { x, z, yaw }) => inReach(spot, x, z, yaw);
 
 // A clear place to stand and a way to face, with everything in `wanted` in reach
-// and nothing in `unwanted`, or null if there is none.
-function findStand({ colliders }, wanted, unwanted = []) {
+// and nothing in `unwanted`, that `ok` accepts, or null if there is none.
+function findStand({ colliders }, wanted, unwanted = [], ok = () => true) {
   const clear = (x, z) => colliders.every((c) => !(
     x > c.minX - PLAYER_RADIUS && x < c.maxX + PLAYER_RADIUS && z > c.minZ - PLAYER_RADIUS && z < c.maxZ + PLAYER_RADIUS
   ));
@@ -37,7 +38,7 @@ function findStand({ colliders }, wanted, unwanted = []) {
       if (!clear(x, z)) continue;
       for (let k = 0; k < YAW_STEPS; k++) {
         const stand = { x, z, yaw: (k / YAW_STEPS) * Math.PI * 2 };
-        if (wanted.every((s) => reaches(s, stand)) && !unwanted.some((s) => reaches(s, stand))) return stand;
+        if (wanted.every((s) => reaches(s, stand)) && !unwanted.some((s) => reaches(s, stand)) && ok(stand)) return stand;
       }
     }
   }
@@ -77,6 +78,32 @@ test('a door offers a knock, and still does after one', async ({ page }) => {
   await page.keyboard.press('KeyE');
   await nextFrames(page);
   await expectPrompt(page, 'KNOCK');
+  expect(errors).toEqual([]);
+});
+
+test('a door beyond the glove is walked up to, then knocked on with the arm and the sound', async ({ page }) => {
+  const errors = watchErrors(page);
+  const world = await enterGame(page, errors);
+  const others = [world.vending, ...world.food];
+  const farFrom = (door) => (s) => Math.hypot(door.face - s.x, door.z - s.z) > KNOCK_REACH + 0.2;
+  const door = world.doors.find((d) => findStand(world, [d], others, farFrom(d)));
+  expect(door, 'no door can be stood back from').toBeDefined();
+  await standAt(page, findStand(world, [door], others, farFrom(door)));
+  await expectPrompt(page, 'KNOCK');
+  // Notes where the biker is when each knock starts, whether the arm took it up, and each knock sound.
+  await page.evaluate(() => {
+    const { __player: p, __character: c, __audio: a } = window;
+    const knock = c.knock.bind(c), sound = a.knock.bind(a);
+    window.__knocks = { arm: [], sounds: 0 };
+    c.knock = (d) => { knock(d); window.__knocks.arm.push({ x: p.pos.x, z: p.pos.y, raised: !!c.knocking }); };
+    a.knock = (...args) => { window.__knocks.sounds++; return sound(...args); };
+  });
+  await page.keyboard.press('KeyE');
+  await expect.poll(() => page.evaluate(() => window.__knocks.arm.length), { timeout: 30_000 }).toBe(1);
+  const { arm: [at], sounds } = await page.evaluate(() => window.__knocks);
+  expect(Math.hypot(door.face - at.x, door.z - at.z)).toBeLessThanOrEqual(KNOCK_REACH);
+  expect(at.raised).toBe(true);
+  expect(sounds).toBe(1);
   expect(errors).toEqual([]);
 });
 

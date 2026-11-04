@@ -14,6 +14,9 @@ A. Ideas
 --------
 A1 [Sonnet | Risk 1/5] Audit code (first pass done, see sections B-F)
 A17 [Sonnet | Risk 2/5] canvas-art.js drawFish/drawOnigiri: the shop back walls still paint realistic fish and rice balls behind the neon
+A98 [Sonnet | Risk 3/5] Skipped on purpose: a browser test that walks up to the vending machine, food or a door with the keys before
+    pressing E. actions.pw.js teleports the player instead (standAt), so the tests survive layout changes, and walking and
+    collisions are already covered in player.test.js and smoke.pw.js. Steering there by key presses would be slow and flaky.
     from A11. Repaint them plainer or as neon if the neon should be the only food shown. Changes the texture snapshot (G9).
 A25 [Sonnet | Risk 1/5] alley.js doorFrame: door frames blend into the door under strong neon. Try a lighter material if they should stand out more.
 A29 [Sonnet | Risk 2/5] The ground vent at x = 0.9, z = -9.4 sometimes hides the left of the ramen shop behind steam. Moving the vent needs care, as vents feed the street prop placement in alley.js.

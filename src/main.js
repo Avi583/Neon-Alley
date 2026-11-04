@@ -150,7 +150,7 @@ async function init() {
     if (player.camDist > CLOSE_UP) camera.layers.enable(HEAD_LAYER); else camera.layers.disable(HEAD_LAYER);
   };
 
-  if (params.has('test')) Object.assign(window, { __land: land, __player: player, __character: character, __alley: alley, __ground: ground, __splashes: splashes }); // for the browser tests
+  if (params.has('test')) Object.assign(window, { __land: land, __player: player, __character: character, __alley: alley, __audio: audio, __ground: ground, __splashes: splashes }); // for the browser tests
 
   progress(0.9, 'Compiling shaders');
   await nextFrame();
