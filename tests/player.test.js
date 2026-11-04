@@ -87,6 +87,45 @@ describe('walk bounds', () => {
   });
 });
 
+describe('walkTo', () => {
+  it('walks to the spot at walking pace and calls back once there', () => {
+    const player = makePlayer();
+    const onArrive = vi.fn();
+    player.walkTo(0.6, 0, onArrive);
+    let fastest = 0;
+    for (let i = 0; i < 120 && !onArrive.mock.calls.length; i++) {
+      player.update(1 / 60);
+      fastest = Math.max(fastest, player.vel.length());
+    }
+    expect(onArrive).toHaveBeenCalledTimes(1);
+    expect(player.pos.x).toBeCloseTo(0.6, 1);
+    expect(fastest).toBeLessThanOrEqual(2);
+    walk(player, 1 / 60, 10);
+    expect(onArrive).toHaveBeenCalledTimes(1);
+  });
+
+  it('is called off by the player moving', () => {
+    const player = makePlayer();
+    const onArrive = vi.fn();
+    player.walkTo(0.6, 0, onArrive);
+    walk(player, 1 / 60, 5);
+    player.keys.add('KeyS');
+    walk(player, 1 / 60, 5);
+    player.keys.clear();
+    walk(player, 1 / 60, 120);
+    expect(onArrive).not.toHaveBeenCalled();
+    expect(player.walking).toBeNull();
+  });
+
+  it('gives up on a spot behind a collider, and still calls back', () => {
+    const player = makePlayer({ start: { x: -2, z: 0 }, colliders: [BOX] });
+    const onArrive = vi.fn();
+    player.walkTo(0, 0, onArrive);
+    walk(player, 1 / 60, 150);
+    expect(onArrive).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('movement', () => {
   const distance = (...keys) => {
     const player = makePlayer();

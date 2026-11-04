@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import { sstep } from './math.js';
 import { KNOCK_RAPS } from './audio.js';
-import { HEAD_LAYER, createMaterials, part, buildArm, buildLeg, buildHelmet, buildJacket, buildSeat } from './character-build.js';
+import { HEAD_LAYER, createMaterials, part, buildArm, buildLeg, buildHelmet, buildJacket, buildSeat, grip } from './character-build.js';
 
 export { HEAD_LAYER };
 const HIP = 0.955; // hip height, so the boot soles sit on the ground
@@ -23,6 +23,7 @@ const MIN_WALK = 0.6; // slower than this, as in player.js, no step lands
 // Knocking: the right arm comes up over KNOCK_LEAD, raps on each of KNOCK_RAPS after it, and is
 // back at rest by KNOCK_TIME, inside the 1 s knock cooldown in main.js.
 export const KNOCK_LEAD = 0.3, KNOCK_TIME = 0.95;
+export const KNOCK_REACH = 0.8; // how far from a door's face the glove reaches it; main.js walks the biker in from further
 const KNOCK_OUT = 0.75; // when the arm starts down again, after the last rap
 const KNOCK_SHOULDER = [1.15, -0.2], KNOCK_ELBOW = [1.75, 1.05]; // shoulder [forward, out]; elbow [cocked, on the door]
 const KNOCK_TWIST = -Math.PI / 2; // the glove turns palm to the biker, so the knuckles meet the door
@@ -49,9 +50,9 @@ export class Character {
     this.head = buildHelmet(this.neck, m);
     this.neck.traverse((o) => o.layers.set(HEAD_LAYER));
 
-    // Bind every limb in the rest pose; update hangs the arms a little out from the body.
+    // Bind every limb and finger in the rest pose; update hangs the arms a little out from the body.
     this.root.updateMatrixWorld(true);
-    for (const { mesh } of [...this.arms, ...this.legs]) mesh.bind(new THREE.Skeleton(mesh.userData.bones));
+    this.root.traverse((o) => { if (o.isSkinnedMesh) o.bind(new THREE.Skeleton(o.userData.bones)); });
 
     this.facing = 0;
     this.headYaw = 0;
@@ -157,6 +158,7 @@ export class Character {
       arm.elbow.rotation.x = 0.2 + 0.25 * walk + 0.5 * run + Math.max(0, -swing[i]) * armAmp * 0.4;
       arm.shoulder.rotation.z = arm.side * 0.08;
       arm.hand.rotation.y = 0;
+      grip(arm, 0);
     }
     // Knocking: the right shoulder up, the elbow bent, and the forearm swinging from it onto the door.
     const [blend, rap] = this.knockPose();
@@ -166,6 +168,7 @@ export class Character {
       shoulder.rotation.z = lerp(shoulder.rotation.z, KNOCK_SHOULDER[1], blend);
       elbow.rotation.x = lerp(elbow.rotation.x, lerp(KNOCK_ELBOW[0], KNOCK_ELBOW[1], rap), blend);
       hand.rotation.y = KNOCK_TWIST * blend;
+      grip(this.arms[1], blend); // knocks with a fist
     }
     this.hips.position.y = HIP - 0.02 * walk + Math.abs(s) * (0.025 * walk + 0.02 * run);
     this.torso.rotation.set(-lean, c * 0.07 * walk, 0);

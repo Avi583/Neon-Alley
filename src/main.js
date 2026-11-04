@@ -19,7 +19,7 @@ import { buildEnvironment } from './environment.js';
 import { LightPool } from './lights.js';
 import { createPost } from './post.js';
 import { Player, CLOSE_UP } from './player.js';
-import { Character, HEAD_LAYER, KNOCK_LEAD } from './character.js';
+import { Character, HEAD_LAYER, KNOCK_LEAD, KNOCK_REACH } from './character.js';
 import { AmbientAudio } from './audio.js';
 import { AdaptiveScale } from './adaptive-scale.js';
 import { createBench } from './bench.js';
@@ -176,8 +176,19 @@ async function init() {
       if (action === TAKE && vending.take()) audio.pickup();
       if (action === KNOCK && performance.now() >= nextKnock) {
         nextKnock = performance.now() + KNOCK_COOLDOWN;
-        character.knock(alley.doors.find(reaches));
-        audio.knock(KNOCK_LEAD);
+        const door = alley.doors.find(reaches);
+        const knock = () => {
+          nextKnock = performance.now() + KNOCK_COOLDOWN;
+          character.knock(door);
+          audio.knock(KNOCK_LEAD);
+        };
+        // The prompt shows from further back than the glove reaches, so the biker first walks up
+        // to stand square in front of the door, as near as the walk bounds allow.
+        if (Math.hypot(door.face - player.pos.x, door.z - player.pos.y) <= KNOCK_REACH) knock();
+        else {
+          const x = THREE.MathUtils.clamp(door.face - Math.sign(door.face) * KNOCK_REACH * 0.9, -ALLEY.walkX, ALLEY.walkX);
+          player.walkTo(x, door.z, knock);
+        }
       }
       const food = action && action !== BUY && action !== TAKE && action !== KNOCK ? foodInReach() : null;
       if (food && performance.now() >= nextFood) {

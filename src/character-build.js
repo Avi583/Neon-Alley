@@ -45,6 +45,9 @@ const GAUNTLET = [
 ];
 // [z, length, radius, extra curl] for each finger, from the index (forward) to the little finger.
 const FINGERS = [[-0.028, 0.074, 0.0098, 0], [-0.0095, 0.081, 0.0102, 0.03], [0.0095, 0.076, 0.0098, 0.06], [0.027, 0.06, 0.0088, 0.12]];
+const PHALANGES = [[0.45, 0.25], [0.32, 0.5], [0.23, 0.4]]; // [share of the finger's length, rest bend] from the knuckle out
+const FINGER_JOINTS = [0.45, 0.77]; // where the joints fall along each finger, from the shares
+const GRIP = [0.95, 0.85, 0.6]; // how much more each joint bends in a fist
 // Boot shaft from its top, 0.27 below the knee, down into the foot.
 const SHAFT = [
   [0, 0.061, 0.063, 0.063, 0], [0.06, 0.057, 0.059, 0.06, 0.01], [0.11, 0.053, 0.054, 0.057, 0.015],
@@ -138,6 +141,27 @@ export function buildArm(chest, m, side) {
   return { mesh, shoulder, elbow, side, fingers, hand: fingers[0].parent };
 }
 
+// Skins a swept finger to its three phalanx bones (FINGER_JOINTS along it), blending across each joint.
+function skinFinger(geo) {
+  const uv = geo.attributes.uv, skinIndex = [], skinWeight = [];
+  const [a, b] = FINGER_JOINTS;
+  for (let i = 0; i < uv.count; i++) {
+    const t = uv.getY(i), j = t < (a + b) / 2 ? 0 : 1;
+    const w = sstep(FINGER_JOINTS[j] - 0.06, FINGER_JOINTS[j] + 0.06, t);
+    skinIndex.push(j, j + 1, 0, 0);
+    skinWeight.push(1 - w, w, 0, 0);
+  }
+  geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(skinIndex, 4));
+  geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(skinWeight, 4));
+}
+
+// Closes a glove's four fingers by k, from 0 (their rest curl) to 1 (a fist). The thumb stays put.
+export function grip(arm, k) {
+  for (const finger of arm.fingers.slice(0, 4)) {
+    finger.userData.bones.forEach((b, j) => { b.rotation.z = -arm.side * GRIP[j] * k; });
+  }
+}
+
 const path = (...pts) => new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p)), false, 'centripetal');
 
 // The hand hangs palm in towards the leg (-side x), fingers down, thumb forward (-z).
@@ -156,18 +180,30 @@ function buildHand(elbow, m, side) {
   for (const [z, len, r, curl] of FINGERS) {
     let p = new THREE.Vector3(side * 0.002, -0.078, z), a = 0;
     const pts = [p];
-    for (const [share, bend] of [[0.45, 0.25], [0.32, 0.5], [0.23, 0.4]]) {
+    for (const [share, bend] of PHALANGES) {
       a += bend + curl;
       p = p.clone().add(new THREE.Vector3(-side * Math.sin(a), -Math.cos(a), 0).multiplyScalar(len * share));
       pts.push(p);
     }
-    fingers.push(part(hand, sweep({
+    const geo = sweep({
       curve: new THREE.CatmullRomCurve3(pts, false, 'centripetal'), side: Z, rows: 16, seg: 12, n: N_LIMB,
       shape: (t) => { const k = (1 - 0.18 * t) * cap(t, 0, 0.14); return [r * 1.08 * k, r * k, r * k]; },
-    }), m.glove));
-    // A padded knuckle over the first joint, and a smaller pad over the second.
+    });
+    skinFinger(geo);
+    const finger = new THREE.SkinnedMesh(geo, m.glove);
+    finger.frustumCulled = false; // its bounds move with the bones
+    hand.add(finger);
+    // A bone at the knuckle and at each joint after it, so grip() can bend them.
+    let parent = finger;
+    finger.userData.bones = pts.slice(0, 3).map((q, j) => {
+      const b = bone(parent);
+      b.position.copy(j ? q.clone().sub(pts[j - 1]) : q);
+      return (parent = b);
+    });
+    fingers.push(finger);
+    // A padded knuckle over the first joint, and a smaller pad over the second that bends with it.
     part(hand, new THREE.SphereGeometry(r * 0.9, 10, 8), m.pad, pts[0].x + side * 0.014, -0.086, z).scale.set(0.55, 0.9, 1);
-    part(hand, new THREE.SphereGeometry(r * 0.75, 8, 6), m.pad, pts[1].x + side * r * 0.85, pts[1].y, z).scale.set(0.5, 1, 1);
+    part(finger.userData.bones[1], new THREE.SphereGeometry(r * 0.75, 8, 6), m.pad, side * r * 0.85).scale.set(0.5, 1, 1);
   }
   fingers.push(part(hand, sweep({
     curve: path([-side * 0.004, -0.02, -0.022], [-side * 0.016, -0.048, -0.046], [-side * 0.022, -0.074, -0.056], [-side * 0.026, -0.096, -0.05]),
@@ -230,6 +266,33 @@ export function buildLeg(hips, m, side) {
   return { mesh, hip, knee, boot };
 }
 
+const SHELL = 0.155; // the helmet shell's radius
+
+// A group sat on the helmet shell at (phi, theta) as SphereGeometry measures them, its y axis
+// out of the surface; on the back (phi near pi / 2) its z axis runs down the shell.
+function onShell(helmet, phi, theta) {
+  const n = new THREE.Vector3(-Math.cos(phi) * Math.sin(theta), Math.cos(theta), Math.sin(phi) * Math.sin(theta));
+  const g = new THREE.Group();
+  g.position.copy(n).multiplyScalar(SHELL);
+  g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n);
+  helmet.add(g);
+  return g;
+}
+
+// One half of the rear spoiler, sideways from x = 0 to -width: flush at the front, kicking up to a lip at the back.
+function spoilerHalf(width) {
+  const s = new THREE.Shape();
+  s.moveTo(-0.032, -0.008);
+  s.lineTo(0.026, -0.008);
+  s.lineTo(0.03, 0.014);
+  s.quadraticCurveTo(0, 0.006, -0.032, 0.001);
+  const geo = new THREE.ExtrudeGeometry(s, { depth: width, bevelEnabled: true, bevelThickness: 0.002, bevelSize: 0.002, bevelSegments: 1, curveSegments: 6 });
+  geo.rotateY(-Math.PI / 2); // the profile along z, extruded along -x
+  return geo;
+}
+
+// Full-face helmet: shell, visor on side hinges, neon stripe, chin bar with a grille,
+// brow intakes, exhaust slots and a split spoiler at the back.
 export function buildHelmet(neck, m) {
   const head = new THREE.Group();
   head.position.y = 0.12;
@@ -237,13 +300,37 @@ export function buildHelmet(neck, m) {
   const helmet = new THREE.Group();
   helmet.scale.set(0.95, 1.05, 1.12);
   head.add(helmet);
-  part(helmet, new THREE.SphereGeometry(0.155, 28, 18), m.shell);
+  part(helmet, new THREE.SphereGeometry(SHELL, 28, 18), m.shell);
   // Visor across the front (-z): phi around the sphere, theta down from the top.
   part(helmet, new THREE.SphereGeometry(0.159, 28, 10, Math.PI * 1.5 - 0.95, 1.9, 1.08, 0.62), m.visor);
   const stripe = part(helmet, new THREE.TorusGeometry(0.157, 0.006, 6, 32, Math.PI), m.stripe);
   stripe.rotation.y = Math.PI / 2; // a neon line from the brow over to the back
   const chin = part(helmet, new THREE.SphereGeometry(0.1, 16, 10, Math.PI * 1.5 - 0.8, 1.6, 1.9, 0.7), m.shell, 0, 0.01, -0.06);
   chin.scale.set(1.25, 1, 1.1); // the chin bar, standing out from the shell
+  // Breathing grille on the front of the chin bar: three dark slots.
+  const grille = new THREE.Group();
+  grille.position.set(0, -0.049, -0.149);
+  grille.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, -0.59, -0.81));
+  helmet.add(grille);
+  for (const z of [-0.008, 0, 0.008]) part(grille, new THREE.BoxGeometry(0.03, 0.006, 0.0035), m.tape, 0, 0, z);
+  for (const side of [-1, 1]) {
+    // Visor hinge just behind each end of the visor: a base plate and a chrome pivot.
+    const hinge = onShell(helmet, Math.PI * 1.5 + side * 1.06, 1.39);
+    part(hinge, new THREE.CylinderGeometry(0.019, 0.021, 0.008, 16), m.shell, 0, 0.002);
+    part(hinge, new THREE.CylinderGeometry(0.008, 0.008, 0.006, 12), m.chrome, 0, 0.008);
+    // Brow intake either side of the stripe: a raised scoop with two slots across it.
+    const intake = onShell(helmet, Math.PI * 1.5 + side * 0.3, 0.75);
+    part(intake, new THREE.BoxGeometry(0.03, 0.009, 0.024), m.shell, 0, 0.002);
+    for (const z of [-0.005, 0.005]) part(intake, new THREE.BoxGeometry(0.022, 0.003, 0.0035), m.tape, 0, 0.0065, z);
+    // Exhaust slot low on the back, under a lip.
+    const exhaust = onShell(helmet, Math.PI / 2 + side * 0.32, 1.42);
+    part(exhaust, new THREE.BoxGeometry(0.03, 0.007, 0.012), m.shell, 0, 0.001);
+    part(exhaust, new THREE.BoxGeometry(0.024, 0.003, 0.004), m.tape, 0, 0.004, 0.002);
+  }
+  // Spoiler across the back of the crown, split so the stripe runs through it.
+  const spoiler = onShell(helmet, Math.PI / 2, 1.0);
+  part(spoiler, spoilerHalf(0.034), m.shell, 0.043);
+  part(spoiler, spoilerHalf(0.034), m.shell, -0.009);
   part(head, new THREE.CylinderGeometry(0.11, 0.12, 0.05, 16), m.shell, 0, -0.15, 0.005); // the rim at the neck
   head.traverse((o) => o.layers.set(HEAD_LAYER));
   return head;

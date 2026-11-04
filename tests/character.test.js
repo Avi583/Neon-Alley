@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { Character, HEAD_LAYER, KNOCK_LEAD, KNOCK_TIME } from '../src/character.js';
 import { KNOCK_RAPS } from '../src/audio.js';
+import { grip } from '../src/character-build.js';
 
 function makeWalker(over = {}) {
   return { pos: new THREE.Vector2(), vel: new THREE.Vector2(), yaw: 0, pitch: 0, bob: 0, lastStep: 0, view: 'third', ...over };
@@ -68,6 +69,34 @@ describe('model', () => {
       const tipX = index.getX(index.count - 1), baseX = index.getX(0);
       expect(Math.sign(tipX - baseX)).toBe(-arm.side); // palms face the legs
     }
+  });
+
+  it('closes the fingers into a fist with grip, in towards the palm, and opens them again', () => {
+    const { character } = make();
+    for (const arm of character.arms) {
+      const finger = arm.fingers[1], last = finger.geometry.attributes.position.count - 1;
+      const tip = () => { character.root.updateMatrixWorld(true); return finger.getVertexPosition(last, new THREE.Vector3()); };
+      const rest = tip();
+      grip(arm, 1);
+      const fist = tip();
+      // The tip curls back up under the knuckles (the palm ends at y = -0.094), on the palm side, outside it.
+      expect(fist.y).toBeGreaterThan(-0.07);
+      expect(fist.y - rest.y).toBeGreaterThan(0.05);
+      expect(-arm.side * fist.x).toBeGreaterThan(0.016 + 0.01);
+      grip(arm, 0);
+      expect(tip().distanceTo(rest)).toBeLessThan(1e-6);
+    }
+  });
+
+  it('knocks with a fist, and opens the hand again after', () => {
+    const { character } = make();
+    const walker = makeWalker();
+    character.knock({ face: 0, z: -1.2 });
+    for (let t = 0; t < KNOCK_LEAD; t += 1 / 60) character.update(1 / 60, walker);
+    expect(Math.abs(character.arms[1].fingers[0].userData.bones[1].rotation.z)).toBeGreaterThan(0.5);
+    expect(character.arms[0].fingers[0].userData.bones[1].rotation.z).toBeCloseTo(0);
+    for (let t = 0; t < KNOCK_TIME; t += 1 / 60) character.update(1 / 60, walker);
+    expect(character.arms[1].fingers[0].userData.bones[1].rotation.z).toBeCloseTo(0);
   });
 
   it('winds every swept and lofted surface outwards', () => {

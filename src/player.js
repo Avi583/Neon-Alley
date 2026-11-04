@@ -9,6 +9,7 @@ const CAM_BACK = 2.4, CAM_SIDE = 0.45, CAM_HEIGHT = 1.62; // third-person camera
 const CAM_PAD = 0.18; // the camera keeps this far from walls
 const CAM_OUT = 3; // how fast the camera eases back out once clear
 export const CLOSE_UP = 0.6; // nearer than this the helmet would fill the view
+const ARRIVE = 0.05, WALK_GIVE_UP = 2; // walkTo: m from the spot that counts as there; s before it stops trying
 
 // How far along the ground segment (x0, z0) -> (x1, z1) is clear, from 0 to 1,
 // against the collider boxes and the alley's walls and ends grown by pad.
@@ -55,6 +56,7 @@ export class Player {
     this.joy = { x: 0, y: 0 };
     this.bob = 0;
     this.lastStep = 0;
+    this.walking = null; // { x, z, onArrive, t } while walkTo has the player walking somewhere
     this.enabled = false;
     this.radius = 0.3;
     this.eye = 1.68;
@@ -143,10 +145,22 @@ export class Player {
     const sx = -Math.sin(this.yaw), sz = -Math.cos(this.yaw); // forward
     const rx = Math.cos(this.yaw), rz = -Math.sin(this.yaw); // right
     let tx = 0, tz = 0;
+    if (len > 0.01 || !this.enabled) this.walking = null; // any move of their own, or a pause, calls off a walkTo
     if (len > 0.01) {
       const n = Math.min(len, 1) / len;
       tx = (sx * f + rx * r) * n * speed;
       tz = (sz * f + rz * r) * n * speed;
+    } else if (this.walking) {
+      const w = this.walking, dx = w.x - this.pos.x, dz = w.z - this.pos.y, d = Math.hypot(dx, dz);
+      w.t += dt;
+      if (d < ARRIVE || w.t > WALK_GIVE_UP) {
+        this.walking = null;
+        w.onArrive();
+      } else {
+        const s = Math.min(2.0, d * 4) / d; // walking pace, easing in over the last half metre
+        tx = dx * s;
+        tz = dz * s;
+      }
     }
     const a = 1 - Math.exp(-dt * 9);
     this.vel.x += (tx - this.vel.x) * a;
@@ -163,6 +177,12 @@ export class Player {
       if (v > 0.6 && this.onStep) this.onStep(v);
     }
     this.apply(v, dt);
+  }
+
+  // Walks to (x, z) at walking pace while there's no input, then calls onArrive. Moving calls it off;
+  // a spot it can't reach (behind a collider) gives up after WALK_GIVE_UP and arrives anyway.
+  walkTo(x, z, onArrive) {
+    this.walking = { x, z, onArrive, t: 0 };
   }
 
   toggleView() {
