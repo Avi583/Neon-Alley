@@ -227,7 +227,7 @@ export function buildLeg(hips, m, side) {
     .rotation.x = Math.PI / 2;
   part(boot, new THREE.ExtrudeGeometry(footprint(0.044, 0.04, -0.005, 0.064), { depth: 0.01, ...bevel(0.002) }), m.sole, 0, -0.213)
     .rotation.x = Math.PI / 2;
-  return { mesh, hip, knee };
+  return { mesh, hip, knee, boot };
 }
 
 export function buildHelmet(neck, m) {

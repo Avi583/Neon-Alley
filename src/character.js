@@ -15,6 +15,11 @@ const TURN = 10; // how fast the body turns to face where it walks
 const HEAD_TURN = 8; // how fast the head eases round to the look
 const NECK_UP = 0.6; // from the hips to the base of the neck
 const FIRST_BACK = 0.12; // in first person the body sits this far behind the eye, so looking down shows the chest and boots
+const SOLE = new THREE.Vector3(0, -0.225, -0.06); // the middle of the sole's tread, in the boot's frame
+// A boot swinging through faster than SWING times the walking speed lands once it slows under PLANT
+// times it: the walk is too low-stepped at a walk to tell landing from the boot's height.
+const SWING = 1.2, PLANT = 0.3;
+const MIN_WALK = 0.6; // slower than this, as in player.js, no step lands
 // Knocking: the right arm comes up over KNOCK_LEAD, raps on each of KNOCK_RAPS after it, and is
 // back at rest by KNOCK_TIME, inside the 1 s knock cooldown in main.js.
 export const KNOCK_LEAD = 0.3, KNOCK_TIME = 0.95;
@@ -52,6 +57,9 @@ export class Character {
     this.headYaw = 0;
     this.time = 0;
     this.knocking = null; // { t, x, z }: time into the knock and where the door is
+    this.feet = [0, 1].map(() => ({ at: new THREE.Vector3(), seen: false, swing: false }));
+    this.landed = []; // the boots that planted on the last update, true for the left
+    this._sole = new THREE.Vector3();
     scene.add(this.root);
   }
 
@@ -76,6 +84,36 @@ export class Character {
   // Which foot lands on the step player.js has just counted: the left on even steps.
   static leftFootDown(player) {
     return ((player.lastStep % 2) + 2) % 2 === 0;
+  }
+
+  // The point on the ground under the middle of a boot's sole, from the bones as update last posed them.
+  soleAt(left, out = new THREE.Vector3()) {
+    const { boot } = this.legs[left ? 0 : 1];
+    boot.updateWorldMatrix(true, false);
+    out.copy(SOLE);
+    boot.localToWorld(out);
+    out.y = 0;
+    return out;
+  }
+
+  // Fills this.landed with the boots (true for the left) that planted this frame: each one's
+  // sole is followed along the walk, and lands as it slows from swinging through to standing.
+  findLandings(dt, player, v) {
+    this.landed.length = 0;
+    const dx = player.vel.x / (v || 1), dz = player.vel.y / (v || 1);
+    for (let i = 0; i < 2; i++) {
+      const foot = this.feet[i], left = i === 0;
+      this.soleAt(left, this._sole);
+      const ahead = foot.seen && dt > 0 ? ((this._sole.x - foot.at.x) * dx + (this._sole.z - foot.at.z) * dz) / dt : 0;
+      foot.at.copy(this._sole);
+      foot.seen = true;
+      if (v < MIN_WALK) foot.swing = false;
+      else if (ahead > SWING * v) foot.swing = true;
+      else if (foot.swing && ahead < PLANT * v) {
+        foot.swing = false;
+        this.landed.push(left);
+      }
+    }
   }
 
   update(dt, player) {
@@ -142,5 +180,6 @@ export class Character {
     const wantYaw = THREE.MathUtils.clamp(turn, -1.1, 1.1) * 0.7 * (1 - sstep(1.5, 2.4, Math.abs(turn)));
     this.headYaw += (wantYaw - this.headYaw) * (1 - Math.exp(-dt * HEAD_TURN));
     this.head.rotation.set(THREE.MathUtils.clamp(player.pitch * 0.5, -0.35, 0.45) - this.torso.rotation.x, this.headYaw, 0);
+    this.findLandings(dt, player, v);
   }
 }

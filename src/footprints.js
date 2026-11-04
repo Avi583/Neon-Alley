@@ -6,8 +6,8 @@ import * as THREE from 'three';
 
 export const MARK_LIFE = 20; // seconds
 export const MARK_COUNT = 72; // running leaves about 3.5 marks a second
-const MARK_W = 0.18, MARK_L = 0.45;
-const STANCE = 0.09, TOE_OUT = 0.08;
+const MARK_W = 0.15, MARK_L = 0.28; // the print fills 0.76 by 0.93 of this, the size of the boot sole
+const TOE_OUT = 0.08;
 
 export class Footprints {
   constructor(map, ground, fog) {
@@ -66,7 +66,6 @@ export class Footprints {
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = -1; // on the ground, so before any other transparent object
     this.next = 0;
-    this.left = false;
     this._m = new THREE.Matrix4();
     this._p = new THREE.Vector3();
     this._q = new THREE.Quaternion();
@@ -78,13 +77,13 @@ export class Footprints {
     this.time.value = t;
   }
 
-  // pos is the walker's position on the ground: x, and z as pos.y. Returns where the foot landed.
-  add(pos, yaw) {
-    this.left = !this.left;
-    const foot = this.left ? -1 : 1;
-    this._p.set(pos.x + Math.cos(yaw) * STANCE * foot, 0.004, pos.y - Math.sin(yaw) * STANCE * foot);
-    this._q.setFromAxisAngle(this._up, yaw - foot * TOE_OUT);
-    this._s.set(MARK_W * foot, 1, MARK_L);
+  // foot is the point on the ground under the middle of the sole, yaw the way the walker
+  // faces and left true for a left boot, which is mirrored. Returns where the mark went.
+  add(foot, yaw, left) {
+    const side = left ? -1 : 1;
+    this._p.set(foot.x, 0.004, foot.z);
+    this._q.setFromAxisAngle(this._up, yaw - side * TOE_OUT);
+    this._s.set(MARK_W * side, 1, MARK_L);
     this.mesh.setMatrixAt(this.next, this._m.compose(this._p, this._q, this._s));
     this.mesh.instanceMatrix.needsUpdate = true;
     this.born.setX(this.next, this.time.value);

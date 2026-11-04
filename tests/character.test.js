@@ -172,6 +172,51 @@ describe('motion', () => {
     for (const leg of character.legs) expect(leg.hip.rotation.x).toBeCloseTo(0, 10);
   });
 
+  // Walks towards -z at speed v for the given time, as player.js and main.js do, noting each
+  // landing: where the boot was, how far ahead of the body, and how far it moves in the next 0.1 s.
+  const walk = (character, v, time) => {
+    const walker = makeWalker({ vel: new THREE.Vector2(0, -v) });
+    const landings = [];
+    for (let f = 0; f < time * 60; f++) {
+      walker.bob += (1 / 60) * v * 2.6;
+      walker.pos.y -= v / 60;
+      character.update(1 / 60, walker);
+      for (const l of landings) if (f - l.f === 6) l.moved = character.soleAt(l.left).distanceTo(l.at);
+      for (const left of character.landed) {
+        const at = character.soleAt(left);
+        landings.push({ left, f, at, ahead: walker.pos.y - at.z, hip: character.legs[left ? 0 : 1].hip.rotation.x });
+      }
+    }
+    return landings;
+  };
+
+  it.each([['walk', 2], ['run', 4.2]])('lands each boot once a stride at a %s, alternately', (_name, v) => {
+    const landings = walk(make().character, v, 4);
+    const steps = (4 * v * 2.6) / Math.PI;
+    expect(landings.length).toBeGreaterThanOrEqual(Math.floor(steps) - 2);
+    expect(landings.length).toBeLessThanOrEqual(Math.ceil(steps));
+    for (let k = 1; k < landings.length; k++) expect(landings[k].left).toBe(!landings[k - 1].left);
+  });
+
+  // At a run the planted boot still skates back by about half the body's speed (A90).
+  it.each([['walk', 2, 0.3], ['run', 4.2, 0.6]])('lands each %s step ahead of the body, where the boot then stays', (_name, v, skate) => {
+    const landings = walk(make().character, v, 3).filter((l) => l.moved !== undefined);
+    expect(landings.length).toBeGreaterThan(2);
+    for (const l of landings) {
+      expect(l.at.y).toBe(0);
+      expect(Math.sign(l.at.x)).toBe(l.left ? -1 : 1);
+      expect(l.ahead).toBeGreaterThan(0.2);
+      expect(l.hip).toBeGreaterThan(0.2); // the leg still out in front
+      expect(l.moved).toBeLessThan(skate * v * 0.1); // while the body walks on
+    }
+  });
+
+  it('lands no step when standing still', () => {
+    const { character } = make();
+    for (let k = 0; k < 120; k++) character.update(1 / 60, makeWalker({ bob: k * 0.05 }));
+    expect(character.landed).toHaveLength(0);
+  });
+
   it('lands the left foot on even steps and the right on odd ones', () => {
     expect(Character.leftFootDown({ lastStep: 0 })).toBe(true);
     expect(Character.leftFootDown({ lastStep: 3 })).toBe(false);

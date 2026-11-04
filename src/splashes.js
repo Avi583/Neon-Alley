@@ -9,9 +9,12 @@ export const SPLASH_COUNT = 4; // running takes about 3.5 steps a second
 export const DROPS_PER_SPLASH = 12;
 const RUN_SPEED = 4.2; // same as player.js
 const RING_Y = 0.006; // above the footprints
-const RING_MIN = 0.6, RING_RUN = 0.5; // width of the ring's quad: standing still, plus at a run
-const DROP_SIZE = 0.022;
+const RING_MIN = 0.38, RING_RUN = 0.22; // width of the ring's quad: standing still, plus at a run
+const DROP_SIZE = 0.016;
 const GRAVITY = 6;
+const FAN = 1.2; // half-width of the forward fan of droplets, in radians
+const CROWN_EVERY = 4; // one droplet in this many may go any way
+const CARRY = 0.07; // share of the walking speed the boot gives the fan's droplets
 
 const strength = (speed) => Math.min(speed / RUN_SPEED, 1);
 
@@ -146,8 +149,9 @@ export class Splashes {
   }
 
   // foot is the point on the ground that the step landed on, yaw the way the boot
-  // points, and side -1 for a left boot, which is mirrored.
-  add(foot, speed, yaw = 0, side = 1) {
+  // points, side -1 for a left boot, which is mirrored, and vel the walker's velocity
+  // (x, and z as y), which the droplets are thrown along; without it, the way the boot points.
+  add(foot, speed, yaw = 0, side = 1, vel = null) {
     const k = strength(speed);
     const width = RING_MIN + RING_RUN * k;
     this._s.set(width * side, 1, width);
@@ -159,12 +163,18 @@ export class Splashes {
     this.ringBorn.needsUpdate = true;
     this.rings.count = Math.min(this.rings.count + 1, SPLASH_COUNT);
 
+    // Most droplets fly forward and out in a fan along the walk, carried on by the boot;
+    // every CROWN_EVERY-th one goes any way, for the crown round the heel.
+    const moving = vel && vel.lengthSq() > 0.01;
+    const heading = moving ? Math.atan2(vel.y, vel.x) : Math.atan2(-Math.cos(yaw), -Math.sin(yaw));
     const pos = this.drops.geometry.attributes.position;
     for (let i = 0; i < DROPS_PER_SPLASH; i++) {
       const d = this.next * DROPS_PER_SPLASH + i;
-      const a = Math.random() * Math.PI * 2, out = (0.2 + Math.random() * 0.5) * (0.6 + k);
+      const crown = i % CROWN_EVERY === 0;
+      const a = heading + (Math.random() * 2 - 1) * (crown ? Math.PI : FAN);
+      const out = (0.12 + Math.random() * 0.3) * (0.5 + k * 1.1) + (crown ? 0 : CARRY * speed);
       pos.setXYZ(d, foot.x, RING_Y, foot.z);
-      this.dropVel.setXYZ(d, Math.cos(a) * out, (0.6 + Math.random() * 0.7) * (0.7 + k * 0.6), Math.sin(a) * out);
+      this.dropVel.setXYZ(d, Math.cos(a) * out, (0.45 + Math.random() * 0.5) * (0.7 + k * 0.6), Math.sin(a) * out);
       this.dropBorn.setX(d, this.time.value);
     }
     pos.needsUpdate = this.dropVel.needsUpdate = this.dropBorn.needsUpdate = true;

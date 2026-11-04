@@ -133,24 +133,24 @@ async function init() {
   const start = { x: num('x', 0.35), z: num('z', 6), yaw: num('yaw', 0), pitch: num('pitch', 0.04), view: params.get('view') };
   vending.onLand = () => audio.clunk();
   foodShop.onLand = () => audio.clunk();
-  const player = new Player(camera, renderer.domElement, {
-    bounds: ALLEY, colliders: alley.colliders, start,
-    onStep: (v) => {
-      footprints.left = !Character.leftFootDown(player); // add() flips it to the foot that lands
-      const foot = footprints.add(player.pos, character.facing);
-      if (ground.inWater(player.pos.x, player.pos.y)) {
-        audio.splash(v);
-        splashes?.add(foot, v, character.facing, footprints.left ? -1 : 1);
-      } else audio.step(v);
-    },
-  });
+  const player = new Player(camera, renderer.domElement, { bounds: ALLEY, colliders: alley.colliders, start });
+  // Each boot leaves its print, sound and splash as it plants, where it plants.
+  const sole = new THREE.Vector3();
+  const land = (left, v) => {
+    character.soleAt(left, sole);
+    footprints.add(sole, character.facing, left);
+    if (ground.inWater(sole.x, sole.z)) {
+      audio.splash(v);
+      splashes?.add(sole, v, character.facing, left ? -1 : 1, player.vel);
+    } else audio.step(v);
+  };
   const character = new Character(scene);
   refl.cam.layers.enable(HEAD_LAYER); // the helmet always shows in puddles
   const showHead = () => {
     if (player.camDist > CLOSE_UP) camera.layers.enable(HEAD_LAYER); else camera.layers.disable(HEAD_LAYER);
   };
 
-  if (params.has('test')) Object.assign(window, { __player: player, __character: character, __alley: alley, __ground: ground, __splashes: splashes }); // for the browser tests
+  if (params.has('test')) Object.assign(window, { __land: land, __player: player, __character: character, __alley: alley, __ground: ground, __splashes: splashes }); // for the browser tests
 
   progress(0.9, 'Compiling shaders');
   await nextFrame();
@@ -225,6 +225,7 @@ async function init() {
     splashes?.update(t, camera, size.y);
     player.update(dt);
     character.update(dt, player);
+    for (const left of character.landed) land(left, player.vel.length());
     showHead();
     vending.update(dt);
     neonFood.update(t);
