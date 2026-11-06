@@ -1,4 +1,4 @@
-To-Do List
+﻿To-Do List
 ==========
 Ideas and planned work. Place any suggestions not implemented by the user here.
 
@@ -35,6 +35,8 @@ A74 [Sonnet | Risk 1/5] ui.js / main.js: the WebGL error now asks the player to 
 A101 [Sonnet | Risk 2/5] inventory.js / ui.js: let the player use what's in the bag: drink a can or eat a dish (a sip or bite sound, the item leaves the bag), and maybe drop one back on the ground.
 A102 [Sonnet | Risk 1/5] inventory.js: the bag empties on reload, including a quality change. Carry it across in the URL like the player position (ui.js currentView), or in localStorage.
 A103 [Opus   | Risk 3/5] character.js / main.js: show a taken can or dish in the glove for a moment before it goes in the bag (ties in with A84), and give food a pick-up animation like the can's.
+A105 [Opus   | Risk 3/5] character-build.js / inventory.js: let the helmet's mouth guard come off (an open-face look), maybe as a bag item or a key toggle. buildMouthGuard already builds it as its own parts, so they could go in one group to show or hide.
+A106 [Sonnet | Risk 1/5] character-build.js: the old helmet's pink neon stripe was dropped to match the reference. Add a thin neon accent back (along the visor trim or the guard's lower edge) if the biker should glow more in the alley.
 
 B. Runtime performance (highest impact first)
 ---------------------------------------------
@@ -45,9 +47,6 @@ B3  [Opus   | Risk 3/5] ground.js / atmosphere.js: use layers to leave snow, ste
     smaller target.
 B4  [Opus   | Risk 4/5] signs.js: put signs in a texture atlas and draw them as one mesh with a per-sign flicker attribute.
     There are 23 separate meshes, materials and canvas textures, all drawn again in the reflection pass.
-B12 [Sonnet | Risk 2/5] main.js resize: stop adaptive scale from softening reflections. refl.setSize uses the scaled drawing
-    buffer, so on High a 60% step leaves the reflection at 30% of native width and height. Size it from the unscaled
-    pixelRatio, or give it a floor. This costs frame time, since the reflection pass redraws the full scene; check with npm run perf. Investigate if actually a bug.
 
 C. Load time and memory
 -----------------------
