@@ -238,19 +238,25 @@ function footprint(ball, heel, toe, back) {
 
 // Boot: a shaft under the jeans down to the ankle, the foot from the heel to a rounded
 // toe, a welted sole and heel, a buckled strap at the ankle and another over the instep.
+// The shaft stays with the shin, and the foot (boot) pivots at the ankle, ANKLE below the shaft's top.
+export const SHIN = 0.27, ANKLE = 0.155; // from the knee to the top of the shaft, and on down to the ankle
 export function buildLeg(hips, m, side) {
   const { mesh, top: hip, lower: knee } = limb(hips, side * LEG_X, -0.02, LEG, m.jeans, 48, THIGH, [-0.04, 0.1]);
   hip.rotation.order = 'ZXY'; // the walk swings the leg forward, then out to the side
+  const shin = new THREE.Group();
+  shin.position.y = -SHIN;
+  knee.add(shin);
   const boot = new THREE.Group();
-  boot.position.y = -0.27;
+  boot.position.y = -SHIN - ANKLE;
   knee.add(boot);
   const shaft = sampler(SHAFT);
-  part(boot, loft({ sample: shaft, from: 0, to: SHAFT[SHAFT.length - 1][0], rows: 14, seg: 20, n: N_LIMB }), m.bootShaft);
-  part(boot, loft({ sample: shaft, from: 0.135, to: 0.155, rows: 2, seg: 20, n: N_LIMB, grow: 0.004 }), m.leatherDark);
-  part(boot, new THREE.TorusGeometry(0.012, 0.0025, 4, 4), m.chrome, side * (shaft(0.145)[0] + 0.006), -0.145, 0)
+  part(shin, loft({ sample: shaft, from: 0, to: SHAFT[SHAFT.length - 1][0], rows: 14, seg: 20, n: N_LIMB }), m.bootShaft);
+  part(shin, loft({ sample: shaft, from: 0.135, to: 0.155, rows: 2, seg: 20, n: N_LIMB, grow: 0.004 }), m.leatherDark);
+  part(shin, new THREE.TorusGeometry(0.012, 0.0025, 4, 4), m.chrome, side * (shaft(0.145)[0] + 0.006), -0.145, 0)
     .rotation.set(0, Math.PI / 2, Math.PI / 4);
   const X = new THREE.Vector3(1, 0, 0);
-  const curve = path([0, -0.182, 0.058], [0, -0.184, -0.03], [0, -0.186, -0.1], [0, -0.178, -0.182]);
+  const up = ANKLE; // the foot's parts, laid out from the shaft's top, sit this much higher from the ankle
+  const curve = path([0, up - 0.182, 0.058], [0, up - 0.184, -0.03], [0, up - 0.186, -0.1], [0, up - 0.178, -0.182]);
   const foot = sampler(FOOT);
   const shape = (t) => { const k = cap(t, 0.05, 0.08); return foot(t).map((v) => v * k); };
   part(boot, sweep({ curve, side: X, rows: 40, seg: 24, n: 2.6, shape }), m.bootFoot);
@@ -260,11 +266,11 @@ export function buildLeg(hips, m, side) {
     .rotation.set(0, Math.PI / 2, Math.PI / 4);
   // Sole and heel block, extruded down from the footprint.
   const bevel = (t) => ({ bevelEnabled: true, bevelThickness: t, bevelSize: t, bevelSegments: 2, curveSegments: 6 });
-  part(boot, new THREE.ExtrudeGeometry(footprint(0.054, 0.046, 0.19, 0.066), { depth: 0.012, ...bevel(0.003) }), m.sole, 0, -0.205)
+  part(boot, new THREE.ExtrudeGeometry(footprint(0.054, 0.046, 0.19, 0.066), { depth: 0.012, ...bevel(0.003) }), m.sole, 0, up - 0.205)
     .rotation.x = Math.PI / 2;
-  part(boot, new THREE.ExtrudeGeometry(footprint(0.044, 0.04, -0.005, 0.064), { depth: 0.01, ...bevel(0.002) }), m.sole, 0, -0.213)
+  part(boot, new THREE.ExtrudeGeometry(footprint(0.044, 0.04, -0.005, 0.064), { depth: 0.01, ...bevel(0.002) }), m.sole, 0, up - 0.213)
     .rotation.x = Math.PI / 2;
-  return { mesh, hip, knee, boot };
+  return { mesh, hip, knee, shin, boot };
 }
 
 const SHELL = 0.155; // the helmet shell's radius

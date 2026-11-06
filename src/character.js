@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { sstep } from './math.js';
 import { KNOCK_RAPS } from './audio.js';
 import { stepLength } from './player.js';
-import { HEAD_LAYER, createMaterials, part, buildArm, buildLeg, buildHelmet, buildJacket, buildSeat, grip } from './character-build.js';
+import { HEAD_LAYER, ANKLE, createMaterials, part, buildArm, buildLeg, buildHelmet, buildJacket, buildSeat, grip } from './character-build.js';
 
 export { HEAD_LAYER };
 const HIP = 0.955; // hip height, so the boot soles sit on the ground
@@ -17,7 +17,7 @@ const TURN = 10; // how fast the body turns to face where it walks
 const HEAD_TURN = 8; // how fast the head eases round to the look
 const NECK_UP = 0.6; // from the hips to the base of the neck
 const FIRST_BACK = 0.12; // in first person the body sits this far behind the eye, so looking down shows the chest and boots
-const SOLE = new THREE.Vector3(0, -0.225, -0.06); // the middle of the sole's tread, in the boot's frame
+const SOLE = new THREE.Vector3(0, ANKLE - 0.225, -0.06); // the middle of the sole's tread, in the boot's frame (from the ankle)
 // Along the sole from the ankle (the boot's origin), forward: the heel and ball it rolls on, and the
 // middle (SOLE). The ankle sits ANKLE_UP over the tread.
 const HEEL = -0.06, BALL = 0.15, MID = -SOLE.z, ANKLE_UP = -SOLE.y;
@@ -25,12 +25,15 @@ const STRAIGHT = 0.005; // the planted leg stops this short of straight
 const MIN_WALK = 0.6; // slower than this, as in player.js, no step lands
 const LOCK = 0.3; // slower than this the boots follow the walk cycle rather than staying put
 const TAU = Math.PI * 2;
+// The furthest the boot rolls toe-up on its heel or heel-up on its ball to keep a planted leg in reach.
+const ROLL_UP = 0.6, ROLL_DOWN = -0.9;
 // Knocking: the right arm comes up over KNOCK_LEAD, raps on each of KNOCK_RAPS after it, and is
 // back at rest by KNOCK_TIME, inside the 1 s knock cooldown in main.js.
 export const KNOCK_LEAD = 0.3, KNOCK_TIME = 0.95;
 export const KNOCK_REACH = 0.8; // how far from a door's face the glove reaches it; main.js walks the biker in from further
 const KNOCK_OUT = 0.75; // when the arm starts down again, after the last rap
 const KNOCK_SHOULDER = [1.15, -0.2], KNOCK_ELBOW = [1.75, 1.05]; // shoulder [forward, out]; elbow [cocked, on the door]
+const KNOCK_LIFT = 0.012; // how far the shoulder joint rises with the knocking arm
 const KNOCK_TWIST = -Math.PI / 2; // the glove turns palm to the biker, so the knuckles meet the door
 
 export class Character {
@@ -141,7 +144,7 @@ export class Character {
       // reach) and the furthest it goes (taken as in reach). Out to the side, rolling doesn't help and
       // the leg reaches as far as it goes.
       const ahead = this._w.dot(this._fwd) > 0;
-      let lo = pitch, hi = ahead ? 0.9 : -1.2;
+      let lo = pitch, hi = ahead ? Math.max(pitch, ROLL_UP) : Math.min(pitch, ROLL_DOWN);
       for (let k = 0; k < 10; k++) {
         const mid = (lo + hi) / 2;
         if (this.reach(at(mid)) > reachMax) lo = mid; else hi = mid;
@@ -155,8 +158,10 @@ export class Character {
   // Bends the leg so the ankle meets a (as near as it reaches), with the boot pitched toe-up from the
   // ground: the hip and knee swing it forward and back, and the hip rolls it out to the side the hips
   // have swayed from it. The boot takes out that roll and the hips' twist and tilt, so it stays
-  // level and facing ahead rather than turning on its ankle. blend eases it in from standing.
-  poseLeg(leg, a, pitch, blend, walk) {
+  // level and facing ahead rather than turning on its ankle. blend eases it in from standing. hang
+  // (0 to 1) takes the boot off the ground's pitch and onto ankle, its angle from the shin (toe-up),
+  // as a swinging boot hangs from the leg rather than staying level with the ground.
+  poseLeg(leg, a, pitch, blend, walk, hang = 0, ankle = 0) {
     const p = leg.mesh.worldToLocal(this._v.copy(a)); // the hip joint is at the mesh's origin
     const thigh = -leg.knee.position.y, shin = -leg.boot.position.y;
     const roll = Math.atan2(p.x, -p.y), down = Math.hypot(p.x, p.y);
@@ -167,7 +172,7 @@ export class Character {
     const lerp = THREE.MathUtils.lerp;
     leg.hip.rotation.set(lerp(0, hip, blend), 0, lerp(0, roll, blend));
     leg.knee.rotation.x = lerp(-0.05 * walk, knee, blend);
-    leg.boot.rotation.set(lerp(0, pitch - hip - knee, blend), -this.hips.rotation.y, -leg.hip.rotation.z - this.hips.rotation.z);
+    leg.boot.rotation.set(lerp(0, lerp(pitch - hip - knee, ankle, hang), blend), -this.hips.rotation.y, -leg.hip.rotation.z - this.hips.rotation.z);
   }
 
   // Poses the legs for the walk: each boot's phase of the stride runs on from player.bob, the left
@@ -188,10 +193,14 @@ export class Character {
     // Heel first going forward, the ball first going backward (in first person), flat sideways.
     const ahead = this._dir.dot(this._fwd);
     const land = (0.25 * walk - 0.13 * run) * ahead, rise = (0.25 * walk + 0.2 * run) * ahead;
-    const lift = 0.07 * walk + 0.1 * run;
+    const lift = 0.08 * walk + 0.08 * run;
+    // Early in the swing the knee folds and the heel comes up behind (a kick at a run), so the boot
+    // clears the ground well before it reaches forward.
+    const tuck = 0.04 * walk + 0.14 * run;
     const blend = sstep(0.05, 0.5, v);
     for (let i = 0; i < 2; i++) {
       const foot = this.feet[i], leg = this.legs[i];
+      let hang = 0, ankle = 0;
       leg.mesh.getWorldPosition(this._hipAt);
       const ground = this._ground.copy(this._hipAt).setY(0);
       const reachMax = -leg.knee.position.y - leg.boot.position.y - STRAIGHT;
@@ -221,12 +230,17 @@ export class Character {
         this._spot.copy(ground).addScaledVector(this._dir, lead + (1 - q) * swingLength);
         const endPitch = this.stancePose(this._spot, 0, land, rise, reachMax, this._end);
         const e = q * q * (3 - 2 * q);
-        foot.ankle.lerpVectors(foot.from, this._end, e).y += lift * Math.sin(Math.PI * q);
+        const fold = Math.sin(Math.PI * Math.sqrt(q)) ** 2; // the most at a quarter of the way through
+        foot.ankle.lerpVectors(foot.from, this._end, e).addScaledVector(this._dir, -0.4 * tuck * fold).y += lift * Math.sin(Math.PI * q) + tuck * fold;
         foot.pitch = THREE.MathUtils.lerp(foot.fromPitch, endPitch, e);
+        // Off the ground the boot hangs from the shin: the toe still pointed from the push-off, coming
+        // up level with the shin by mid-swing and a little past it to meet the ground heel first.
+        hang = sstep(0, 0.25, q) * (1 - sstep(0.75, 1, q));
+        ankle = -0.35 * (1 - sstep(0.05, 0.55, q)) + 0.1 * sstep(0.5, 0.9, q);
       }
       foot.stance = down;
       foot.ready = true;
-      this.poseLeg(leg, foot.ankle, foot.pitch, blend, walk);
+      this.poseLeg(leg, foot.ankle, foot.pitch, blend, walk, hang, ankle);
     }
   }
 
@@ -263,13 +277,17 @@ export class Character {
     const c = Math.cos(b), s = Math.sin(b);
     const armAmp = 0.24 * walk + 0.41 * run;
     // The left heel strikes at cos(bob) = 1, the right at -1, as player.js counts each step; each arm
-    // swings against its leg.
+    // swings against its leg. The shoulder joint goes with it: forward as the arm comes forward and
+    // back as it goes back, lifting a little at each end of the swing, and the arm swings in a little
+    // across the body going forward and out going back. The elbow bends further at a run.
     const swing = [c, -c];
+    const reach = 0.012 * walk + 0.01 * run, shrug = 0.006 * walk + 0.008 * run;
     for (let i = 0; i < 2; i++) {
       const arm = this.arms[i];
       arm.shoulder.rotation.x = -swing[i] * armAmp;
-      arm.elbow.rotation.x = 0.2 + 0.25 * walk + 0.5 * run + Math.max(0, -swing[i]) * armAmp * 0.4;
-      arm.shoulder.rotation.z = arm.side * 0.08;
+      arm.shoulder.position.set(0, shrug * swing[i] * swing[i], swing[i] * reach);
+      arm.elbow.rotation.x = 0.2 + 0.25 * walk + 0.8 * run + Math.max(0, -swing[i]) * armAmp * 0.4;
+      arm.shoulder.rotation.z = arm.side * (0.08 + 0.04 * swing[i] * walk);
       arm.hand.rotation.y = 0;
       grip(arm, 0);
     }
@@ -279,6 +297,7 @@ export class Character {
       const { shoulder, elbow, hand } = this.arms[1], lerp = THREE.MathUtils.lerp;
       shoulder.rotation.x = lerp(shoulder.rotation.x, KNOCK_SHOULDER[0] + 0.08 * rap, blend);
       shoulder.rotation.z = lerp(shoulder.rotation.z, KNOCK_SHOULDER[1], blend);
+      shoulder.position.lerp(this._v.set(0, KNOCK_LIFT, 0), blend); // the shoulder comes up with the arm
       elbow.rotation.x = lerp(elbow.rotation.x, lerp(KNOCK_ELBOW[0], KNOCK_ELBOW[1], rap), blend);
       hand.rotation.y = KNOCK_TWIST * blend;
       grip(this.arms[1], blend); // knocks with a fist
@@ -288,10 +307,10 @@ export class Character {
     // walking so the planted leg reaches its boot, rising over it mid-stride at a walk. The torso undoes the
     // hips, so the shoulders turn and tilt against them, in step with the arms, and the chest turns on
     // further, spreading the twist up the spine.
-    const hipYaw = 0.08 * walk + 0.06 * run, hipRoll = 0.04 * walk + 0.02 * run;
-    const shoulderYaw = 0.07 * walk + 0.08 * run, shoulderRoll = 0.025 * walk + 0.015 * run;
-    const chestYaw = 0.05 * walk + 0.03 * run;
-    this.hips.position.set(-s * (0.015 * walk - 0.008 * run), HIP - 0.035 * (walk + run) + Math.abs(s) * 0.02 * walk * (1 - run), 0);
+    const hipYaw = 0.045 * walk + 0.035 * run, hipRoll = 0.02 * walk + 0.01 * run;
+    const shoulderYaw = 0.04 * walk + 0.05 * run, shoulderRoll = 0.01 * walk + 0.008 * run;
+    const chestYaw = 0.025 * walk + 0.02 * run;
+    this.hips.position.set(-s * (0.006 * walk - 0.003 * run),HIP - 0.035 * (walk + run) + Math.abs(s) * 0.02 * walk * (1 - run), 0);
     this.hips.rotation.set(0, -c * hipYaw, -s * hipRoll);
     this.torso.rotation.set(-lean, c * (hipYaw + shoulderYaw), s * (hipRoll + shoulderRoll));
     this.chest.rotation.y = c * chestYaw;

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { Character, HEAD_LAYER, KNOCK_LEAD, KNOCK_TIME } from '../src/character.js';
 import { KNOCK_RAPS } from '../src/audio.js';
-import { grip } from '../src/character-build.js';
+import { grip, ANKLE } from '../src/character-build.js';
 import { stepLength } from '../src/player.js';
 
 function makeWalker(over = {}) {
@@ -206,7 +206,7 @@ describe('motion', () => {
   const soleLow = (character, left) => {
     const { boot } = character.legs[left ? 0 : 1];
     boot.updateWorldMatrix(true, false);
-    return Math.min(...[0.06, -0.06, -0.15].map((z) => boot.localToWorld(new THREE.Vector3(0, -0.225, z)).y));
+    return Math.min(...[0.06, -0.06, -0.15].map((z) => boot.localToWorld(new THREE.Vector3(0, ANKLE - 0.225, z)).y));
   };
 
   // Walks towards -z at speed v for the given time, as player.js and main.js do, noting each
@@ -266,7 +266,37 @@ describe('motion', () => {
   });
 
   it.each([['walk', 2], ['run', 4.2]])('lifts the swinging boot clear of the ground at a %s', (_name, v) => {
-    expect(walk(make().character, v, 3).swingLow).toBeGreaterThan(0.02);
+    expect(walk(make().character, v, 3).swingLow).toBeGreaterThan(0.04);
+  });
+
+  it.each([['walk', 2], ['run', 4.2]])('bends the boot at the ankle only as far as an ankle goes at a %s', (_name, v) => {
+    const { character } = make();
+    const walker = makeWalker({ vel: new THREE.Vector2(0, -v) });
+    let lo = Infinity, hi = -Infinity, swingKnee = 0;
+    for (let f = 0; f < 240; f++) {
+      walker.bob += ((1 / 60) * v * Math.PI) / stepLength(v);
+      walker.pos.y -= v / 60;
+      character.update(1 / 60, walker);
+      if (f < 60) continue;
+      const { boot, knee } = character.legs[0];
+      lo = Math.min(lo, boot.rotation.x);
+      hi = Math.max(hi, boot.rotation.x);
+      if (!character.feet[0].stance) swingKnee = Math.min(swingKnee, knee.rotation.x);
+    }
+    expect(lo).toBeGreaterThan(-0.5); // the toe pointed no more than about 30 degrees from the shin
+    expect(hi).toBeLessThan(0.65); // and pulled up no more than about 37
+    expect(swingKnee).toBeLessThan(v > 3 ? -1.7 : -1.1); // the knee folds through the swing, more at a run
+  });
+
+  it('moves the shoulder joint forward and back with the arm swing', () => {
+    const { character } = make();
+    const [leftArm] = character.arms;
+    character.update(1 / 60, makeWalker({ vel: new THREE.Vector2(0, -2), bob: 0 }));
+    expect(leftArm.shoulder.position.z).toBeGreaterThan(0.008); // left arm back, its shoulder back
+    character.update(1 / 60, makeWalker({ vel: new THREE.Vector2(0, -2), bob: Math.PI }));
+    expect(leftArm.shoulder.position.z).toBeLessThan(-0.008); // and forward
+    character.update(1 / 60, makeWalker({ bob: 0 }));
+    expect(leftArm.shoulder.position.length()).toBe(0); // still at rest standing
   });
 
   it('lands no step when standing still', () => {
