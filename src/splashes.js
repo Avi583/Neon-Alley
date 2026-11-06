@@ -3,11 +3,11 @@
 // the shaders, so the only per-frame cost is a couple of uniforms. Built only on the
 // presets that ask for it.
 import * as THREE from 'three';
+import { RUN_SPEED } from './player.js';
 
 export const SPLASH_LIFE = 0.7; // seconds
 export const SPLASH_COUNT = 4; // running takes about 3.5 steps a second
 export const DROPS_PER_SPLASH = 12;
-const RUN_SPEED = 4.2; // same as player.js
 const RING_Y = 0.006; // above the footprints
 const RING_MIN = 0.38, RING_RUN = 0.22; // width of the ring's quad: standing still, plus at a run
 const DROP_SIZE = 0.016;
@@ -145,7 +145,12 @@ export class Splashes {
 
   update(t, camera, heightPx) {
     this.time.value = t;
-    this.scale.value = heightPx / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
+    // Only changes with a resize or a new field of view.
+    if (heightPx !== this._h || camera.fov !== this._fov) {
+      this._h = heightPx;
+      this._fov = camera.fov;
+      this.scale.value = heightPx / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
+    }
   }
 
   // foot is the point on the ground that the step landed on, yaw the way the boot

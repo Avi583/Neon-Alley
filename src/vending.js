@@ -2,9 +2,9 @@
 // front can tips off the shelf, falls behind the glass and lands in the pickup bin.
 // Slots are picked with Math.random, so the seeded world layout never changes.
 import * as THREE from 'three';
-import { CAN_FLAVOURS } from './canvas-art.js';
+import { CAN_FLAVOURS } from './items.js';
+import { damp, smooth01 } from './math.js';
 
-const REACH = 1.6, FACING = 0.6;
 export const VEND_TURN = 0.9; // seconds for one turn of a corkscrew
 const CAN_Y = 0.075, COIL_Y = 0.056, COIL_R = 0.05, COIL_TUBE = 0.004;
 const SHELF_EDGE = 0.19, SHELF_BACK = 0.45; // depths into the cabinet from its face
@@ -17,13 +17,6 @@ const BIN_SLOTS = [-0.16, 0, 0.16]; // along the bin, relative to the machine's 
 
 const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), scale = new THREE.Vector3(1, 1, 1);
 const turned = new THREE.Quaternion(), X_AXIS = new THREE.Vector3(1, 0, 0);
-
-// Close enough to the machine and looking towards it? yaw 0 looks down -z, as in player.js.
-export function inReach(spot, x, z, yaw) {
-  const dx = spot.face - x, dz = spot.z - z, dist = Math.hypot(dx, dz);
-  if (dist > REACH) return false;
-  return dist === 0 || (-Math.sin(yaw) * dx - Math.cos(yaw) * dz) / dist > FACING;
-}
 
 function canGeometry(cell) {
   const g = new THREE.CylinderGeometry(0.042, 0.042, 0.15, 16, 1, true), uv = g.attributes.uv;
@@ -41,8 +34,6 @@ function coilGeometry(side) {
   }
   return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 42, COIL_TUBE, 5, false);
 }
-
-function smoothstep(k) { return k * k * (3 - 2 * k); }
 
 export class Vending {
   constructor(spot, mats, parent, rng = Math.random) {
@@ -194,7 +185,7 @@ export class Vending {
     job.spin += TUMBLE * dt;
     job.angle += job.spin * dt;
     group.position.y -= job.speed * dt;
-    group.position.x += (face + side * CHANNEL - group.position.x) * (1 - Math.exp(-dt * 12));
+    group.position.x += (face + side * CHANNEL - group.position.x) * damp(12, dt);
     group.rotation.z = side * job.angle;
     if (group.position.y > FALL_TO) return;
     group.visible = false;
@@ -219,11 +210,11 @@ export class Vending {
       this.fall(job, dt);
     } else if (job) {
       job.time += dt;
-      if (job.time < VEND_TURN) this.poseSlot(job.slot, smoothstep(job.time / VEND_TURN));
+      if (job.time < VEND_TURN) this.poseSlot(job.slot, smooth01(job.time / VEND_TURN));
       else this.release(job);
     }
     const target = this.flapOpen ? FLAP_OPEN : FLAP_CLOSED;
-    this.flapAngle += (target - this.flapAngle) * (1 - Math.exp(-dt * 10));
+    this.flapAngle += (target - this.flapAngle) * damp(10, dt);
     this.flap.rotation.z = -this.spot.side * this.flapAngle;
     for (const can of this.cans) {
       if (can.delay > 0) {

@@ -1,3 +1,5 @@
+import { smooth01 as sm } from './math.js';
+
 // Small deterministic noise toolkit used by the procedural textures and the
 // neon flicker. Everything is seeded so the alley looks the same every visit.
 
@@ -17,8 +19,6 @@ export function hash2(x, y, s = 0) {
   h ^= h >>> 16;
   return (h >>> 0) / 4294967296;
 }
-
-const sm = (t) => t * t * (3 - 2 * t);
 
 // Precomputed hash2 values for each (period, seed), built on first use.
 const lattices = new Map();

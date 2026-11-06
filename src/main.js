@@ -8,20 +8,22 @@ import { Batch, makeKit } from './batch.js';
 import { buildAlley, ALLEY } from './alley.js';
 import { buildSigns } from './signs.js';
 import { SIGN_SPECS, SIGN_TEXT } from './sign-specs.js';
-import { PlanarReflection, createGround } from './ground.js';
+import { createGround } from './ground.js';
+import { PlanarReflection } from './reflection.js';
 import { Footprints } from './footprints.js';
 import { Splashes } from './splashes.js';
-import { Vending, VEND_TURN, inReach } from './vending.js';
+import { Vending } from './vending.js';
+import { wrapAngle, yawTo, damp } from './math.js';
 import { NeonFood } from './neon-food.js';
-import { FOOD, FoodShop, FOOD_LIFT, foodLabel } from './food-shop.js';
+import { FoodShop } from './food-shop.js';
 import { Inventory } from './inventory.js';
-import { CAN_LABELS } from './canvas-art.js';
 import { createSky, Snow, Steam } from './atmosphere.js';
 import { buildEnvironment } from './environment.js';
 import { LightPool } from './lights.js';
 import { createPost } from './post.js';
 import { Player, CLOSE_UP } from './player.js';
-import { Character, HEAD_LAYER, KNOCK_LEAD, KNOCK_REACH, PICK_STAND } from './character.js';
+import { Character, HEAD_LAYER } from './character.js';
+import { createInteractions } from './interactions.js';
 import { AmbientAudio } from './audio.js';
 import { AdaptiveScale } from './adaptive-scale.js';
 import { createBench } from './bench.js';
@@ -35,8 +37,6 @@ const AUTO = params.has('autostart'); // used for automated screenshots
 const FREEZE = AUTO || params.has('freeze');
 const BENCH = params.has('bench'); // used for the performance baseline
 const num = (k, d) => (params.has(k) ? parseFloat(params.get(k)) : d);
-const BUY = 'BUY A DRINK ¥120', TAKE = 'TAKE THE DRINK', KNOCK = 'KNOCK', BAG_FULL = 'BAG FULL', KNOCK_COOLDOWN = 1000; // ms, no shorter than a knock (KNOCK_TIME in character.js)
-const FOOD_COOLDOWN = 400; // ms, so a held key can't clear a counter
 
 createQualityPills(qKey);
 
@@ -147,6 +147,8 @@ async function init() {
     } else audio.step(v);
   };
   const character = new Character(scene);
+  // Left out of the reflection pass: the ground can't mirror itself, nor what lies flat on it.
+  const unreflected = [ground.mesh, ground.street, footprints.mesh, ...(splashes ? [splashes.rings] : [])];
   refl.cam.layers.enable(HEAD_LAYER); // the helmet always shows in puddles
   const showHead = () => {
     if (player.camDist > CLOSE_UP) camera.layers.enable(HEAD_LAYER); else camera.layers.disable(HEAD_LAYER);
@@ -160,87 +162,11 @@ async function init() {
   camera.layers.enable(HEAD_LAYER); // so the helmet's shaders compile too
   try { await renderer.compileAsync(scene, camera); } catch { renderer.compile(scene, camera); }
 
-  const reaches = (spot) => inReach(spot, player.pos.x, player.pos.y, player.yaw);
   const inventory = new Inventory();
-  const canItem = (flavour) => ({ id: `can:${CAN_LABELS[flavour][2]}`, name: CAN_LABELS[flavour][2], color: CAN_LABELS[flavour][0] });
-  const foodItem = ({ name }) => ({ id: `food:${name}`, name });
-  let nextKnock = 0, nextFood = 0;
-  const knockAt = (door) => {
-    if (performance.now() < nextKnock || character.picking) return;
-    nextKnock = performance.now() + KNOCK_COOLDOWN;
-    const knock = () => {
-      nextKnock = performance.now() + KNOCK_COOLDOWN;
-      character.knock(door);
-      audio.knock(KNOCK_LEAD);
-    };
-    // The prompt shows from further back than the glove reaches, so the biker first walks up
-    // to stand square in front of the door, as near as the walk bounds allow.
-    if (Math.hypot(door.face - player.pos.x, door.z - player.pos.y) <= KNOCK_REACH) knock();
-    else {
-      const x = THREE.MathUtils.clamp(door.face - Math.sign(door.face) * KNOCK_REACH * 0.9, -ALLEY.walkX, ALLEY.walkX);
-      player.walkTo(x, door.z, knock);
-    }
-  };
-  // Taking a can: the biker walks up square to the bin if not there already, crouches and reaches in.
-  // The can leaves the bin as the glove closes on it, and goes in the bag once the biker has stood up.
-  const pickCan = () => {
-    if (character.picking || character.knocking) return;
-    const at = vending.nextPosition();
-    if (!at) return;
-    let item = null;
-    const pick = () => character.pickUp(at, {
-      onGrab: () => {
-        const flavour = vending.take();
-        if (flavour === null) return null;
-        item = canItem(flavour);
-        audio.pickup();
-        return vending.heldCan(flavour);
-      },
-      onDone: () => inventory.add(item),
-    });
-    const { side } = alley.vending; // side points into the wall, so the biker stands out from the can the other way
-    const x = THREE.MathUtils.clamp(at.x - side * PICK_STAND, -ALLEY.walkX, ALLEY.walkX);
-    if (Math.hypot(x - player.pos.x, at.z - player.pos.y) <= 0.12) pick();
-    else player.walkTo(x, at.z, pick);
-  };
-  // The action in reach as { label, use }, or null. A full bag still shows, so the player knows why.
-  const full = { label: BAG_FULL, use: () => {} };
-  const useAction = () => {
-    if (!player.enabled) return null;
-    const { x, y: z } = player.pos, yaw = player.yaw;
-    if (reaches(alley.vending)) {
-      const flavour = vending.nextFlavour();
-      if (flavour === null) return { label: BUY, use: () => { if (vending.buy()) audio.whirr(VEND_TURN); } };
-      const item = canItem(flavour);
-      if (!inventory.canAdd(item.id)) return full;
-      return { label: TAKE, use: pickCan };
-    }
-    const dish = foodShop.takeTarget(x, z, yaw);
-    if (dish) {
-      const item = foodItem(FOOD[dish.kind]);
-      if (!inventory.canAdd(item.id)) return full;
-      return { label: `TAKE ${item.name}`, use: () => { if (foodShop.take(dish)) { inventory.add(item); audio.pickup(); } } };
-    }
-    const food = foodShop.target(x, z, yaw);
-    if (food) {
-      return {
-        label: foodLabel(food),
-        use: () => {
-          if (performance.now() < nextFood) return;
-          nextFood = performance.now() + FOOD_COOLDOWN;
-          foodShop.buy(food);
-          neonFood.hide(food.form, food.index);
-          audio.purchase();
-          audio.whirr(FOOD_LIFT);
-        },
-      };
-    }
-    const door = alley.doors.find(reaches);
-    return door ? { label: KNOCK, use: () => knockAt(door) } : null;
-  };
+  const actions = createInteractions({ player, character, alley, vending, foodShop, neonFood, inventory, audio });
   const states = createStates({
     player, audio, canvas: renderer.domElement, auto: AUTO || BENCH, inventory,
-    onUse: () => useAction()?.use(),
+    onUse: actions.use,
     // Drinks a can or eats a dish from the bag.
     onConsume: (item) => { if (inventory.remove(item.id)) (item.id.startsWith('can:') ? audio.sip() : audio.bite()); },
   });
@@ -283,8 +209,8 @@ async function init() {
     if (pick && !pick.done && player.view === 'first' && !player.moving) {
       // In first person the look eases round to the bin, as the body turns to it in third, so the
       // glove and the can show coming up from below.
-      const want = Math.atan2(-(pick.target.x - player.pos.x), -(pick.target.z - player.pos.y));
-      player.yaw += Math.atan2(Math.sin(want - player.yaw), Math.cos(want - player.yaw)) * (1 - Math.exp(-dt * 6));
+      const want = yawTo(player.pos.x, player.pos.y, pick.target.x, pick.target.z);
+      player.yaw += wrapAngle(want - player.yaw) * damp(6, dt);
     }
     player.dip = player.view === 'first' ? character.dip : 0;
     player.update(dt);
@@ -294,7 +220,7 @@ async function init() {
     vending.update(dt);
     neonFood.update(t);
     foodShop.update(dt);
-    states.showPrompt(useAction()?.label ?? null);
+    states.showPrompt(actions.find()?.label ?? null);
     sky.position.copy(camera.position);
     signs.update(t);
     mats.blink.color.copy(mats.blinkBase).multiplyScalar(Math.sin(t * 4) > 0 ? 1 : 0.05);
@@ -302,9 +228,7 @@ async function init() {
     snow.update(t, camera, size.y);
     steam.update(t);
     ground.uniforms.uTime.value = t;
-    refl.update(renderer, scene, camera, splashes
-      ? [ground.mesh, ground.street, footprints.mesh, splashes.rings]
-      : [ground.mesh, ground.street, footprints.mesh]);
+    refl.update(renderer, scene, camera, unreflected);
     post.render(t);
     bench?.end();
 

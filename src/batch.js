@@ -129,7 +129,6 @@ export function makeKit(batch, mats, seed = 1) {
     box: new THREE.BoxGeometry(1, 1, 1),
     cyl: new THREE.CylinderGeometry(1, 1, 1, 12, 1),
     cylLo: new THREE.CylinderGeometry(1, 1, 1, 6, 1),
-    cylOpen: new THREE.CylinderGeometry(1, 1, 1, 12, 1, true),
     prism: new THREE.CylinderGeometry(1, 1, 1, 3, 1),
     cone: new THREE.ConeGeometry(1, 1, 6, 1, true),
     sph: new THREE.SphereGeometry(1, 14, 10),
@@ -155,12 +154,6 @@ export function makeKit(batch, mats, seed = 1) {
   const sph = (mat, x, y, z, sx, sy = sx, sz = sx, lo = false) =>
     put(lo ? G.sphLo : G.sph, mat, x, y, z, sx, sy, sz);
   const plane = (mat, x, y, z, w, h, ry = 0) => put(G.plane, mat, x, y, z, w, h, 1, 0, ry, 0);
-  // An open cylinder wrapped in one cell of a horizontal texture atlas.
-  function atlasCyl(mat, x, y, z, r, h, cell, cells, ry = 0) {
-    const g = G.cylOpen.clone(), uv = g.attributes.uv;
-    for (let i = 0; i < uv.count; i++) uv.setX(i, (cell + uv.getX(i)) / cells);
-    put(g, mat, x, y, z, r, h, r, 0, ry, 0);
-  }
   // A plane showing one cell of a horizontal texture atlas.
   function atlasPlane(mat, x, y, z, w, h, cell, cells, ry = 0) {
     const g = G.plane.clone(), uv = g.attributes.uv;
@@ -206,5 +199,5 @@ export function makeKit(batch, mats, seed = 1) {
     batch.add(new THREE.TubeGeometry(curve, segs, radius, 5, false), mat);
     return curve;
   }
-  return { rng, R, pick, box, cyl, squashedCyl, prism, sph, plane, atlasCyl, atlasPlane, icicles, drift, snow, catenary, tube };
+  return { rng, R, pick, box, cyl, squashedCyl, prism, sph, plane, atlasPlane, icicles, drift, snow, catenary, tube };
 }

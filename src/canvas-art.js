@@ -3,6 +3,7 @@
 import { mulberry32 } from './noise.js';
 import { makeCanvas, canvasTexture, roundRect, FONT_JP, FONT_LAT } from './texture-core.js';
 import { ART_TEXT } from './art-text.js';
+import { CAN_LABELS, CAN_FLAVOURS, CAN_PRICE, yen } from './items.js';
 
 // --------------------------------------------------- outdoor AC unit front
 // Four streak patterns side by side in the alpha channel, heaviest at the top, for
@@ -100,14 +101,14 @@ export function genVendingPanel() {
   // price display
   ctx.fillStyle = '#050608'; roundRect(ctx, 28, 28, 200, 62, 6); ctx.fill();
   ctx.fillStyle = '#3dff9a'; ctx.textAlign = 'right';
-  ctx.font = `700 38px ${FONT_LAT}`; ctx.fillText('¥ 120', 214, 60);
+  ctx.font = `700 38px ${FONT_LAT}`; ctx.fillText(`¥ ${CAN_PRICE}`, 214, 60);
   // poster
   const ad = ctx.createLinearGradient(28, 0, 300, 0);
   ad.addColorStop(0, '#1a6dff'); ad.addColorStop(1, '#14d8ff');
   ctx.fillStyle = ad; roundRect(ctx, 28, 110, 272, 136, 8); ctx.fill();
   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
   ctx.font = `900 50px ${FONT_JP}`; ctx.fillText(ART_TEXT.vending, 164, 160);
-  ctx.font = `700 20px ${FONT_LAT}`; ctx.fillText('COLD · ¥120', 164, 214);
+  ctx.font = `700 20px ${FONT_LAT}`; ctx.fillText(`COLD · ${yen(CAN_PRICE)}`, 164, 214);
   // labels above the coin plate and the return button
   ctx.fillStyle = '#c4c8d0'; ctx.font = `700 16px ${FONT_LAT}`;
   ctx.fillText('COINS', 410, 24);
@@ -121,7 +122,7 @@ export function genVendingPrice() {
   const c = makeCanvas(W, H), ctx = c.getContext('2d');
   ctx.fillStyle = '#f4f7ff'; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = '#0a0a12'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `900 50px ${FONT_LAT}`; ctx.fillText('¥120', W / 2, H / 2 + 2, W - 12);
+  ctx.font = `900 50px ${FONT_LAT}`; ctx.fillText(yen(CAN_PRICE), W / 2, H / 2 + 2, W - 12);
   return canvasTexture(c, { repeat: false });
 }
 
@@ -141,16 +142,7 @@ export function genNoEntry(aniso) {
 
 // One label per cell. u = 0.5 of a cell faces the viewer, so the can's round
 // shading is painted in: the sides fall away to dark, with a highlight left of centre.
-// [label colour, ink, name] for each flavour, in the order of the cells on the label strip.
-export const CAN_LABELS = [
-  ['#e0162e', '#ffffff', 'COLA'],
-  ['#1a5cff', '#d8f4ff', 'SODA'],
-  ['#ffc21f', '#c81e32', 'LEMON'],
-  ['#14b866', '#f4fff0', 'MATCHA'],
-  ['#8a35e0', '#ffe0ff', 'GRAPE'],
-  ['#ff7a14', '#fff4d8', 'MIKAN'],
-];
-export const CAN_FLAVOURS = CAN_LABELS.length;
+// The flavours are CAN_LABELS in items.js.
 export function genCanLabels() {
   const S = 128, W = S * CAN_FLAVOURS, H = 256;
   const c = makeCanvas(W, H), ctx = c.getContext('2d');

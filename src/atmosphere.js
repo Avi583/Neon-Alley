@@ -88,7 +88,12 @@ export class Snow {
   update(t, camera, heightPx) {
     this.uniforms.uTime.value = t;
     this.uniforms.uCamZ.value = camera.position.z;
-    this.uniforms.uScale.value = heightPx / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
+    // Only changes with a resize or a new field of view.
+    if (heightPx !== this._h || camera.fov !== this._fov) {
+      this._h = heightPx;
+      this._fov = camera.fov;
+      this.uniforms.uScale.value = heightPx / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
+    }
   }
 }
 

@@ -8,6 +8,28 @@ import { neonForm, fishParts, onigiriParts, nigiriParts, makiParts, bowlParts, b
 const SHELL = 0.4; // far enough out to cover a shutter's housing and icicles
 const COUNTER = 0.46;
 const ROOF_TILT = 0.49;
+const STOOLS = SHELL + COUNTER + 0.22; // how far out the stools stand
+
+// A wooden counter along the shop, with a top of mat, and a lit edge if edge ([colour, strength]) is given.
+// cd is the middle of its depth, for placing things on it.
+function woodCounter(ctx, at, zc, w, top, edge = null) {
+  const { mats, box } = ctx, cd = SHELL + COUNTER / 2, wood = [0.8, 0.8];
+  box(mats.woodDark, at(cd), 0.4, zc, COUNTER, 0.8, w - 0.1, wood);
+  box(top, at(cd + 0.01), 0.82, zc, COUNTER + 0.06, 0.04, w, wood);
+  if (edge) box(mats.strip(...edge), at(SHELL + COUNTER + 0.045), 0.78, zc, 0.01, 0.03, w);
+  return cd;
+}
+
+// n stools in front of the counter, gap apart.
+function stools(ctx, at, zc, n, gap) {
+  const { mats, cyl } = ctx;
+  for (let k = 0; k < n; k++) {
+    const sz = zc + (k - (n - 1) / 2) * gap;
+    cyl(mats.metalDark, at(STOOLS), 0.015, sz, 0.1, 0.03);
+    cyl(mats.metalDark, at(STOOLS), 0.27, sz, 0.018, 0.5, 0, 0, 0, true);
+    cyl(mats.metalRed, at(STOOLS), 0.53, sz, 0.13, 0.05);
+  }
+}
 
 // Places a copy of a neon form and offers it for sale. rest is the height of the
 // surface below, where the real food goes once it's bought.
@@ -114,9 +136,7 @@ function onigiriShop(ctx) {
   shell(ctx, at, side, zc, w, mats.shopOnigiri);
 
   // wooden counter
-  const cd = SHELL + COUNTER / 2, wood = [0.8, 0.8];
-  box(mats.woodDark, at(cd), 0.4, zc, COUNTER, 0.8, w - 0.1, wood);
-  box(mats.wood, at(cd + 0.01), 0.82, zc, COUNTER + 0.06, 0.04, w, wood);
+  const cd = woodCounter(ctx, at, zc, w, mats.wood), wood = [0.8, 0.8];
 
   // a row of neon onigiri over a riser, each with a strip of nori
   const rice = mats.strip('#fff1d6', 1.5), nori = mats.strip('#5dffb4', 2);
@@ -141,10 +161,7 @@ function sushiShop(ctx) {
   shell(ctx, at, side, zc, w, mats.shopSushi);
 
   // pale wooden counter with a lit edge
-  const cd = SHELL + COUNTER / 2, wood = [0.8, 0.8];
-  box(mats.woodDark, at(cd), 0.4, zc, COUNTER, 0.8, w - 0.1, wood);
-  box(mats.wood, at(cd + 0.01), 0.82, zc, COUNTER + 0.06, 0.04, w, wood);
-  box(mats.strip('#ffe6c0', 1.6), at(SHELL + COUNTER + 0.045), 0.78, zc, 0.01, 0.03, w);
+  const cd = woodCounter(ctx, at, zc, w, mats.wood, ['#ffe6c0', 1.6]);
 
   // conveyor belt with rails, carrying plates of neon sushi
   const salmon = mats.strip('#ff7a5a', 2.2), rice = mats.strip('#fff1d6', 1.5), nori = mats.strip('#5dffb4', 2);
@@ -173,16 +190,13 @@ function sushiShop(ctx) {
 }
 
 function ramenShop(ctx) {
-  const { mats, box, cyl, addLight, addCollider } = ctx;
+  const { mats, box, addLight, addCollider } = ctx;
   const side = 1, zc = -8.3, w = 3.3;
   const at = (d) => side * (WALL - d);
   shell(ctx, at, side, zc, w, mats.shopRamenFront);
 
   // dark wooden counter with a lit edge
-  const cd = SHELL + COUNTER / 2, wood = [0.8, 0.8];
-  box(mats.woodDark, at(cd), 0.4, zc, COUNTER, 0.8, w - 0.1, wood);
-  box(mats.woodDark, at(cd + 0.01), 0.82, zc, COUNTER + 0.06, 0.04, w, wood);
-  box(mats.strip('#ff6a3a', 3), at(SHELL + COUNTER + 0.045), 0.78, zc, 0.01, 0.03, w);
+  const cd = woodCounter(ctx, at, zc, w, mats.woodDark, ['#ff6a3a', 3]), wood = [0.8, 0.8];
 
   // neon bowls over a riser, each with noodles, chopsticks and steam
   const bowl = mats.strip('#ff4a3a', 2.6), noodle = mats.strip('#ffd166', 2.2), pale = mats.strip('#f4f8ff', 1.6);
@@ -190,14 +204,7 @@ function ramenShop(ctx) {
   const bowls = neonForm(ctx.neonForms, bowlParts(bowl, noodle, pale, 0.19));
   for (let k = 0; k < 3; k++) sell(ctx, bowls, [at(cd + 0.06), 1.17, zc + (k - 1) * 0.98], side, 'ramen', 0.96);
 
-  // stools in front of the counter
-  const sd = SHELL + COUNTER + 0.22;
-  for (let k = 0; k < 4; k++) {
-    const sz = zc + (k - 1.5) * 0.72;
-    cyl(mats.metalDark, at(sd), 0.015, sz, 0.1, 0.03);
-    cyl(mats.metalDark, at(sd), 0.27, sz, 0.018, 0.5, 0, 0, 0, true);
-    cyl(mats.metalRed, at(sd), 0.53, sz, 0.13, 0.05);
-  }
+  stools(ctx, at, zc, 4, 0.72);
 
   tiledEave(ctx, at, side, zc, w);
   box(mats.strip('#ffb070', 2.5), at(SHELL + 0.08), 2.7, zc, 0.04, 0.04, w - 0.5);
@@ -206,20 +213,17 @@ function ramenShop(ctx) {
   lanterns(ctx, at, zc, w, mats.lantern);
 
   addLight(at(1.5), 1.6, zc, '#ff9a5a', 3, 8);
-  addCollider(at(sd + 0.15), at(-0.35), zc - w / 2, zc + w / 2);
+  addCollider(at(STOOLS + 0.15), at(-0.35), zc - w / 2, zc + w / 2);
 }
 
 function barShop(ctx) {
-  const { mats, box, cyl, addLight, addCollider } = ctx;
+  const { mats, box, addLight, addCollider } = ctx;
   const side = 1, zc = -45, w = 5.4;
   const at = (d) => side * (WALL - d);
   shell(ctx, at, side, zc, w, mats.shopBarFront);
 
   // dark wooden counter with a lit edge
-  const cd = SHELL + COUNTER / 2, wood = [0.8, 0.8];
-  box(mats.woodDark, at(cd), 0.4, zc, COUNTER, 0.8, w - 0.1, wood);
-  box(mats.woodDark, at(cd + 0.01), 0.82, zc, COUNTER + 0.06, 0.04, w, wood);
-  box(mats.strip('#ff6ad5', 3), at(SHELL + COUNTER + 0.045), 0.78, zc, 0.01, 0.03, w);
+  const cd = woodCounter(ctx, at, zc, w, mats.woodDark, ['#ff6ad5', 3]), wood = [0.8, 0.8];
 
   // three of each neon drink over a riser, far enough out to clear the back wall as they turn
   box(mats.woodDark, at(cd + 0.02), 0.89, zc, 0.2, 0.1, w - 0.3, wood);
@@ -236,14 +240,7 @@ function barShop(ctx) {
     sell(ctx, form, [at(cd + 0.02), y, zc + (k - 4) * 0.56], side, kind, 0.94);
   }
 
-  // stools in front of the counter
-  const sd = SHELL + COUNTER + 0.22;
-  for (let k = 0; k < 6; k++) {
-    const sz = zc + (k - 2.5) * 0.8;
-    cyl(mats.metalDark, at(sd), 0.015, sz, 0.1, 0.03);
-    cyl(mats.metalDark, at(sd), 0.27, sz, 0.018, 0.5, 0, 0, 0, true);
-    cyl(mats.metalRed, at(sd), 0.53, sz, 0.13, 0.05);
-  }
+  stools(ctx, at, zc, 6, 0.8);
 
   tiledEave(ctx, at, side, zc, w);
   box(mats.strip('#ff9ae0', 2.5), at(SHELL + 0.08), 2.7, zc, 0.04, 0.04, w - 0.5);
@@ -252,7 +249,7 @@ function barShop(ctx) {
   lanterns(ctx, at, zc, w, mats.lantern);
 
   for (const d of [-1, 1]) addLight(at(1.5), 1.6, zc + d * 1.4, '#ff6ad5', 3, 8);
-  addCollider(at(sd + 0.15), at(-0.35), zc - w / 2, zc + w / 2);
+  addCollider(at(STOOLS + 0.15), at(-0.35), zc - w / 2, zc + w / 2);
 }
 
 export function buildShops(ctx) {

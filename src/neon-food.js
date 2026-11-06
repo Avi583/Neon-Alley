@@ -9,6 +9,7 @@ const SPEED = 0.35; // radians per second
 const BOB = 0.015, BOB_SPEED = 1.1; // metres either way, radians per second
 const PHASE_STEP = 2.4; // so neighbours are never lined up
 const BOUNDS_MARGIN = 0.3; // the bounding sphere is measured once, but the forms keep turning
+const matrix = new THREE.Matrix4();
 
 // Outlines as [along, up] points on a unit shape, with depth added by each form.
 const FISH_BODY = [[1, 0], [0.5, 0.38], [-0.2, 0.3], [-0.62, 0.06], [-1, 0.34], [-0.9, 0], [-1, -0.34], [-0.62, -0.06], [-0.2, -0.3], [0.5, -0.38], [1, 0]];
@@ -174,13 +175,14 @@ export class NeonFood {
   }
 
   pose({ meshes, spots, bob, phases, hidden }, t) {
-    const m = new THREE.Matrix4();
-    spots.forEach(([x, y, z], i) => {
+    const m = matrix;
+    for (let i = 0; i < spots.length; i++) {
+      const [x, y, z] = spots[i];
       if (hidden[i]) m.makeScale(0, 0, 0);
       else m.makeRotationY(t * SPEED + phases[i]);
       m.setPosition(x, y + Math.sin(t * BOB_SPEED + phases[i]) * bob, z);
       for (const mesh of meshes) mesh.setMatrixAt(i, m);
-    });
+    }
     for (const mesh of meshes) mesh.instanceMatrix.needsUpdate = true;
   }
 

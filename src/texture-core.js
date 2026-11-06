@@ -64,15 +64,17 @@ export class Maps {
   }
 }
 
-function normalFromHeight(hgt, w, h, strength) {
-  const out = new Uint8ClampedArray(w * h * 4);
+// A tangent-space normal map from a height field, wrapping round in x (and in y unless wrapY is
+// false, when the edge rows are clamped). flipY flips green for textures uploaded without a flip
+// (DataTexture). out picks the array type: clamped bytes round, plain bytes truncate.
+export function normalFromHeight(hgt, w, h, strength, { wrapY = true, flipY = false, out = new Uint8ClampedArray(w * h * 4) } = {}) {
   for (let y = 0; y < h; y++) {
-    const yu = (y - 1 + h) % h, yd = (y + 1) % h;
+    const yu = wrapY ? (y - 1 + h) % h : Math.max(0, y - 1), yd = wrapY ? (y + 1) % h : Math.min(h - 1, y + 1);
     for (let x = 0; x < w; x++) {
       const xl = (x - 1 + w) % w, xr = (x + 1) % w;
       const dx = (hgt[y * w + xr] - hgt[y * w + xl]) * strength;
       const dy = (hgt[yd * w + x] - hgt[yu * w + x]) * strength;
-      const nx = -dx, ny = dy, nz = 1;
+      const nx = -dx, ny = flipY ? -dy : dy, nz = 1;
       const l = Math.sqrt(nx * nx + ny * ny + nz * nz);
       const k = (y * w + x) * 4;
       out[k] = (nx / l * 0.5 + 0.5) * 255;

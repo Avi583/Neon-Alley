@@ -1,5 +1,8 @@
 // Page overlays, the title/play/paused state machine and global input.
 import { PRESETS } from './quality.js';
+import { SLOT_KEYS, renderBag } from './ui-bag.js';
+
+export { SLOT_KEYS };
 
 const $ = (id) => document.getElementById(id);
 const ui = {
@@ -26,13 +29,19 @@ let isMuted = () => startMuted;
 let viewMode = () => params.get('view');
 let lookKey = Object.hasOwn(LOOK_SPEEDS, params.get('look')) ? params.get('look') : 'normal';
 
+// A pill button, lit when on.
+function pill(label, on, onClick) {
+  const b = document.createElement('button');
+  b.textContent = label;
+  b.className = 'pill' + (on ? ' on' : '');
+  b.addEventListener('click', onClick);
+  return b;
+}
+
 export function createQualityPills(qKey) {
   for (const box of [ui.pills, ui.pausePills]) {
     for (const [k, p] of Object.entries(PRESETS)) {
-      const b = document.createElement('button');
-      b.textContent = p.label;
-      b.className = 'pill' + (k === qKey ? ' on' : '');
-      b.addEventListener('click', () => {
+      box.appendChild(pill(p.label, k === qKey, () => {
         if (k === qKey) return;
         const u = new URL(location.href);
         u.searchParams.set('q', k);
@@ -41,8 +50,7 @@ export function createQualityPills(qKey) {
         if (viewMode() === 'first') u.searchParams.set('view', 'first'); else u.searchParams.delete('view');
         if (lookKey !== 'normal') u.searchParams.set('look', lookKey); else u.searchParams.delete('look');
         location.href = u.toString();
-      });
-      box.appendChild(b);
+      }));
     }
   }
 }
@@ -59,42 +67,6 @@ export function showError(err) {
 
 export function setFps(text) {
   ui.fps.textContent = text;
-}
-
-// The key for each bag slot, in order: 1-9, 0, - and =, as along the number row.
-export const SLOT_KEYS = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0', 'Minus', 'Equal'];
-const SLOT_LABELS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='];
-
-// One cell per slot, filled in pick-up order, with the rest left empty. A filled cell uses its
-// item when clicked or tapped (onPick gets the slot's index).
-export function renderBag(inventory, onPick = null) {
-  const cells = [];
-  for (let i = 0; i < inventory.slots; i++) {
-    const item = inventory.items[i];
-    const cell = document.createElement('div');
-    cell.className = item ? 'bag-slot' : 'bag-slot empty';
-    if (item) {
-      cell.textContent = item.name;
-      if (item.color) cell.style.setProperty?.('--slot', item.color);
-      if (SLOT_LABELS[i]) {
-        const k = document.createElement('span');
-        k.className = 'k';
-        k.textContent = SLOT_LABELS[i];
-        cell.appendChild(k);
-      }
-      if (onPick) cell.addEventListener('click', () => onPick(i));
-      if (item.count > 1) {
-        const n = document.createElement('span');
-        n.className = 'n';
-        n.textContent = `×${item.count}`;
-        cell.appendChild(n);
-      }
-    }
-    cells.push(cell);
-  }
-  ui.bagSlots.replaceChildren(...cells);
-  ui.bagCount.textContent = `${inventory.items.length}/${inventory.slots}`;
-  ui.bagButton.textContent = `BAG ${inventory.total}`;
 }
 
 export function createStates({ player, audio, canvas, auto, onUse, inventory = null, onConsume = null }) {
@@ -175,6 +147,8 @@ export function createStates({ player, audio, canvas, auto, onUse, inventory = n
   isMuted = () => audio.muted;
   showSound();
   let showFps = false;
+  const bagEls = { slots: ui.bagSlots, count: ui.bagCount, button: ui.bagButton };
+  const pickSlot = (i) => { const item = inventory?.items[i]; if (item) onConsume?.(item); };
   window.addEventListener('keydown', (e) => {
     if (e.code === 'KeyM') toggleSound();
     if (e.code === 'KeyV' && !e.repeat && state === 'play') toggleView();
@@ -186,26 +160,23 @@ export function createStates({ player, audio, canvas, auto, onUse, inventory = n
     if (e.code === 'KeyE' && !e.repeat && state === 'play') onUse();
     if (e.code === 'KeyI' && !e.repeat && state === 'play') toggleBag();
     if (e.code === 'KeyH' && !e.repeat) ui.keymap.classList.toggle('hidden');
+    // With the bag open, the number row uses a slot (the pointer is locked on desktop, so it can't click).
+    const slot = SLOT_KEYS.indexOf(e.code);
+    if (slot >= 0 && inventory && !e.repeat && state === 'play' && !ui.bag.classList.contains('hidden')) pickSlot(slot);
   });
   ui.vend.addEventListener('click', onUse);
   const toggleBag = () => ui.bag.classList.toggle('hidden', !ui.bag.classList.contains('hidden'));
   ui.bagButton.addEventListener('click', toggleBag);
   if (inventory) {
     let bump = 0;
-    const pick = (i) => { const item = inventory.items[i]; if (item) onConsume?.(item); };
-    // With the bag open, the number row uses a slot (the pointer is locked on desktop, so it can't click).
-    window.addEventListener('keydown', (e) => {
-      const i = SLOT_KEYS.indexOf(e.code);
-      if (i >= 0 && !e.repeat && state === 'play' && !ui.bag.classList.contains('hidden')) pick(i);
-    });
     inventory.onChange = () => {
-      renderBag(inventory, pick);
+      renderBag(bagEls, inventory, pickSlot);
       // A short glow on the button, so a pick-up shows even with the bag closed.
       ui.bagButton.classList.add('bump');
       clearTimeout(bump);
       bump = setTimeout(() => ui.bagButton.classList.remove('bump'), 400);
     };
-    renderBag(inventory, pick);
+    renderBag(bagEls, inventory, pickSlot);
   }
   let shownPrompt = null;
   ui.sound.addEventListener('click', toggleSound);
@@ -223,10 +194,7 @@ export function createStates({ player, audio, canvas, auto, onUse, inventory = n
 
   player.lookSpeed = LOOK_SPEEDS[lookKey].speed;
   const lookPills = Object.entries(LOOK_SPEEDS).map(([k, { label, speed }]) => {
-    const b = document.createElement('button');
-    b.textContent = label;
-    b.className = 'pill' + (k === lookKey ? ' on' : '');
-    b.addEventListener('click', () => {
+    const b = pill(label, k === lookKey, () => {
       lookKey = k;
       player.lookSpeed = speed;
       for (const other of lookPills) other.className = 'pill' + (other === b ? ' on' : '');

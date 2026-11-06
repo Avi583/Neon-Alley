@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
-import { FOOD, FOOD_LIFT, FoodShop as Shop, foodLabel } from '../src/food-shop.js';
+import { FOOD_LIFT, FoodShop as Shop } from '../src/food-shop.js';
+import { FOOD, foodLabel } from '../src/items.js';
 
 const LOOK_POS_X = -Math.PI / 2; // yaw looking down +x, towards the counter
 const spot = (kind, z, index = 0) => ({ face: 2, z, side: 1, kind, rest: 1, form: null, index });

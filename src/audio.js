@@ -96,74 +96,70 @@ export class AmbientAudio {
     this.hum.gain.setTargetAtTime(Math.min(level, 1) * 0.05, this.ctx.currentTime, 0.04);
   }
 
-  step(speed) {
+  // Whether one-off sounds play: started and not muted.
+  get live() { return !!this.ctx && !this.muted; }
+
+  // One oscillator note from time t: pitch from -> to (exponentially, over glide s), up to vol over
+  // attack s (at once if 0; from silence, linearly or, with curve 'exp', exponentially) and down to
+  // silence by decay s.
+  tone(t, { type = 'sine', from, to = from, glide = 0, vol, attack = 0, curve = 'linear', decay }) {
     const ctx = this.ctx;
-    if (!ctx || this.muted) return;
-    const t = ctx.currentTime;
-    const vol = 0.18 + Math.min(speed / 4, 1) * 0.12;
-    const src = ctx.createBufferSource(); src.buffer = this.white;
-    src.playbackRate.value = 0.7 + Math.random() * 0.5;
-    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1500 + Math.random() * 1200; bp.Q.value = 0.9;
+    const o = ctx.createOscillator(); o.type = type;
+    o.frequency.setValueAtTime(from, t);
+    if (to !== from) o.frequency.exponentialRampToValueAtTime(to, t + glide);
     const g = ctx.createGain();
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(vol, t + 0.008);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
-    src.connect(bp).connect(g).connect(this.master);
-    src.start(t, Math.random() * 2, 0.2);
-    const o = ctx.createOscillator(); o.type = 'sine';
-    o.frequency.setValueAtTime(90, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
-    const og = ctx.createGain();
-    og.gain.setValueAtTime(vol * 0.9, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
-    o.connect(og).connect(this.master);
-    o.start(t); o.stop(t + 0.15);
+    this.envelope(g.gain, t, vol, attack, decay, curve);
+    o.connect(g).connect(this.master);
+    o.start(t); o.stop(t + decay + 0.02);
+  }
+
+  // A burst of white noise from time t, length s long, through a filter at freq (swept
+  // exponentially to to over sweep s), played at rate, with the envelope as in tone.
+  noise(t, { filter = 'bandpass', freq, to = freq, sweep = 0, Q = 1, rate = 1, vol, attack = 0, decay, length }) {
+    const ctx = this.ctx;
+    const src = ctx.createBufferSource(); src.buffer = this.white; src.playbackRate.value = rate;
+    const f = ctx.createBiquadFilter(); f.type = filter; f.Q.value = Q;
+    f.frequency.setValueAtTime(freq, t);
+    if (to !== freq) f.frequency.exponentialRampToValueAtTime(to, t + sweep);
+    const g = ctx.createGain();
+    this.envelope(g.gain, t, vol, attack, decay);
+    src.connect(f).connect(g).connect(this.master);
+    src.start(t, Math.random() * 2, length);
+  }
+
+  envelope(gain, t, vol, attack, decay, curve = 'linear') {
+    if (attack <= 0) gain.setValueAtTime(vol, t);
+    else if (curve === 'exp') { gain.setValueAtTime(0.001, t); gain.exponentialRampToValueAtTime(vol, t + attack); }
+    else { gain.setValueAtTime(0, t); gain.linearRampToValueAtTime(vol, t + attack); }
+    gain.exponentialRampToValueAtTime(0.001, t + decay);
+  }
+
+  // A boot on snow: a soft crunch of noise over a low thump.
+  step(speed) {
+    if (!this.live) return;
+    const t = this.ctx.currentTime, vol = 0.18 + Math.min(speed / 4, 1) * 0.12;
+    this.noise(t, { freq: 1500 + Math.random() * 1200, Q: 0.9, rate: 0.7 + Math.random() * 0.5, vol, attack: 0.008, decay: 0.16, length: 0.2 });
+    this.tone(t, { from: 90, to: 42, glide: 0.12, vol: vol * 0.9, decay: 0.13 });
   }
 
   // A boot in a puddle: one slosh of water falling in pitch, over the low thump of the boot.
   splash(speed) {
-    const ctx = this.ctx;
-    if (!ctx || this.muted) return;
-    const t = ctx.currentTime;
-    const vol = 0.3 + Math.min(speed / 4, 1) * 0.2;
-    const src = ctx.createBufferSource(); src.buffer = this.white;
-    src.playbackRate.value = 0.8 + Math.random() * 0.4;
-    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.6;
-    bp.frequency.setValueAtTime(2200 + Math.random() * 600, t);
-    bp.frequency.exponentialRampToValueAtTime(500, t + 0.3);
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(vol, t + 0.025);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.34);
-    src.connect(bp).connect(g).connect(this.master);
-    src.start(t, Math.random() * 2, 0.36);
-    const o = ctx.createOscillator(); o.type = 'sine';
-    o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(50, t + 0.12);
-    const og = ctx.createGain();
-    og.gain.setValueAtTime(0, t);
-    og.gain.linearRampToValueAtTime(vol * 0.6, t + 0.015);
-    og.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
-    o.connect(og).connect(this.master);
-    o.start(t); o.stop(t + 0.16);
+    if (!this.live) return;
+    const t = this.ctx.currentTime, vol = 0.3 + Math.min(speed / 4, 1) * 0.2;
+    this.noise(t, { freq: 2200 + Math.random() * 600, to: 500, sweep: 0.3, Q: 0.6, rate: 0.8 + Math.random() * 0.4, vol, attack: 0.025, decay: 0.34, length: 0.36 });
+    this.tone(t, { from: 110, to: 50, glide: 0.12, vol: vol * 0.6, attack: 0.015, decay: 0.14 });
   }
 
   // Food handed over at a shop: two soft rising notes.
   purchase() {
-    const ctx = this.ctx;
-    if (!ctx || this.muted) return;
-    for (const [at, f] of [[0, 880], [0.12, 1175]]) {
-      const t = ctx.currentTime + at;
-      const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = f;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.14, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-      o.connect(g).connect(this.master);
-      o.start(t); o.stop(t + 0.32);
-    }
+    if (!this.live) return;
+    for (const [at, f] of [[0, 880], [0.12, 1175]]) this.tone(this.ctx.currentTime + at, { type: 'triangle', from: f, vol: 0.14, decay: 0.3 });
   }
 
   // A vending machine's corkscrew turning: a small geared motor that eases in and out.
   whirr(dur) {
-    const ctx = this.ctx;
-    if (!ctx || this.muted) return;
-    const t = ctx.currentTime;
+    if (!this.live) return;
+    const ctx = this.ctx, t = ctx.currentTime;
     const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 95;
     const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
     const g = ctx.createGain();
@@ -177,88 +173,42 @@ export class AmbientAudio {
 
   // A can dropping into the vending machine's bin: a low thud and a tinny ring.
   clunk() {
-    const ctx = this.ctx;
-    if (!ctx || this.muted) return;
-    const t = ctx.currentTime;
+    if (!this.live) return;
+    const t = this.ctx.currentTime;
     for (const [type, from, to, vol, dur] of [['sine', 150, 60, 0.5, 0.16], ['triangle', 1400, 900, 0.07, 0.22]]) {
-      const o = ctx.createOscillator(); o.type = type;
-      o.frequency.setValueAtTime(from, t); o.frequency.exponentialRampToValueAtTime(to, t + dur);
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-      o.connect(g).connect(this.master);
-      o.start(t); o.stop(t + dur + 0.02);
+      this.tone(t, { type, from, to, glide: dur, vol, decay: dur });
     }
   }
 
   // A can lifted out of the bin: a light, tinny tick.
   pickup() {
-    const ctx = this.ctx;
-    if (!ctx || this.muted) return;
-    const t = ctx.currentTime;
-    const o = ctx.createOscillator(); o.type = 'triangle';
-    o.frequency.setValueAtTime(1900, t); o.frequency.exponentialRampToValueAtTime(1300, t + 0.1);
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-    o.connect(g).connect(this.master);
-    o.start(t); o.stop(t + 0.12);
+    if (!this.live) return;
+    this.tone(this.ctx.currentTime, { type: 'triangle', from: 1900, to: 1300, glide: 0.1, vol: 0.1, decay: 0.1 });
   }
 
   // A can drunk from the bag: the tab's crack and hiss, then two gulps.
   sip() {
-    const ctx = this.ctx;
-    if (!ctx || this.muted) return;
-    const t = ctx.currentTime;
-    const src = ctx.createBufferSource(); src.buffer = this.white;
-    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3000;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-    src.connect(hp).connect(g).connect(this.master);
-    src.start(t, Math.random() * 2, 0.27);
-    for (const at of [0.45, 0.8]) {
-      const s = t + at;
-      const o = ctx.createOscillator(); o.type = 'sine';
-      o.frequency.setValueAtTime(320, s); o.frequency.exponentialRampToValueAtTime(140, s + 0.12);
-      const og = ctx.createGain();
-      og.gain.setValueAtTime(0.001, s); og.gain.exponentialRampToValueAtTime(0.3, s + 0.02);
-      og.gain.exponentialRampToValueAtTime(0.001, s + 0.14);
-      o.connect(og).connect(this.master);
-      o.start(s); o.stop(s + 0.16);
-    }
+    if (!this.live) return;
+    const t = this.ctx.currentTime;
+    this.noise(t, { filter: 'highpass', freq: 3000, vol: 0.25, decay: 0.25, length: 0.27 });
+    for (const at of [0.45, 0.8]) this.tone(t + at, { from: 320, to: 140, glide: 0.12, vol: 0.3, attack: 0.02, curve: 'exp', decay: 0.14 });
   }
 
   // A dish eaten from the bag: three short, soft crunches of noise.
   bite() {
-    const ctx = this.ctx;
-    if (!ctx || this.muted) return;
+    if (!this.live) return;
     for (const at of [0, 0.22, 0.44]) {
-      const t = ctx.currentTime + at;
-      const src = ctx.createBufferSource(); src.buffer = this.white;
-      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1400 + Math.random() * 600; bp.Q.value = 0.9;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.3, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-      src.connect(bp).connect(g).connect(this.master);
-      src.start(t, Math.random() * 2, 0.09);
+      this.noise(this.ctx.currentTime + at, { freq: 1400 + Math.random() * 600, Q: 0.9, vol: 0.3, decay: 0.08, length: 0.09 });
     }
   }
 
   // Three raps on a door, the first after delay seconds: a dull thump with a short slap of noise on each.
   knock(delay = 0) {
-    const ctx = this.ctx;
-    if (!ctx || this.muted) return;
+    if (!this.live) return;
     for (const at of KNOCK_RAPS) {
-      const t = ctx.currentTime + delay + at;
-      const o = ctx.createOscillator(); o.type = 'sine';
-      o.frequency.setValueAtTime(190, t); o.frequency.exponentialRampToValueAtTime(85, t + 0.09);
-      const og = ctx.createGain();
-      og.gain.setValueAtTime(0.6, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-      o.connect(og).connect(this.master);
-      o.start(t); o.stop(t + 0.12);
-      const src = ctx.createBufferSource(); src.buffer = this.white;
-      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 650; bp.Q.value = 1.2;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-      src.connect(bp).connect(g).connect(this.master);
-      src.start(t, Math.random() * 2, 0.06);
+      const t = this.ctx.currentTime + delay + at;
+      this.tone(t, { from: 190, to: 85, glide: 0.09, vol: 0.6, decay: 0.1 });
+      this.noise(t, { freq: 650, Q: 1.2, vol: 0.35, decay: 0.05, length: 0.06 });
     }
   }
 

@@ -11,7 +11,7 @@ import { ALLEY, buildAlley } from '../src/alley.js';
 import { buildSigns } from '../src/signs.js';
 import { LightPool } from '../src/lights.js';
 import { SIGN_SPECS } from '../src/sign-specs.js';
-import { inReach } from '../src/vending.js';
+import { inReach } from '../src/math.js';
 
 const SEED = 20261028; // same seed as main.js
 const SIGN_PPM = 64;

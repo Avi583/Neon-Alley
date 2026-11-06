@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
-import { Vending, VEND_TURN, inReach } from '../src/vending.js';
+import { Vending, VEND_TURN } from '../src/vending.js';
+import { inReach } from '../src/math.js';
 
 const SLOTS = [0, 1, 2, 3, 4, 5].map((flavour) => ({ z: -26.5 + flavour * 0.125, base: 0.745 + flavour * 0.1, flavour }));
 const SPOT = { face: 2.0, z: -26.5, side: 1, slots: SLOTS };

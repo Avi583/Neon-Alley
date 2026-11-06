@@ -5,9 +5,11 @@
 import * as THREE from 'three';
 import { fbm } from './noise.js';
 import { clamp01, sstep } from './math.js';
+import { normalFromHeight } from './texture-core.js';
 
 const DASH = 5, DASH_ON = 3; // stitch length plus gap, and stitch length, in texels
 const ROW = 2.8; // a seam's stitch rows sit this many texels either side of it
+const NEAR = 8; // texels: past this from a line its groove and stitches are too faint to show
 const THREAD_LEATHER = [0.95, 0.95, 0.95], THREAD_DENIM = [0.86, 0.6, 0.27];
 
 // A polyline in uv. A 'seam' is a groove stitched along both sides, 'stitch' is topstitching alone.
@@ -26,6 +28,8 @@ function stitching(W, H, segs) {
         let rx = x + 0.5 - p.ax;
         if (Math.abs(p.dx) < W / 2) rx -= W * Math.round(rx / W); // the nearest copy round the wrap
         const ry = y + 0.5 - p.ay;
+        // Nothing to add away from the segment's bounding box.
+        if (rx < Math.min(0, p.dx) - NEAR || rx > Math.max(0, p.dx) + NEAR || ry < Math.min(0, p.dy) - NEAR || ry > Math.max(0, p.dy) + NEAR) continue;
         const len2 = p.dx * p.dx + p.dy * p.dy || 1;
         const t = clamp01((rx * p.dx + ry * p.dy) / len2);
         const d = Math.hypot(rx - t * p.dx, ry - t * p.dy);
@@ -45,23 +49,18 @@ function stitching(W, H, segs) {
 // texel(u, v, groove, stitch) returns [height, r, g, b] with colour 0 to 1 (sRGB).
 function paint(W, H, segs, strength, texel) {
   const { groove, stitch } = stitching(W, H, segs);
-  const h = new Float32Array(W * H), rgba = new Uint8Array(W * H * 4), nrm = new Uint8Array(W * H * 4);
+  const h = new Float32Array(W * H), rgba = new Uint8Array(W * H * 4);
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const i = y * W + x;
       const [height, r, g, b] = texel((x + 0.5) / W, (y + 0.5) / H, groove[i], stitch[i]);
       h[i] = height;
-      rgba.set([r * 255, g * 255, b * 255, 255], i * 4);
+      const k = i * 4;
+      rgba[k] = r * 255; rgba[k + 1] = g * 255; rgba[k + 2] = b * 255; rgba[k + 3] = 255;
     }
   }
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      const at = (xx, yy) => h[Math.min(H - 1, Math.max(0, yy)) * W + ((xx + W) % W)];
-      const nx = (at(x - 1, y) - at(x + 1, y)) * strength, ny = (at(x, y - 1) - at(x, y + 1)) * strength;
-      const l = Math.hypot(nx, ny, 1);
-      nrm.set([(nx / l * 0.5 + 0.5) * 255, (ny / l * 0.5 + 0.5) * 255, (1 / l * 0.5 + 0.5) * 255, 255], (y * W + x) * 4);
-    }
-  }
+  // Wrapping round the part but not along it, and unflipped, as DataTextures upload.
+  const nrm = normalFromHeight(h, W, H, strength, { wrapY: false, flipY: true, out: new Uint8Array(W * H * 4) });
   const tex = (data, srgb) => {
     const t = new THREE.DataTexture(data, W, H);
     t.wrapS = THREE.RepeatWrapping;

@@ -2,8 +2,8 @@
 // place to stand comes from the generated layout, so moving a shop doesn't break this.
 import { test, expect } from '@playwright/test';
 import { ALLEY } from '../src/alley.js';
-import { foodLabel } from '../src/food-shop.js';
-import { inReach } from '../src/vending.js';
+import { foodLabel } from '../src/items.js';
+import { inReach } from '../src/math.js';
 import { LOAD_TIMEOUT, nextFrames, openGame, watchErrors } from './game-page.js';
 
 const PLAYER_RADIUS = 0.3; // same as player.js

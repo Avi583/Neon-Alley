@@ -7,6 +7,7 @@ import { genACFront, genACDrip, genBootPrint, genVendingHeader, genVendingPanel,
 import { genGraffiti } from './graffiti-art.js';
 import { genShopPrice, genBarMenu, genShopInterior, genNoren } from './shop-art.js';
 import { ART_TEXT } from './art-text.js';
+import { FOOD, yen } from './items.js';
 
 // Generate everything with progress callbacks, yielding to the browser
 // between textures so the loading bar can animate.
@@ -30,10 +31,10 @@ export async function generateTextures(Q, aniso, progress) {
     ['vendingPanel', () => genVendingPanel()],
     ['vendingPrice', () => genVendingPrice()],
     ['noEntry', () => genNoEntry(aniso)],
-    ['priceRamen', () => genShopPrice(ART_TEXT.ramen, '¥980')],
-    ['priceOnigiri', () => genShopPrice(ART_TEXT.onigiri, '¥180')],
-    ['priceSushi', () => genShopPrice(ART_TEXT.sushi, '¥240')],
-    ['priceBar', () => genBarMenu([['BEER', '¥600'], ['SAKE', '¥800'], ['SOJU', '¥500']])],
+    ['priceRamen', () => genShopPrice(ART_TEXT.ramen, yen(FOOD.ramen.price))],
+    ['priceOnigiri', () => genShopPrice(ART_TEXT.onigiri, yen(FOOD.onigiri.price))],
+    ['priceSushi', () => genShopPrice(ART_TEXT.sushi, yen(FOOD.nigiri.price))],
+    ['priceBar', () => genBarMenu(['beer', 'sake', 'soju'].map((k) => [FOOD[k].name, yen(FOOD[k].price)]))],
     ['canLabels', () => genCanLabels()],
     ['shopRamen', () => genShopInterior('ramen')],
     ['shopBar', () => genShopInterior('bar')],

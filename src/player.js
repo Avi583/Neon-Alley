@@ -4,12 +4,17 @@
 // at eye height (first person) or over the shoulder (third person), pulled in
 // when a wall or shopfront would come between it and the player.
 import * as THREE from 'three';
+import { damp } from './math.js';
 
 const CAM_BACK = 2.4, CAM_SIDE = 0.45, CAM_HEIGHT = 1.62; // third-person camera, from the player
 const CAM_PAD = 0.18; // the camera keeps this far from walls
 const CAM_OUT = 3; // how fast the camera eases back out once clear
 export const CLOSE_UP = 0.6; // nearer than this the helmet would fill the view
-const RUN = 4.2; // a full run, where stepLength stops growing
+export const WALK_SPEED = 2, RUN_SPEED = 4.2; // m/s; a full run is also where stepLength stops growing
+export const MIN_STEP = 0.6; // slower than this no step lands
+// 0 standing to 1 at walking pace, and 0 walking to 1 at a full run.
+export const walkShare = (v) => Math.min(v / WALK_SPEED, 1);
+export const runShare = (v) => THREE.MathUtils.clamp((v - WALK_SPEED) / (RUN_SPEED - WALK_SPEED), 0, 1);
 const ARRIVE = 0.05, WALK_GIVE_UP = 2; // walkTo: m from the spot that counts as there; s before it stops trying
 
 // How far each step carries the walker at speed v: short quick steps at a walk, lengthening into a
@@ -17,8 +22,7 @@ const ARRIVE = 0.05, WALK_GIVE_UP = 2; // walkTo: m from the spot that counts as
 // sideways), as far as a leg reaches out. bob turns half a turn a step, and the biker's boots plant
 // in time with it.
 export function stepLength(v, side = 0) {
-  const walk = Math.min(v / 2, 1), run = THREE.MathUtils.clamp((v - 2) / (RUN - 2), 0, 1);
-  return (0.45 + 0.23 * walk + 0.52 * run) * (1 - 0.4 * side);
+  return (0.45 + 0.23 * walkShare(v) + 0.52 * runShare(v)) * (1 - 0.4 * side);
 }
 
 // How far along the ground segment (x0, z0) -> (x1, z1) is clear, from 0 to 1,
@@ -154,7 +158,7 @@ export class Player {
       run = k.has('ShiftLeft') || k.has('ShiftRight') || Math.hypot(this.joy.x, this.joy.y) > 0.95;
     }
     const len = Math.hypot(f, r);
-    const speed = run ? 4.2 : 2.0;
+    const speed = run ? RUN_SPEED : WALK_SPEED;
     const sx = -Math.sin(this.yaw), sz = -Math.cos(this.yaw); // forward
     const rx = Math.cos(this.yaw), rz = -Math.sin(this.yaw); // right
     let tx = 0, tz = 0;
@@ -172,12 +176,12 @@ export class Player {
         this.vel.set(0, 0); // stands where it got to, rather than coasting (or still pushing at a collider)
         w.onArrive();
       } else {
-        const s = Math.min(2.0, d * 4) / d; // walking pace, easing in over the last half metre
+        const s = Math.min(WALK_SPEED, d * 4) / d; // walking pace, easing in over the last half metre
         tx = dx * s;
         tz = dz * s;
       }
     }
-    const a = 1 - Math.exp(-dt * 9);
+    const a = damp(9, dt);
     this.vel.x += (tx - this.vel.x) * a;
     this.vel.y += (tz - this.vel.y) * a;
     this.pos.x += this.vel.x * dt;
@@ -191,7 +195,7 @@ export class Player {
     const stepIdx = Math.floor(this.bob / Math.PI);
     if (stepIdx !== this.lastStep) {
       this.lastStep = stepIdx;
-      if (v > 0.6 && this.onStep) this.onStep(v);
+      if (v > MIN_STEP && this.onStep) this.onStep(v);
     }
     this.apply(v, dt);
   }
@@ -210,7 +214,7 @@ export class Player {
 
   apply(v, dt = 0) {
     // The bob grows with the pace, and with the step: a walk's shorter steps bob less than a run's.
-    const amp = Math.min(v / 2, 1.5) * (stepLength(v) / stepLength(RUN));
+    const amp = Math.min(v / WALK_SPEED, 1.5) * (stepLength(v) / stepLength(RUN_SPEED));
     if (this.view === 'first') {
       this.camDist = 0;
       this.cam.position.set(
@@ -229,7 +233,7 @@ export class Player {
     const wx = -fx * CAM_BACK + rx * CAM_SIDE, wz = -fz * CAM_BACK + rz * CAM_SIDE;
     const clear = clearFraction(hx, hz, hx + wx, hz + wz, this.colliders, this.bounds, CAM_PAD);
     // In at once so walls never show through, back out gently.
-    this.camReach = clear < this.camReach ? clear : this.camReach + (clear - this.camReach) * (1 - Math.exp(-dt * CAM_OUT));
+    this.camReach = clear < this.camReach ? clear : this.camReach + (clear - this.camReach) * damp(CAM_OUT, dt);
     const k = this.camReach;
     const y = Math.max(0.25, hy - fy * CAM_BACK * k);
     this.cam.position.set(hx + wx * k, y, hz + wz * k);
