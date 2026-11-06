@@ -186,6 +186,17 @@ body.touch #pause-button, body.touch #view-button, body.touch #fullscreen { disp
 body.touch #hud-buttons button { min-height: 44px; min-width: 96px; }
 #hud-buttons #bag-button { color: var(--cyan); }
 #hud-buttons #bag-button.bump { border-color: rgba(56, 232, 255, 0.8); box-shadow: 0 0 10px rgba(56, 232, 255, 0.6); }
+#keymap {
+  display: grid; grid-template-columns: auto auto; gap: 3px 10px;
+  margin-top: 2px; padding: 8px 10px;
+  font-size: 11px; letter-spacing: 0.1em; color: var(--dim);
+  background: rgba(10, 8, 18, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+#keymap b { color: var(--text); font-weight: 400; text-align: right; }
+body.touch #keymap, body.touch .pause-keys { display: none; }
+.panel.small .keys.pause-keys { margin-top: 20px; }
 #bag {
   position: absolute;
   top: calc(10px + env(safe-area-inset-top));

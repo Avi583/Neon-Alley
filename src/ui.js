@@ -7,7 +7,7 @@ const ui = {
   hud: $('hud'), pause: $('pause'), fps: $('fps'), sound: $('sound'), pauseButton: $('pause-button'), pills: $('qpills'),
   resume: $('resume'), pauseSound: $('pause-sound'), pausePills: $('pause-qpills'), vend: $('vend'),
   fullscreen: $('fullscreen'), lookPills: $('look-pills'), view: $('view-button'),
-  bag: $('bag'), bagButton: $('bag-button'), bagSlots: $('bag-slots'), bagCount: $('bag-count'),
+  keymap: $('keymap'), bag: $('bag'), bagButton: $('bag-button'), bagSlots: $('bag-slots'), bagCount: $('bag-count'),
 };
 
 const LOOK_SPEEDS = {
@@ -173,6 +173,7 @@ export function createStates({ player, audio, canvas, auto, onUse, inventory = n
     }
     if (e.code === 'KeyE' && !e.repeat && state === 'play') onUse();
     if (e.code === 'KeyI' && !e.repeat && state === 'play') toggleBag();
+    if (e.code === 'KeyH' && !e.repeat) ui.keymap.classList.toggle('hidden');
   });
   ui.vend.addEventListener('click', onUse);
   const toggleBag = () => ui.bag.classList.toggle('hidden', !ui.bag.classList.contains('hidden'));
