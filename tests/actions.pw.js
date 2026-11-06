@@ -57,7 +57,7 @@ async function standAt(page, { x, z, yaw }) {
 
 const expectPrompt = (page, text) => expect(page.locator('#vend')).toHaveText(`E · ${text}`, { timeout: 60_000 });
 
-test('the vending machine sells a drink, then offers it to take', async ({ page }) => {
+test('the vending machine sells a drink, then offers it to take into the bag', async ({ page }) => {
   const errors = watchErrors(page);
   const world = await enterGame(page, errors);
   await standAt(page, findStand(world, [world.vending], [...world.doors, ...world.food]));
@@ -66,6 +66,10 @@ test('the vending machine sells a drink, then offers it to take', async ({ page 
   await expectPrompt(page, 'TAKE THE DRINK');
   await page.keyboard.press('KeyE');
   await expectPrompt(page, 'BUY A DRINK ¥120');
+  await expect(page.locator('#bag-button')).toHaveText('BAG 1');
+  await page.keyboard.press('KeyI');
+  await expect(page.locator('#bag')).toBeVisible();
+  await expect(page.locator('.bag-slot:not(.empty)')).toHaveCount(1);
   expect(errors).toEqual([]);
 });
 
@@ -107,7 +111,7 @@ test('a door beyond the glove is walked up to, then knocked on with the arm and 
   expect(errors).toEqual([]);
 });
 
-test('each food spot in reach sells once, then the prompt goes', async ({ page }) => {
+test('each food spot in reach sells once, the dish is taken into the bag, then the prompt goes', async ({ page }) => {
   const errors = watchErrors(page);
   const world = await enterGame(page, errors);
   const others = [world.vending, ...world.doors];
@@ -115,14 +119,21 @@ test('each food spot in reach sells once, then the prompt goes', async ({ page }
   const stand = findStand(world, [first], others);
   const inReachNow = world.food.filter((s) => reaches(s, stand));
   await standAt(page, stand);
-  for (let left = inReachNow.length; left > 0; left--) {
-    await expect(page.locator('#vend')).toBeVisible({ timeout: 60_000 });
-    await expect(page.locator('#vend')).toHaveText(/^E · BUY /);
+  // Each spot is bought once, and each dish taken once it has risen, in whatever order the prompt offers.
+  const prompt = page.locator('#vend');
+  let bought = 0, taken = 0;
+  while (bought + taken < inReachNow.length * 2) {
+    await expect(prompt).toBeVisible({ timeout: 60_000 });
+    const text = await prompt.textContent();
+    expect(text).toMatch(/^E · (BUY|TAKE) /);
+    if (text.startsWith('E · BUY ')) bought++; else taken++;
     await page.keyboard.press('KeyE');
     await page.waitForTimeout(FOOD_COOLDOWN);
     await nextFrames(page);
   }
-  await expect(page.locator('#vend')).toBeHidden({ timeout: 60_000 });
+  expect([bought, taken]).toEqual([inReachNow.length, inReachNow.length]);
+  await expect(prompt).toBeHidden({ timeout: 60_000 });
+  await expect(page.locator('#bag-button')).toHaveText(`BAG ${inReachNow.length}`);
   expect(errors).toEqual([]);
 });
 

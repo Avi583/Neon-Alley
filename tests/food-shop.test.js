@@ -92,4 +92,25 @@ describe('FoodShop', () => {
     expect(foodLabel(spot('sake', 0))).toBe('BUY SAKE ¥800');
     expect(foodLabel(spot('soju', 0))).toBe('BUY SOJU ¥500');
   });
+
+  it('offers a bought dish to take only once it has risen, then shuts the hatch', () => {
+    const shop = new FoodShop([spot('ramen', 0)], new THREE.Group());
+    const at = [1.2, 0, LOOK_POS_X], target = shop.spots[0];
+    expect(shop.takeTarget(...at)).toBe(null);
+    expect(shop.take(target)).toBe(null);
+    shop.buy(target);
+    shop.update(FOOD_LIFT / 2);
+    expect(shop.takeTarget(...at)).toBe(null);
+    expect(shop.take(target)).toBe(null);
+    shop.update(FOOD_LIFT);
+    expect(shop.target(...at)).toBe(null);
+    expect(shop.takeTarget(...at)).toBe(target);
+    expect(shop.take(target)).toBe(FOOD.ramen);
+    expect(shop.items[0].group.visible).toBe(false);
+    const m = new THREE.Matrix4();
+    shop.leaves.getMatrixAt(0, m);
+    expect(m.elements[14]).toBeCloseTo(0);
+    expect(shop.takeTarget(...at)).toBe(null);
+    expect(shop.take(target)).toBe(null);
+  });
 });

@@ -97,14 +97,27 @@ describe('Vending', () => {
 
   it('has nothing to take until a can has landed', () => {
     const v = make(() => 0);
-    expect(v.take()).toBe(false);
+    expect(v.take()).toBe(null);
     v.buy();
     run(v, VEND_TURN + 0.1);
-    expect(v.take()).toBe(false);
+    expect(v.take()).toBe(null);
     run(v, 3);
-    expect(v.take()).toBe(true);
+    expect(v.take()).toBe(v.slots[0].flavour);
     expect(v.cans[0].group.visible).toBe(false);
-    expect(v.take()).toBe(false);
+    expect(v.take()).toBe(null);
+  });
+
+  it('tells which flavour comes out next, oldest first, and hands it over on take', () => {
+    const picks = [0, 1].map((s) => s / SLOTS.length);
+    const v = make(() => picks.shift());
+    expect(v.nextFlavour()).toBe(null);
+    for (let k = 0; k < 2; k++) { v.buy(); run(v, 3); }
+    const [first, second] = [v.slots[0].flavour, v.slots[1].flavour];
+    expect(v.nextFlavour()).toBe(first);
+    expect(v.take()).toBe(first);
+    expect(v.nextFlavour()).toBe(second);
+    expect(v.take()).toBe(second);
+    expect(v.nextFlavour()).toBe(null);
   });
 
   it('takes the oldest can first, and the next can fills the free slot', () => {

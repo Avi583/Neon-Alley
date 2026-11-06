@@ -13,7 +13,9 @@ import { Footprints } from './footprints.js';
 import { Splashes } from './splashes.js';
 import { Vending, VEND_TURN, inReach } from './vending.js';
 import { NeonFood } from './neon-food.js';
-import { FoodShop, FOOD_LIFT, foodLabel } from './food-shop.js';
+import { FOOD, FoodShop, FOOD_LIFT, foodLabel } from './food-shop.js';
+import { Inventory } from './inventory.js';
+import { CAN_LABELS } from './canvas-art.js';
 import { createSky, Snow, Steam } from './atmosphere.js';
 import { buildEnvironment } from './environment.js';
 import { LightPool } from './lights.js';
@@ -33,7 +35,7 @@ const AUTO = params.has('autostart'); // used for automated screenshots
 const FREEZE = AUTO || params.has('freeze');
 const BENCH = params.has('bench'); // used for the performance baseline
 const num = (k, d) => (params.has(k) ? parseFloat(params.get(k)) : d);
-const BUY = 'BUY A DRINK ¥120', TAKE = 'TAKE THE DRINK', KNOCK = 'KNOCK', KNOCK_COOLDOWN = 1000; // ms, no shorter than a knock (KNOCK_TIME in character.js)
+const BUY = 'BUY A DRINK ¥120', TAKE = 'TAKE THE DRINK', KNOCK = 'KNOCK', BAG_FULL = 'BAG FULL', KNOCK_COOLDOWN = 1000; // ms, no shorter than a knock (KNOCK_TIME in character.js)
 const FOOD_COOLDOWN = 400; // ms, so a held key can't clear a counter
 
 createQualityPills(qKey);
@@ -159,46 +161,64 @@ async function init() {
   try { await renderer.compileAsync(scene, camera); } catch { renderer.compile(scene, camera); }
 
   const reaches = (spot) => inReach(spot, player.pos.x, player.pos.y, player.yaw);
-  const foodInReach = () => foodShop.target(player.pos.x, player.pos.y, player.yaw);
+  const inventory = new Inventory();
+  const canItem = (flavour) => ({ id: `can:${CAN_LABELS[flavour][2]}`, name: CAN_LABELS[flavour][2], color: CAN_LABELS[flavour][0] });
+  const foodItem = ({ name }) => ({ id: `food:${name}`, name });
+  let nextKnock = 0, nextFood = 0;
+  const knockAt = (door) => {
+    if (performance.now() < nextKnock) return;
+    nextKnock = performance.now() + KNOCK_COOLDOWN;
+    const knock = () => {
+      nextKnock = performance.now() + KNOCK_COOLDOWN;
+      character.knock(door);
+      audio.knock(KNOCK_LEAD);
+    };
+    // The prompt shows from further back than the glove reaches, so the biker first walks up
+    // to stand square in front of the door, as near as the walk bounds allow.
+    if (Math.hypot(door.face - player.pos.x, door.z - player.pos.y) <= KNOCK_REACH) knock();
+    else {
+      const x = THREE.MathUtils.clamp(door.face - Math.sign(door.face) * KNOCK_REACH * 0.9, -ALLEY.walkX, ALLEY.walkX);
+      player.walkTo(x, door.z, knock);
+    }
+  };
+  // The action in reach as { label, use }, or null. A full bag still shows, so the player knows why.
+  const full = { label: BAG_FULL, use: () => {} };
   const useAction = () => {
     if (!player.enabled) return null;
-    if (reaches(alley.vending)) return vending.landed().length ? TAKE : BUY;
-    const food = foodInReach();
-    if (food) return foodLabel(food);
-    return alley.doors.some(reaches) ? KNOCK : null;
+    const { x, y: z } = player.pos, yaw = player.yaw;
+    if (reaches(alley.vending)) {
+      const flavour = vending.nextFlavour();
+      if (flavour === null) return { label: BUY, use: () => { if (vending.buy()) audio.whirr(VEND_TURN); } };
+      const item = canItem(flavour);
+      if (!inventory.canAdd(item.id)) return full;
+      return { label: TAKE, use: () => { if (vending.take() !== null && inventory.add(item)) audio.pickup(); } };
+    }
+    const dish = foodShop.takeTarget(x, z, yaw);
+    if (dish) {
+      const item = foodItem(FOOD[dish.kind]);
+      if (!inventory.canAdd(item.id)) return full;
+      return { label: `TAKE ${item.name}`, use: () => { if (foodShop.take(dish)) { inventory.add(item); audio.pickup(); } } };
+    }
+    const food = foodShop.target(x, z, yaw);
+    if (food) {
+      return {
+        label: foodLabel(food),
+        use: () => {
+          if (performance.now() < nextFood) return;
+          nextFood = performance.now() + FOOD_COOLDOWN;
+          foodShop.buy(food);
+          neonFood.hide(food.form, food.index);
+          audio.purchase();
+          audio.whirr(FOOD_LIFT);
+        },
+      };
+    }
+    const door = alley.doors.find(reaches);
+    return door ? { label: KNOCK, use: () => knockAt(door) } : null;
   };
-  let nextKnock = 0, nextFood = 0;
   const states = createStates({
-    player, audio, canvas: renderer.domElement, auto: AUTO || BENCH,
-    onUse: () => {
-      const action = useAction();
-      if (action === BUY && vending.buy()) audio.whirr(VEND_TURN);
-      if (action === TAKE && vending.take()) audio.pickup();
-      if (action === KNOCK && performance.now() >= nextKnock) {
-        nextKnock = performance.now() + KNOCK_COOLDOWN;
-        const door = alley.doors.find(reaches);
-        const knock = () => {
-          nextKnock = performance.now() + KNOCK_COOLDOWN;
-          character.knock(door);
-          audio.knock(KNOCK_LEAD);
-        };
-        // The prompt shows from further back than the glove reaches, so the biker first walks up
-        // to stand square in front of the door, as near as the walk bounds allow.
-        if (Math.hypot(door.face - player.pos.x, door.z - player.pos.y) <= KNOCK_REACH) knock();
-        else {
-          const x = THREE.MathUtils.clamp(door.face - Math.sign(door.face) * KNOCK_REACH * 0.9, -ALLEY.walkX, ALLEY.walkX);
-          player.walkTo(x, door.z, knock);
-        }
-      }
-      const food = action && action !== BUY && action !== TAKE && action !== KNOCK ? foodInReach() : null;
-      if (food && performance.now() >= nextFood) {
-        nextFood = performance.now() + FOOD_COOLDOWN;
-        foodShop.buy(food);
-        neonFood.hide(food.form, food.index);
-        audio.purchase();
-        audio.whirr(FOOD_LIFT);
-      }
-    },
+    player, audio, canvas: renderer.domElement, auto: AUTO || BENCH, inventory,
+    onUse: () => useAction()?.use(),
   });
   const bench = BENCH ? createBench(renderer, player, ALLEY, num('bench', 600)) : null;
 
@@ -241,7 +261,7 @@ async function init() {
     vending.update(dt);
     neonFood.update(t);
     foodShop.update(dt);
-    states.showPrompt(useAction());
+    states.showPrompt(useAction()?.label ?? null);
     sky.position.copy(camera.position);
     signs.update(t);
     mats.blink.color.copy(mats.blinkBase).multiplyScalar(Math.sin(t * 4) > 0 ? 1 : 0.05);

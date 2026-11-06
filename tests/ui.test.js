@@ -26,6 +26,7 @@ function fakeElement() {
       toggle: (c, on) => (on ? classes.add(c) : classes.delete(c)),
     },
     appendChild(child) { this.children.push(child); },
+    replaceChildren(...nodes) { this.children = nodes; },
   };
 }
 
@@ -496,5 +497,36 @@ describe('quality pills', () => {
     (await loadUi('?mute=1')).createQualityPills('high');
     pill('qpills', 'Low').fire('click');
     expect(reloadUrl().get('mute')).toBe('1');
+  });
+});
+
+describe('inventory bag', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('draws a cell per slot, stacks counts, and toggles with I in play', async () => {
+    const ui = await loadUi();
+    const { Inventory } = await import('../src/inventory.js');
+    const f = fakes(), inventory = new Inventory(4);
+    ui.createStates({ ...f, auto: false, inventory });
+    const slots = el('bag-slots');
+    expect(slots.children.length).toBe(4);
+    expect(el('bag-button').textContent).toBe('BAG 0');
+    inventory.add({ id: 'can:COLA', name: 'COLA', color: '#e0162e' });
+    inventory.add({ id: 'can:COLA', name: 'COLA', color: '#e0162e' });
+    inventory.add({ id: 'food:RAMEN', name: 'RAMEN' });
+    expect(slots.children.map((c) => c.className)).toEqual(['bag-slot', 'bag-slot', 'bag-slot empty', 'bag-slot empty']);
+    expect(slots.children[0].children[0].textContent).toBe('×2');
+    expect(slots.children[1].children.length).toBe(0);
+    expect(el('bag-button').textContent).toBe('BAG 3');
+    expect(el('bag-count').textContent).toBe('2/4');
+
+    el('bag').classList.add('hidden');
+    listeners.window.fire('keydown', { code: 'KeyI' });
+    expect(el('bag').classList.contains('hidden')).toBe(true); // not in play yet
+    el('enter').fire('click');
+    listeners.window.fire('keydown', { code: 'KeyI' });
+    expect(el('bag').classList.contains('hidden')).toBe(false);
+    el('bag-button').fire('click');
+    expect(el('bag').classList.contains('hidden')).toBe(true);
   });
 });

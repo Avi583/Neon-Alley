@@ -141,18 +141,20 @@ export function genNoEntry(aniso) {
 
 // One label per cell. u = 0.5 of a cell faces the viewer, so the can's round
 // shading is painted in: the sides fall away to dark, with a highlight left of centre.
-export const CAN_FLAVOURS = 6;
+// [label colour, ink, name] for each flavour, in the order of the cells on the label strip.
+export const CAN_LABELS = [
+  ['#e0162e', '#ffffff', 'COLA'],
+  ['#1a5cff', '#d8f4ff', 'SODA'],
+  ['#ffc21f', '#c81e32', 'LEMON'],
+  ['#14b866', '#f4fff0', 'MATCHA'],
+  ['#8a35e0', '#ffe0ff', 'GRAPE'],
+  ['#ff7a14', '#fff4d8', 'MIKAN'],
+];
+export const CAN_FLAVOURS = CAN_LABELS.length;
 export function genCanLabels() {
   const S = 128, W = S * CAN_FLAVOURS, H = 256;
   const c = makeCanvas(W, H), ctx = c.getContext('2d');
-  const flavours = [
-    ['#e0162e', '#ffffff', 'COLA'],
-    ['#1a5cff', '#d8f4ff', 'SODA'],
-    ['#ffc21f', '#c81e32', 'LEMON'],
-    ['#14b866', '#f4fff0', 'MATCHA'],
-    ['#8a35e0', '#ffe0ff', 'GRAPE'],
-    ['#ff7a14', '#fff4d8', 'MIKAN'],
-  ];
+  const flavours = CAN_LABELS;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   flavours.forEach(([base, ink, name], i) => {
     const x = i * S, mid = x + S / 2;

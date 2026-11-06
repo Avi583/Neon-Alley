@@ -41,6 +41,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - src/graffiti-art.js
 - src/ground.js
 - src/holo-shader.js
+- src/inventory.js
 - src/lights.js
 - src/main.js
 - src/materials.js
@@ -78,6 +79,7 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 - tests/fps-counter.test.js
 - tests/game-page.js
 - tests/input.pw.js
+- tests/inventory.test.js
 - tests/layout.test.js
 - tests/neon-food.test.js
 - tests/noise.test.js
@@ -100,6 +102,6 @@ Filepath of every file in the project. Update whenever a file is added, removed,
 
 ## docs/ (deployed build output)
 - docs/.nojekyll
-- docs/assets/index-DIXfbRTh.js
-- docs/assets/index-DsfeK6UR.css
+- docs/assets/index-C8WzPnVd.js
+- docs/assets/index-azkImpDX.css
 - docs/index.html

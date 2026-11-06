@@ -7,6 +7,7 @@ const ui = {
   hud: $('hud'), pause: $('pause'), fps: $('fps'), sound: $('sound'), pauseButton: $('pause-button'), pills: $('qpills'),
   resume: $('resume'), pauseSound: $('pause-sound'), pausePills: $('pause-qpills'), vend: $('vend'),
   fullscreen: $('fullscreen'), lookPills: $('look-pills'), view: $('view-button'),
+  bag: $('bag'), bagButton: $('bag-button'), bagSlots: $('bag-slots'), bagCount: $('bag-count'),
 };
 
 const LOOK_SPEEDS = {
@@ -60,7 +61,31 @@ export function setFps(text) {
   ui.fps.textContent = text;
 }
 
-export function createStates({ player, audio, canvas, auto, onUse }) {
+// One cell per slot, filled in pick-up order, with the rest left empty.
+export function renderBag(inventory) {
+  const cells = [];
+  for (let i = 0; i < inventory.slots; i++) {
+    const item = inventory.items[i];
+    const cell = document.createElement('div');
+    cell.className = item ? 'bag-slot' : 'bag-slot empty';
+    if (item) {
+      cell.textContent = item.name;
+      if (item.color) cell.style.setProperty?.('--slot', item.color);
+      if (item.count > 1) {
+        const n = document.createElement('span');
+        n.className = 'n';
+        n.textContent = `×${item.count}`;
+        cell.appendChild(n);
+      }
+    }
+    cells.push(cell);
+  }
+  ui.bagSlots.replaceChildren(...cells);
+  ui.bagCount.textContent = `${inventory.items.length}/${inventory.slots}`;
+  ui.bagButton.textContent = `BAG ${inventory.total}`;
+}
+
+export function createStates({ player, audio, canvas, auto, onUse, inventory = null }) {
   let state = 'title';
   const hasLock = 'requestPointerLock' in canvas;
   const usesLock = () => !player.touch && hasLock;
@@ -147,8 +172,22 @@ export function createStates({ player, audio, canvas, auto, onUse }) {
       play();
     }
     if (e.code === 'KeyE' && !e.repeat && state === 'play') onUse();
+    if (e.code === 'KeyI' && !e.repeat && state === 'play') toggleBag();
   });
   ui.vend.addEventListener('click', onUse);
+  const toggleBag = () => ui.bag.classList.toggle('hidden', !ui.bag.classList.contains('hidden'));
+  ui.bagButton.addEventListener('click', toggleBag);
+  if (inventory) {
+    let bump = 0;
+    inventory.onChange = () => {
+      renderBag(inventory);
+      // A short glow on the button, so a pick-up shows even with the bag closed.
+      ui.bagButton.classList.add('bump');
+      clearTimeout(bump);
+      bump = setTimeout(() => ui.bagButton.classList.remove('bump'), 400);
+    };
+    renderBag(inventory);
+  }
   let shownPrompt = null;
   ui.sound.addEventListener('click', toggleSound);
   ui.pauseSound.addEventListener('click', toggleSound);

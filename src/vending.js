@@ -86,7 +86,7 @@ export class Vending {
       const can = makeCan();
       can.group.position.set(x, REST_Y, spot.z + dz);
       can.group.rotation.x = Math.PI / 2; // lying along the bin
-      return { ...can, held: false, order: 0, delay: 0, fall: 0, speed: 0 };
+      return { ...can, held: false, flavour: 0, order: 0, delay: 0, fall: 0, speed: 0 };
     });
     this.falling = makeCan();
     this.bodies = bodies;
@@ -139,15 +139,21 @@ export class Vending {
     return this.cans.filter((c) => c.held && c.delay <= 0 && c.fall === 0);
   }
 
-  // Lifts the oldest can out of the bin. Returns true if there was one to take.
+  // The flavour of the can take() would lift next, or null if none has landed.
+  nextFlavour() {
+    const landed = this.landed();
+    return landed.length ? this.oldest(landed).flavour : null;
+  }
+
+  // Lifts the oldest can out of the bin. Returns its flavour, or null if there was none to take.
   take() {
     const landed = this.landed();
-    if (!landed.length) return false;
+    if (!landed.length) return null;
     const can = this.oldest(landed);
     can.held = false;
     can.group.visible = false;
     this.flapOpen = this.cans.some((c) => c.held);
-    return true;
+    return can.flavour;
   }
 
   // The front can leaves the coil as a separate object, and the stock steps back into place.
@@ -178,6 +184,7 @@ export class Vending {
     can.held = true;
     can.order = this.sold++;
     can.body.geometry = this.bodies[job.slot.flavour];
+    can.flavour = job.slot.flavour;
     can.group.visible = false;
     can.delay = DROP_DELAY;
     can.fall = DROP_FROM - REST_Y;

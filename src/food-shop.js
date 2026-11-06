@@ -176,7 +176,7 @@ export class FoodShop {
         group.add(mesh);
       }
       parent.add(group);
-      return { spot, group, depth: kit.depth, sold: false, time: 0 };
+      return { spot, group, depth: kit.depth, sold: false, taken: false, time: 0 };
     });
 
     // The hatches show all the time, so they're instanced to stay cheap to draw.
@@ -212,11 +212,12 @@ export class FoodShop {
     this.leaves.instanceMatrix.needsUpdate = true;
   }
 
-  // The unsold spot in reach that's closest to the centre of the view, or null.
-  target(x, z, yaw) {
+  // The spot in reach that's closest to the centre of the view among those that pass test, or null.
+  nearest(x, z, yaw, test) {
     let best = null, bestFacing = -Infinity;
-    for (const { spot, sold } of this.items) {
-      if (sold || !inReach(spot, x, z, yaw)) continue;
+    for (const item of this.items) {
+      const { spot } = item;
+      if (!test(item) || !inReach(spot, x, z, yaw)) continue;
       const dx = spot.face - x, dz = spot.z - z;
       const facing = (-Math.sin(yaw) * dx - Math.cos(yaw) * dz) / (Math.hypot(dx, dz) || 1);
       if (facing > bestFacing) { best = spot; bestFacing = facing; }
@@ -224,8 +225,28 @@ export class FoodShop {
     return best;
   }
 
+  // The unsold spot in reach that's closest to the centre of the view, or null.
+  target(x, z, yaw) {
+    return this.nearest(x, z, yaw, (it) => !it.sold);
+  }
+
+  // A bought dish that has finished rising and is still on the counter, or null.
+  takeTarget(x, z, yaw) {
+    return this.nearest(x, z, yaw, (it) => it.sold && !it.taken && it.time >= FOOD_LIFT);
+  }
+
   buy(spot) {
     this.items.find((it) => it.spot === spot).sold = true;
+  }
+
+  // Lifts the dish off the counter and shuts the hatch behind it. Returns its FOOD entry, or null.
+  take(spot) {
+    const item = this.items.find((it) => it.spot === spot);
+    if (!item || !item.sold || item.taken || item.time < FOOD_LIFT) return null;
+    item.taken = true;
+    item.group.visible = false;
+    this.poseLeaves(item, 0);
+    return FOOD[spot.kind];
   }
 
   update(dt) {

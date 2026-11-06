@@ -184,6 +184,35 @@ html, body {
 #pause-button, #view-button, #fullscreen { display: none; }
 body.touch #pause-button, body.touch #view-button, body.touch #fullscreen { display: block; }
 body.touch #hud-buttons button { min-height: 44px; min-width: 96px; }
+#hud-buttons #bag-button { color: var(--cyan); }
+#hud-buttons #bag-button.bump { border-color: rgba(56, 232, 255, 0.8); box-shadow: 0 0 10px rgba(56, 232, 255, 0.6); }
+#bag {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  left: 50%; transform: translateX(-50%);
+  width: min(360px, calc(100vw - 32px));
+  pointer-events: auto;
+  padding: 10px 12px 12px;
+  background: rgba(10, 8, 18, 0.72);
+  border: 1px solid rgba(56, 232, 255, 0.35);
+  border-radius: 6px;
+}
+.bag-title { font-size: 11px; letter-spacing: 0.2em; color: var(--cyan); margin-bottom: 8px; }
+.bag-title span { color: var(--dim); }
+#bag-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.bag-slot {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font-size: 10px; letter-spacing: 0.08em; color: rgba(233, 230, 255, 0.85);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid var(--slot, rgba(255, 255, 255, 0.1));
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bag-slot.empty { color: transparent; }
+.bag-slot .n { position: absolute; right: 4px; bottom: 2px; font-size: 10px; color: var(--cyan); }
 #vend {
   position: absolute; left: 50%; bottom: calc(58px + env(safe-area-inset-bottom)); transform: translateX(-50%);
   pointer-events: auto;
