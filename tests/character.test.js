@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
-import { Character, HEAD_LAYER, KNOCK_LEAD, KNOCK_TIME } from '../src/character.js';
+import { Character, HEAD_LAYER, KNOCK_LEAD, KNOCK_TIME, PICK_GRAB, PICK_DONE, PICK_TIME, PICK_STAND } from '../src/character.js';
 import { KNOCK_RAPS } from '../src/audio.js';
 import { grip, ANKLE } from '../src/character-build.js';
 import { stepLength } from '../src/player.js';
@@ -404,5 +404,89 @@ describe('knocking', () => {
       character.update(0.01, walker);
     }
     expect(glove(character).y).toBeGreaterThan(rest.y + 0.3);
+  });
+});
+
+describe('picking up', () => {
+  const bin = new THREE.Vector3(0, 0.17, -PICK_STAND); // a can in a low bin straight ahead
+  const soleY = (c, i) => c.legs[i].boot.localToWorld(new THREE.Vector3(0, ANKLE - 0.225, -0.06)).y;
+  const runTo = (c, walker, t) => {
+    while ((c.picking?.t ?? Infinity) < t - 1e-6) c.update(0.01, walker);
+  };
+
+  it('crouches with the boots on the ground and the knees folded, and the glove at the bin by the grab', () => {
+    const { character } = make();
+    const walker = makeWalker();
+    character.update(0, walker);
+    character.pickUp(bin);
+    runTo(character, walker, PICK_GRAB - 0.01);
+    character.root.updateMatrixWorld(true);
+    expect(character.crouch).toBeGreaterThan(0.95);
+    expect(character.hips.position.y).toBeLessThan(0.6);
+    for (const i of [0, 1]) {
+      expect(Math.abs(soleY(character, i))).toBeLessThan(0.01);
+      expect(character.legs[i].knee.rotation.x).toBeLessThan(-1.5);
+    }
+    const wrist = character.arms[1].hand.getWorldPosition(new THREE.Vector3());
+    expect(wrist.distanceTo(bin)).toBeLessThan(0.16);
+    expect(wrist.y).toBeGreaterThan(bin.y); // coming down onto it
+    expect(character.duck).toBeGreaterThan(0.5); // first person drops the eye with it
+  });
+
+  it('holds what onGrab gives from the grab, puts it away at PICK_DONE and calls onDone once', () => {
+    const { character } = make();
+    const walker = makeWalker();
+    const can = new THREE.Group();
+    let grabs = 0, done = 0;
+    character.update(0, walker);
+    expect(character.pickUp(bin, { onGrab: () => { grabs++; return can; }, onDone: () => done++ })).toBe(true);
+    expect(character.pickUp(bin)).toBe(false); // one at a time
+    runTo(character, walker, PICK_GRAB + 0.02);
+    expect(grabs).toBe(1);
+    expect(can.parent).toBe(character.arms[1].hand);
+    runTo(character, walker, PICK_DONE + 0.02);
+    expect(can.parent).toBeNull();
+    expect(done).toBe(1);
+    runTo(character, walker, PICK_TIME);
+    expect(character.picking).toBeNull();
+    for (let k = 0; k < 30; k++) character.update(0.01, walker);
+    expect(character.crouch).toBeLessThan(0.01);
+    expect(Math.abs(character.hips.position.y - 0.955)).toBeLessThan(0.01);
+    expect(done).toBe(1);
+  });
+
+  it('gives up without grabbing when the player walks off first, and skips onDone when there was nothing', () => {
+    const { character } = make();
+    const walker = makeWalker();
+    const onGrab = () => new THREE.Group();
+    let done = 0;
+    character.update(0, walker);
+    character.pickUp(bin, { onGrab: () => { throw new Error('grabbed'); }, onDone: () => done++ });
+    runTo(character, walker, 0.3);
+    walker.moving = true;
+    character.update(0.01, walker);
+    walker.moving = false;
+    for (let k = 0; k < 40; k++) character.update(0.01, walker);
+    expect(character.picking).toBeNull();
+    expect(done).toBe(0);
+
+    character.pickUp(bin, { onGrab: () => null, onDone: () => done++ }); // the can had gone
+    runTo(character, walker, PICK_TIME);
+    expect(done).toBe(0);
+    expect(character.held).toBeNull();
+
+    character.pickUp(bin, { onGrab, onDone: () => done++ }); // walking off after the grab puts it away at once
+    runTo(character, walker, PICK_GRAB + 0.05);
+    walker.moving = true;
+    character.update(0.01, walker);
+    expect(done).toBe(1);
+    expect(character.held).toBeNull();
+  });
+
+  it("won't start while knocking", () => {
+    const { character } = make();
+    character.update(0, makeWalker());
+    character.knock({ face: 0, z: -1.2 });
+    expect(character.pickUp(bin)).toBe(false);
   });
 });

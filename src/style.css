@@ -224,6 +224,11 @@ body.touch #keymap, body.touch .pause-keys { display: none; }
 }
 .bag-slot.empty { color: transparent; }
 .bag-slot .n { position: absolute; right: 4px; bottom: 2px; font-size: 10px; color: var(--cyan); }
+.bag-slot:not(.empty) { cursor: pointer; }
+.bag-slot:not(.empty):hover { border-color: rgba(56, 232, 255, 0.5); }
+.bag-slot .k { position: absolute; left: 4px; top: 2px; font-size: 9px; color: var(--dim); }
+body.touch .bag-slot .k { display: none; }
+.bag-hint { margin-top: 8px; font-size: 9px; letter-spacing: 0.12em; color: var(--dim); }
 #vend {
   position: absolute; left: 50%; bottom: calc(58px + env(safe-area-inset-bottom)); transform: translateX(-50%);
   pointer-events: auto;

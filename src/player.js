@@ -71,6 +71,8 @@ export class Player {
     this.enabled = false;
     this.radius = 0.3;
     this.eye = 1.68;
+    this.duck = 0; // how far a crouch (set from character.js) drops the camera, and tips the first-person view down
+    this.dip = 0;
     this.view = start.view === 'first' ? 'first' : 'third';
     this.camReach = 1; // the clear share of the third-person camera's distance
     this.camDist = CAM_BACK; // how far the camera is from the player's head
@@ -213,17 +215,17 @@ export class Player {
       this.camDist = 0;
       this.cam.position.set(
         this.pos.x + Math.cos(this.bob) * 0.025 * amp,
-        this.eye + Math.abs(Math.sin(this.bob)) * 0.05 * amp,
+        this.eye - this.duck + Math.abs(Math.sin(this.bob)) * 0.05 * amp,
         this.pos.y,
       );
-      this.cam.rotation.set(this.pitch, this.yaw, Math.sin(this.bob) * 0.004 * amp, 'YXZ');
+      this.cam.rotation.set(this.pitch - this.dip, this.yaw, Math.sin(this.bob) * 0.004 * amp, 'YXZ');
       return;
     }
     // Over the right shoulder, swung round the head by the look.
     const cp = Math.cos(this.pitch);
     const fx = -Math.sin(this.yaw) * cp, fy = Math.sin(this.pitch), fz = -Math.cos(this.yaw) * cp;
     const rx = Math.cos(this.yaw), rz = -Math.sin(this.yaw);
-    const hx = this.pos.x, hy = CAM_HEIGHT + Math.abs(Math.sin(this.bob)) * 0.02 * amp, hz = this.pos.y;
+    const hx = this.pos.x, hy = CAM_HEIGHT - this.duck * 0.4 + Math.abs(Math.sin(this.bob)) * 0.02 * amp, hz = this.pos.y;
     const wx = -fx * CAM_BACK + rx * CAM_SIDE, wz = -fz * CAM_BACK + rz * CAM_SIDE;
     const clear = clearFraction(hx, hz, hx + wx, hz + wz, this.colliders, this.bounds, CAM_PAD);
     // In at once so walls never show through, back out gently.

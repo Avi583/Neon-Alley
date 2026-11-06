@@ -21,7 +21,7 @@ import { buildEnvironment } from './environment.js';
 import { LightPool } from './lights.js';
 import { createPost } from './post.js';
 import { Player, CLOSE_UP } from './player.js';
-import { Character, HEAD_LAYER, KNOCK_LEAD, KNOCK_REACH } from './character.js';
+import { Character, HEAD_LAYER, KNOCK_LEAD, KNOCK_REACH, PICK_STAND } from './character.js';
 import { AmbientAudio } from './audio.js';
 import { AdaptiveScale } from './adaptive-scale.js';
 import { createBench } from './bench.js';
@@ -166,7 +166,7 @@ async function init() {
   const foodItem = ({ name }) => ({ id: `food:${name}`, name });
   let nextKnock = 0, nextFood = 0;
   const knockAt = (door) => {
-    if (performance.now() < nextKnock) return;
+    if (performance.now() < nextKnock || character.picking) return;
     nextKnock = performance.now() + KNOCK_COOLDOWN;
     const knock = () => {
       nextKnock = performance.now() + KNOCK_COOLDOWN;
@@ -181,6 +181,28 @@ async function init() {
       player.walkTo(x, door.z, knock);
     }
   };
+  // Taking a can: the biker walks up square to the bin if not there already, crouches and reaches in.
+  // The can leaves the bin as the glove closes on it, and goes in the bag once the biker has stood up.
+  const pickCan = () => {
+    if (character.picking || character.knocking) return;
+    const at = vending.nextPosition();
+    if (!at) return;
+    let item = null;
+    const pick = () => character.pickUp(at, {
+      onGrab: () => {
+        const flavour = vending.take();
+        if (flavour === null) return null;
+        item = canItem(flavour);
+        audio.pickup();
+        return vending.heldCan(flavour);
+      },
+      onDone: () => inventory.add(item),
+    });
+    const { side } = alley.vending; // side points into the wall, so the biker stands out from the can the other way
+    const x = THREE.MathUtils.clamp(at.x - side * PICK_STAND, -ALLEY.walkX, ALLEY.walkX);
+    if (Math.hypot(x - player.pos.x, at.z - player.pos.y) <= 0.12) pick();
+    else player.walkTo(x, at.z, pick);
+  };
   // The action in reach as { label, use }, or null. A full bag still shows, so the player knows why.
   const full = { label: BAG_FULL, use: () => {} };
   const useAction = () => {
@@ -191,7 +213,7 @@ async function init() {
       if (flavour === null) return { label: BUY, use: () => { if (vending.buy()) audio.whirr(VEND_TURN); } };
       const item = canItem(flavour);
       if (!inventory.canAdd(item.id)) return full;
-      return { label: TAKE, use: () => { if (vending.take() !== null && inventory.add(item)) audio.pickup(); } };
+      return { label: TAKE, use: pickCan };
     }
     const dish = foodShop.takeTarget(x, z, yaw);
     if (dish) {
@@ -219,6 +241,8 @@ async function init() {
   const states = createStates({
     player, audio, canvas: renderer.domElement, auto: AUTO || BENCH, inventory,
     onUse: () => useAction()?.use(),
+    // Drinks a can or eats a dish from the bag.
+    onConsume: (item) => { if (inventory.remove(item.id)) (item.id.startsWith('can:') ? audio.sip() : audio.bite()); },
   });
   const bench = BENCH ? createBench(renderer, player, ALLEY, num('bench', 600)) : null;
 
@@ -254,6 +278,15 @@ async function init() {
     }
     footprints.update(t);
     splashes?.update(t, camera, size.y);
+    player.duck = character.duck; // a crouch from the last frame drops the camera
+    const pick = character.picking;
+    if (pick && !pick.done && player.view === 'first' && !player.moving) {
+      // In first person the look eases round to the bin, as the body turns to it in third, so the
+      // glove and the can show coming up from below.
+      const want = Math.atan2(-(pick.target.x - player.pos.x), -(pick.target.z - player.pos.y));
+      player.yaw += Math.atan2(Math.sin(want - player.yaw), Math.cos(want - player.yaw)) * (1 - Math.exp(-dt * 6));
+    }
+    player.dip = player.view === 'first' ? character.dip : 0;
     player.update(dt);
     character.update(dt, player);
     for (const left of character.landed) land(left, player.vel.length());

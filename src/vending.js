@@ -90,6 +90,8 @@ export class Vending {
     });
     this.falling = makeCan();
     this.bodies = bodies;
+    this.capGeo = capGeo;
+    this.canMats = [mats.vendingCans, mats.metalLight];
 
     // Shelf stock and coils, instanced so the 24 slots stay cheap to draw
     this.slots = spot.slots.map((slot) => ({ ...slot }));
@@ -143,6 +145,24 @@ export class Vending {
   nextFlavour() {
     const landed = this.landed();
     return landed.length ? this.oldest(landed).flavour : null;
+  }
+
+  // Where the can take() would lift next is (world space, into out), or null if none has landed.
+  nextPosition(out = new THREE.Vector3()) {
+    const landed = this.landed();
+    return landed.length ? this.oldest(landed).group.getWorldPosition(out) : null;
+  }
+
+  // A loose can of this flavour, upright, to show in the biker's glove. Shares the bin cans' geometry.
+  heldCan(flavour) {
+    const group = new THREE.Group();
+    group.add(new THREE.Mesh(this.bodies[flavour], this.canMats[0]));
+    for (const e of [-1, 1]) {
+      const cap = new THREE.Mesh(this.capGeo, this.canMats[1]);
+      cap.position.y = e * 0.076;
+      group.add(cap);
+    }
+    return group;
   }
 
   // Lifts the oldest can out of the bin. Returns its flavour, or null if there was none to take.

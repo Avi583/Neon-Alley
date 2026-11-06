@@ -70,6 +70,9 @@ test('the vending machine sells a drink, then offers it to take into the bag', a
   await page.keyboard.press('KeyI');
   await expect(page.locator('#bag')).toBeVisible();
   await expect(page.locator('.bag-slot:not(.empty)')).toHaveCount(1);
+  await page.keyboard.press('Digit1'); // drinks it
+  await expect(page.locator('#bag-button')).toHaveText('BAG 0');
+  await expect(page.locator('.bag-slot:not(.empty)')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

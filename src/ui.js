@@ -61,8 +61,13 @@ export function setFps(text) {
   ui.fps.textContent = text;
 }
 
-// One cell per slot, filled in pick-up order, with the rest left empty.
-export function renderBag(inventory) {
+// The key for each bag slot, in order: 1-9, 0, - and =, as along the number row.
+export const SLOT_KEYS = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0', 'Minus', 'Equal'];
+const SLOT_LABELS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='];
+
+// One cell per slot, filled in pick-up order, with the rest left empty. A filled cell uses its
+// item when clicked or tapped (onPick gets the slot's index).
+export function renderBag(inventory, onPick = null) {
   const cells = [];
   for (let i = 0; i < inventory.slots; i++) {
     const item = inventory.items[i];
@@ -71,6 +76,13 @@ export function renderBag(inventory) {
     if (item) {
       cell.textContent = item.name;
       if (item.color) cell.style.setProperty?.('--slot', item.color);
+      if (SLOT_LABELS[i]) {
+        const k = document.createElement('span');
+        k.className = 'k';
+        k.textContent = SLOT_LABELS[i];
+        cell.appendChild(k);
+      }
+      if (onPick) cell.addEventListener('click', () => onPick(i));
       if (item.count > 1) {
         const n = document.createElement('span');
         n.className = 'n';
@@ -85,7 +97,7 @@ export function renderBag(inventory) {
   ui.bagButton.textContent = `BAG ${inventory.total}`;
 }
 
-export function createStates({ player, audio, canvas, auto, onUse, inventory = null }) {
+export function createStates({ player, audio, canvas, auto, onUse, inventory = null, onConsume = null }) {
   let state = 'title';
   const hasLock = 'requestPointerLock' in canvas;
   const usesLock = () => !player.touch && hasLock;
@@ -180,14 +192,20 @@ export function createStates({ player, audio, canvas, auto, onUse, inventory = n
   ui.bagButton.addEventListener('click', toggleBag);
   if (inventory) {
     let bump = 0;
+    const pick = (i) => { const item = inventory.items[i]; if (item) onConsume?.(item); };
+    // With the bag open, the number row uses a slot (the pointer is locked on desktop, so it can't click).
+    window.addEventListener('keydown', (e) => {
+      const i = SLOT_KEYS.indexOf(e.code);
+      if (i >= 0 && !e.repeat && state === 'play' && !ui.bag.classList.contains('hidden')) pick(i);
+    });
     inventory.onChange = () => {
-      renderBag(inventory);
+      renderBag(inventory, pick);
       // A short glow on the button, so a pick-up shows even with the bag closed.
       ui.bagButton.classList.add('bump');
       clearTimeout(bump);
       bump = setTimeout(() => ui.bagButton.classList.remove('bump'), 400);
     };
-    renderBag(inventory);
+    renderBag(inventory, pick);
   }
   let shownPrompt = null;
   ui.sound.addEventListener('click', toggleSound);

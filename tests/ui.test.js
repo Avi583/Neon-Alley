@@ -515,8 +515,12 @@ describe('inventory bag', () => {
     inventory.add({ id: 'can:COLA', name: 'COLA', color: '#e0162e' });
     inventory.add({ id: 'food:RAMEN', name: 'RAMEN' });
     expect(slots.children.map((c) => c.className)).toEqual(['bag-slot', 'bag-slot', 'bag-slot empty', 'bag-slot empty']);
-    expect(slots.children[0].children[0].textContent).toBe('×2');
-    expect(slots.children[1].children.length).toBe(0);
+    const tag = (cell, cls) => cell.children.find((c) => c.className === cls)?.textContent;
+    expect(tag(slots.children[0], 'n')).toBe('×2');
+    expect(tag(slots.children[1], 'n')).toBe(undefined);
+    expect(tag(slots.children[0], 'k')).toBe('1');
+    expect(tag(slots.children[1], 'k')).toBe('2');
+    expect(tag(slots.children[2], 'k')).toBe(undefined); // empty slots have no key
     expect(el('bag-button').textContent).toBe('BAG 3');
     expect(el('bag-count').textContent).toBe('2/4');
 
@@ -528,5 +532,27 @@ describe('inventory bag', () => {
     expect(el('bag').classList.contains('hidden')).toBe(false);
     el('bag-button').fire('click');
     expect(el('bag').classList.contains('hidden')).toBe(true);
+  });
+
+  it('uses an item with its number key while the bag is open, or a click on its cell', async () => {
+    const ui = await loadUi();
+    const { Inventory } = await import('../src/inventory.js');
+    const f = fakes(), inventory = new Inventory(4), onConsume = vi.fn();
+    ui.createStates({ ...f, auto: false, inventory, onConsume });
+    inventory.add({ id: 'can:COLA', name: 'COLA' });
+    inventory.add({ id: 'food:RAMEN', name: 'RAMEN' });
+    el('bag').classList.add('hidden');
+    el('enter').fire('click');
+    key('Digit2');
+    expect(onConsume).not.toHaveBeenCalled(); // bag closed
+    key('KeyI');
+    key('Digit2');
+    expect(onConsume).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'food:RAMEN' }));
+    key('Digit3'); // an empty slot
+    key('Digit1', { repeat: true });
+    expect(onConsume).toHaveBeenCalledTimes(1);
+    el('bag-slots').children[0].fire('click');
+    expect(onConsume).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'can:COLA' }));
+    expect(ui.SLOT_KEYS.length).toBe(12);
   });
 });

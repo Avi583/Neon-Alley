@@ -46,4 +46,20 @@ describe('Inventory', () => {
     inv.add(ramen);
     expect(changes).toBe(2);
   });
+
+  it('removes one at a time, freeing the slot once the stack runs out', () => {
+    const inv = new Inventory(2);
+    let changes = 0;
+    inv.add(cola);
+    inv.add(cola);
+    inv.add(ramen);
+    inv.onChange = () => changes++;
+    expect(inv.remove('can:COLA')).toMatchObject({ id: 'can:COLA', count: 2 });
+    expect(inv.count('can:COLA')).toBe(1);
+    expect(inv.remove('can:COLA')).toMatchObject({ id: 'can:COLA', count: 1 });
+    expect(inv.items.map((it) => it.id)).toEqual(['food:RAMEN']);
+    expect(inv.remove('can:COLA')).toBe(null);
+    expect(changes).toBe(2);
+    expect(inv.canAdd('food:SOJU')).toBe(true);
+  });
 });

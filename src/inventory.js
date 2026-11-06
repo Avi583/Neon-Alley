@@ -31,4 +31,15 @@ export class Inventory {
     this.onChange?.(this);
     return true;
   }
+
+  // Takes one of this id out. The slot frees up, and later slots move up, once its stack runs out.
+  // Returns the item as it was, or null if none was held.
+  remove(id) {
+    const i = this.items.findIndex((it) => it.id === id);
+    if (i < 0) return null;
+    const item = { ...this.items[i] };
+    if (--this.items[i].count === 0) this.items.splice(i, 1);
+    this.onChange?.(this);
+    return item;
+  }
 }

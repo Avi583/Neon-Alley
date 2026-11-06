@@ -203,6 +203,44 @@ export class AmbientAudio {
     o.start(t); o.stop(t + 0.12);
   }
 
+  // A can drunk from the bag: the tab's crack and hiss, then two gulps.
+  sip() {
+    const ctx = this.ctx;
+    if (!ctx || this.muted) return;
+    const t = ctx.currentTime;
+    const src = ctx.createBufferSource(); src.buffer = this.white;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3000;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    src.connect(hp).connect(g).connect(this.master);
+    src.start(t, Math.random() * 2, 0.27);
+    for (const at of [0.45, 0.8]) {
+      const s = t + at;
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(320, s); o.frequency.exponentialRampToValueAtTime(140, s + 0.12);
+      const og = ctx.createGain();
+      og.gain.setValueAtTime(0.001, s); og.gain.exponentialRampToValueAtTime(0.3, s + 0.02);
+      og.gain.exponentialRampToValueAtTime(0.001, s + 0.14);
+      o.connect(og).connect(this.master);
+      o.start(s); o.stop(s + 0.16);
+    }
+  }
+
+  // A dish eaten from the bag: three short, soft crunches of noise.
+  bite() {
+    const ctx = this.ctx;
+    if (!ctx || this.muted) return;
+    for (const at of [0, 0.22, 0.44]) {
+      const t = ctx.currentTime + at;
+      const src = ctx.createBufferSource(); src.buffer = this.white;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1400 + Math.random() * 600; bp.Q.value = 0.9;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.3, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+      src.connect(bp).connect(g).connect(this.master);
+      src.start(t, Math.random() * 2, 0.09);
+    }
+  }
+
   // Three raps on a door, the first after delay seconds: a dull thump with a short slap of noise on each.
   knock(delay = 0) {
     const ctx = this.ctx;
