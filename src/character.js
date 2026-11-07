@@ -179,11 +179,6 @@ export class Character {
     return [blend, rap];
   }
 
-  // Which foot lands on the step player.js has just counted: the left on even steps.
-  static leftFootDown(player) {
-    return ((player.lastStep % 2) + 2) % 2 === 0;
-  }
-
   update(dt, player) {
     this.time += dt;
     const v = player.vel.length();
@@ -278,7 +273,7 @@ export class Character {
       this.headYaw - c * (shoulderYaw + chestYaw),
       -s * shoulderRoll,
     );
-    this.legRig.stride(player, v, walk, run, first, this.facing, this.crouch);
+    this.legRig.stride(player, v, walk, run, first, this.facing, this.crouch, dt);
 
     // Picking up: the left forearm comes forward over the knee, and the right reaches down to the
     // thing, then brings it up in front of the chest.

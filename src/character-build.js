@@ -249,7 +249,7 @@ const SHIN = 0.27; // from the knee to the top of the shaft
 export const ANKLE = 0.155; // and on down to the ankle
 export function buildLeg(hips, m, side) {
   const { mesh, top: hip, lower: knee } = limb(hips, side * LEG_X, -0.02, LEG, m.jeans, 48, THIGH, [-0.04, 0.1]);
-  hip.rotation.order = 'ZXY'; // the walk swings the leg forward, then out to the side
+  hip.rotation.order = 'YZX'; // the walk swings the leg forward, then out to the side, then turns it to where it goes
   const shin = new THREE.Group();
   shin.position.y = -SHIN;
   knee.add(shin);

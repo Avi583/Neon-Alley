@@ -17,9 +17,9 @@ function fire(type, event = {}) {
   for (const fn of listeners[type] || []) fn({ preventDefault() {}, ...event });
 }
 
-function makePlayer({ start = { x: 0, z: 0 }, colliders = [], onStep, enabled = true } = {}) {
+function makePlayer({ start = { x: 0, z: 0 }, colliders = [], enabled = true } = {}) {
   const camera = { position: { set() {} }, rotation: { set() {} } };
-  const player = new Player(camera, {}, { bounds: BOUNDS, colliders, start, onStep });
+  const player = new Player(camera, {}, { bounds: BOUNDS, colliders, start });
   player.enabled = enabled;
   return player;
 }
@@ -177,23 +177,6 @@ describe('look', () => {
   });
 });
 
-describe('footsteps', () => {
-  it('fires onStep with the speed while walking', () => {
-    const onStep = vi.fn();
-    const player = makePlayer({ onStep });
-    player.keys.add('KeyW');
-    walk(player, 1 / 60, 120);
-    expect(onStep).toHaveBeenCalled();
-    expect(onStep.mock.calls[0][0]).toBeGreaterThan(0.6);
-  });
-
-  it('stays quiet while standing still', () => {
-    const onStep = vi.fn();
-    const player = makePlayer({ onStep });
-    walk(player, 1 / 60, 120);
-    expect(onStep).not.toHaveBeenCalled();
-  });
-});
 
 describe('touch', () => {
   const WIDTH = 1000;

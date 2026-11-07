@@ -55,12 +55,11 @@ export function clearFraction(x0, z0, x1, z1, colliders, bounds, pad) {
 }
 
 export class Player {
-  constructor(camera, dom, { bounds, colliders, start, onStep }) {
+  constructor(camera, dom, { bounds, colliders, start }) {
     this.cam = camera;
     this.dom = dom;
     this.bounds = bounds;
     this.colliders = colliders;
-    this.onStep = onStep;
     this.pos = new THREE.Vector2(start.x, start.z);
     this.vel = new THREE.Vector2();
     this.yaw = start.yaw || 0;
@@ -69,7 +68,6 @@ export class Player {
     this.keys = new Set();
     this.joy = { x: 0, y: 0 };
     this.bob = 0;
-    this.lastStep = 0;
     this.walking = null; // { x, z, onArrive, t } while walkTo has the player walking somewhere
     this.moving = false; // whether the player's own input is moving them this frame
     this.enabled = false;
@@ -192,11 +190,6 @@ export class Player {
     // Only first person walks other than the way the biker faces (the third-person body turns to it).
     const side = this.view === 'first' && v > 1e-3 ? Math.abs(this.vel.x * Math.cos(this.yaw) - this.vel.y * Math.sin(this.yaw)) / v : 0;
     this.bob += (dt * v * Math.PI) / stepLength(v, side);
-    const stepIdx = Math.floor(this.bob / Math.PI);
-    if (stepIdx !== this.lastStep) {
-      this.lastStep = stepIdx;
-      if (v > MIN_STEP && this.onStep) this.onStep(v);
-    }
     this.apply(v, dt);
   }
 

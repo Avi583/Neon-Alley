@@ -6,7 +6,7 @@ import { grip, ANKLE } from '../src/character-build.js';
 import { stepLength } from '../src/player.js';
 
 function makeWalker(over = {}) {
-  return { pos: new THREE.Vector2(), vel: new THREE.Vector2(), yaw: 0, pitch: 0, bob: 0, lastStep: 0, view: 'third', ...over };
+  return { pos: new THREE.Vector2(), vel: new THREE.Vector2(), yaw: 0, pitch: 0, bob: 0, view: 'third', ...over };
 }
 
 function make() {
@@ -265,6 +265,28 @@ describe('motion', () => {
     }
   });
 
+  // Walking diagonally or sideways in first person, the swinging boot passes the planted one with room
+  // between them, rather than one leg going through the other.
+  it.each([
+    ['ahead and right', 1, -1], ['ahead and left', -1, -1], ['back and right', 1, 1], ['right', 1, 0], ['left', -1, 0],
+  ])('keeps the boots apart as they pass walking %s in first person', (_name, x, z) => {
+    const { character } = make();
+    const dir = new THREE.Vector2(x, z).normalize();
+    const walker = makeWalker({ vel: dir.clone().multiplyScalar(2), view: 'first' });
+    let closest = Infinity;
+    for (let f = 0; f < 180; f++) {
+      walker.bob += ((1 / 60) * 2 * Math.PI) / stepLength(2, Math.abs(dir.x));
+      walker.pos.addScaledVector(dir, 2 / 60);
+      character.update(1 / 60, walker);
+      if (f < 60) continue;
+      const d = character.soleAt(true).sub(character.soleAt(false));
+      const along = d.x * dir.x + d.z * dir.y, across = Math.abs(d.x * dir.y - d.z * dir.x);
+      if (Math.abs(along) < 0.08) closest = Math.min(closest, across); // level along the way they go
+    }
+    expect(closest).toBeLessThan(Infinity); // they did pass
+    expect(closest).toBeGreaterThan(0.16);
+  });
+
   it.each([['walk', 2], ['run', 4.2]])('lifts the swinging boot clear of the ground at a %s', (_name, v) => {
     expect(walk(make().character, v, 3).swingLow).toBeGreaterThan(0.04);
   });
@@ -303,12 +325,6 @@ describe('motion', () => {
     const { character } = make();
     for (let k = 0; k < 120; k++) character.update(1 / 60, makeWalker({ bob: k * 0.05 }));
     expect(character.landed).toHaveLength(0);
-  });
-
-  it('lands the left foot on even steps and the right on odd ones', () => {
-    expect(Character.leftFootDown({ lastStep: 0 })).toBe(true);
-    expect(Character.leftFootDown({ lastStep: 3 })).toBe(false);
-    expect(Character.leftFootDown({ lastStep: 4 })).toBe(true);
   });
 });
 

@@ -3,7 +3,7 @@
 // and ball; a swinging one lifts clear and comes through to land a little ahead of the hips. Each leg
 // is solved as a two-bone chain from the hip joint to the ankle. Driven by character.js.
 import * as THREE from 'three';
-import { sstep, lawOfCosines } from './math.js';
+import { sstep, lawOfCosines, wrapAngle, damp } from './math.js';
 import { stepLength, MIN_STEP } from './player.js';
 import { ANKLE } from './character-build.js';
 
@@ -17,6 +17,12 @@ const TAU = Math.PI * 2;
 // The furthest the boot rolls toe-up on its heel or heel-up on its ball to keep a planted leg in reach.
 const ROLL_UP = 0.6, ROLL_DOWN = -0.9;
 const lerp = THREE.MathUtils.lerp;
+// Walking off to the side of where the body faces (first person), the legs turn at the hip toward
+// the way they go, by up to TOE_MAX, easing at TOE_TURN. Past that, each boot's track is pushed out
+// from the line of travel so the two boots' footprints (BOOT_L by BOOT_W, GAP apart) don't pass
+// through each other. Beyond HALF_TURN + FLIP from ahead the legs walk backward instead.
+const TOE_MAX = 0.6, TOE_TURN = 8, FLIP = 0.3, HALF_TURN = Math.PI / 2;
+const BOOT_L = 0.26, BOOT_W = 0.114, GAP = 0.02;
 
 export class Legs {
   // hips is the group the legs hang from, legs the two from buildLeg (left first).
@@ -30,6 +36,10 @@ export class Legs {
       ankle: new THREE.Vector3(), pitch: 0,
     }));
     this.landed = []; // the boots that planted on the last update, true for the left
+    this.toe = 0; // how far the legs have turned at the hip from the body's facing
+    this.backward = false; // whether the legs walk backward to the way they go
+    this._body = new THREE.Vector3();
+    this._perp = new THREE.Vector3();
     this._hipAt = new THREE.Vector3();
     this._fwd = new THREE.Vector3();
     this._dir = new THREE.Vector3();
@@ -95,15 +105,18 @@ export class Legs {
   // have swayed from it. The boot takes out that roll and the hips' twist and tilt, so it stays
   // level and facing ahead rather than turning on its ankle. blend eases it in from standing. hang
   // (0 to 1) takes the boot off the ground's pitch and onto ankle, its angle from the shin (toe-up),
-  // as a swinging boot hangs from the leg rather than staying level with the ground.
-  poseLeg(leg, a, pitch, blend, walk, hang = 0, ankle = 0) {
+  // as a swinging boot hangs from the leg rather than staying level with the ground. yaw turns the
+  // whole leg at the hip about the upright, so it's solved in the turned frame.
+  poseLeg(leg, a, pitch, blend, walk, hang = 0, ankle = 0, yaw = 0) {
     const p = leg.mesh.worldToLocal(this._v.copy(a)); // the hip joint is at the mesh's origin
+    const cy = Math.cos(yaw), sy = Math.sin(yaw);
+    p.set(p.x * cy - p.z * sy, p.y, p.x * sy + p.z * cy);
     const thigh = -leg.knee.position.y, shin = -leg.boot.position.y;
     const roll = Math.atan2(p.x, -p.y), down = Math.hypot(p.x, p.y);
     const d = THREE.MathUtils.clamp(Math.hypot(down, p.z), 0.1, thigh + shin - 1e-4);
     const hip = Math.atan2(-p.z, down) + lawOfCosines(thigh, d, shin);
     const knee = lawOfCosines(thigh, shin, d) - Math.PI;
-    leg.hip.rotation.set(lerp(0, hip, blend), 0, lerp(0, roll, blend));
+    leg.hip.rotation.set(lerp(0, hip, blend), yaw, lerp(0, roll, blend));
     leg.knee.rotation.x = lerp(-0.05 * walk, knee, blend);
     leg.boot.rotation.set(lerp(0, lerp(pitch - hip - knee, ankle, hang), blend), -this.hips.rotation.y, -leg.hip.rotation.z - this.hips.rotation.z);
   }
@@ -112,12 +125,30 @@ export class Legs {
   // wherever the hips will have carried it, whichever way they go. facing is the body's yaw, and crouch
   // (0 to 1) folds the legs to boots set flat under the hips. Fills landed with the boots (true for the
   // left) that planted this frame.
-  stride(player, v, walk, run, first, facing, crouch) {
+  stride(player, v, walk, run, first, facing, crouch, dt = 0) {
     this.landed.length = 0;
-    this._fwd.set(-Math.sin(facing), 0, -Math.cos(facing));
+    const body = this._body.set(-Math.sin(facing), 0, -Math.cos(facing));
     if (v > 1e-3) this._dir.set(player.vel.x / v, 0, player.vel.y / v);
-    else this._dir.copy(this._fwd);
-    const step = stepLength(v, first ? Math.abs(this._dir.x * this._fwd.z - this._dir.z * this._fwd.x) : 0); // as player.js
+    else this._dir.copy(body);
+    const step = stepLength(v, first ? Math.abs(this._dir.x * body.z - this._dir.z * body.x) : 0); // as player.js
+    let blend = sstep(0.05, 0.5, v);
+    // Crouching, the boots stand a little apart under the hips (the right a little ahead), and the legs
+    // fold to reach them as the hips drop.
+    const crouching = crouch > 1e-3 && v < LOCK;
+    // The way the legs go from the body's facing, and from the way they point (ahead or behind).
+    const travel = v > 1e-3 ? wrapAngle(Math.atan2(-this._dir.x, -this._dir.z) - facing) : 0;
+    if (Math.abs(travel) > HALF_TURN + FLIP) this.backward = true;
+    else if (Math.abs(travel) < HALF_TURN - FLIP) this.backward = false;
+    const off = this.backward ? wrapAngle(travel - Math.PI) : travel;
+    const toeTo = crouching ? 0 : THREE.MathUtils.clamp(off, -TOE_MAX, TOE_MAX) * blend;
+    this.toe = dt > 0 ? this.toe + (toeTo - this.toe) * damp(TOE_TURN, dt) : toeTo;
+    this._fwd.copy(body).applyAxisAngle(THREE.Object3D.DEFAULT_UP, this.toe); // the way the boots point
+    // How far each boot's track sits out from the line of travel: the hip joint's own offset across
+    // it, pushed out to clear the other boot's footprint, turned off the line by what's left of off.
+    const rest = off - this.toe;
+    const clear = (BOOT_L * Math.abs(Math.sin(rest)) + BOOT_W * Math.abs(Math.cos(rest)) + GAP) / 2;
+    const across = Math.cos(off); // of the hip joints' spread, the share across the line of travel (the right way round)
+    this._perp.set(-this._dir.z, 0, this._dir.x).multiplyScalar(this.backward ? -1 : 1); // to the right of the line
     const stance = 0.58 - 0.22 * run; // of the stride with the boot down: a run has a flight between
     const sweep = stance * 2 * step; // how far the hips go over a planted boot
     const lead = 0.46 * sweep; // and how far ahead of them it lands
@@ -129,16 +160,14 @@ export class Legs {
     // Early in the swing the knee folds and the heel comes up behind (a kick at a run), so the boot
     // clears the ground well before it reaches forward.
     const tuck = 0.04 * walk + 0.14 * run;
-    let blend = sstep(0.05, 0.5, v);
-    // Crouching, the boots stand a little apart under the hips (the right a little ahead), and the legs
-    // fold to reach them as the hips drop.
-    const crouching = crouch > 1e-3 && v < LOCK;
     if (crouching) blend = 1;
     for (let i = 0; i < 2; i++) {
       const foot = this.feet[i], leg = this.legs[i];
       let hang = 0, ankle = 0;
       leg.mesh.getWorldPosition(this._hipAt);
-      const ground = this._ground.copy(this._hipAt).setY(0);
+      const hipX = leg.mesh.position.x;
+      const push = Math.max(0, clear - Math.abs(hipX) * across) * blend;
+      const ground = this._ground.copy(this._hipAt).setY(0).addScaledVector(this._perp, Math.sign(hipX) * push);
       const reachMax = -leg.knee.position.y - leg.boot.position.y - STRAIGHT;
       const phase = THREE.MathUtils.euclideanModulo(player.bob - i * Math.PI, TAU) / TAU;
       const down = phase < stance;
@@ -178,14 +207,14 @@ export class Legs {
       foot.ready = true;
       if (crouching) {
         // Flat on the ground under the hip joint, a little out, the right a little ahead of the left.
-        this._spot.copy(ground).addScaledVector(this._fwd, i === 1 ? 0.1 : -0.04);
+        this._spot.copy(this._hipAt).setY(0).addScaledVector(this._fwd, i === 1 ? 0.1 : -0.04);
         this._spot.x += Math.cos(facing) * leg.mesh.position.x * 0.4; // out to the side (x, turned)
         this._spot.z -= Math.sin(facing) * leg.mesh.position.x * 0.4;
         this.ankleFrom(this._spot, MID, 0, this._end);
         this.poseLeg(leg, this._end, 0, blend, walk);
         continue;
       }
-      this.poseLeg(leg, foot.ankle, foot.pitch, blend, walk, hang, ankle);
+      this.poseLeg(leg, foot.ankle, foot.pitch, blend, walk, hang, ankle, this.toe);
     }
   }
 }
